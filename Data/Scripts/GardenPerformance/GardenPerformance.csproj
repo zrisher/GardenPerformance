@@ -1,0 +1,122 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{4A29BD00-9DC6-4B13-81A6-479B55DA547D}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <NoStandardLibraries>false</NoStandardLibraries>
+    <AssemblyName>ClassLibrary</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <RootNamespace>GardenPerformance</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Sandbox.Common">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\SteamApps\common\SpaceEngineers\Bin\Sandbox.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Sandbox.Game">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\SteamApps\common\SpaceEngineers\Bin\Sandbox.Game.dll</HintPath>
+    </Reference>
+    <Reference Include="Sandbox.Graphics">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\SteamApps\common\SpaceEngineers\Bin\Sandbox.Graphics.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="VRage">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\SteamApps\common\SpaceEngineers\Bin\VRage.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Audio">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\SteamApps\common\SpaceEngineers\Bin\VRage.Audio.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Game">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\SteamApps\common\SpaceEngineers\Bin\VRage.Game.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Input">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\SteamApps\common\SpaceEngineers\Bin\VRage.Input.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Library">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\SteamApps\common\SpaceEngineers\Bin\VRage.Library.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Math">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\SteamApps\common\SpaceEngineers\Bin\VRage.Math.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Native">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\SteamApps\common\SpaceEngineers\Bin\VRage.Native.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Render">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\SteamApps\common\SpaceEngineers\Bin\VRage.Render.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Render11">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\SteamApps\common\SpaceEngineers\Bin\VRage.Render11.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Components\Session.cs" />
+    <Compile Include="SEGarden\Chat\ChatEvent.cs" />
+    <Compile Include="SEGarden\Chat\ChatManager.cs" />
+    <Compile Include="SEGarden\Chat\Commands\Command.cs" />
+    <Compile Include="SEGarden\Chat\Commands\Node.cs" />
+    <Compile Include="SEGarden\Chat\Commands\Processor.cs" />
+    <Compile Include="SEGarden\Chat\Commands\Tree.cs" />
+    <Compile Include="SEGarden\Chat\Example.cs" />
+    <Compile Include="SEGarden\ConquestSettings.cs" />
+    <Compile Include="SEGarden\Extensions\ByteStream.cs" />
+    <Compile Include="SEGarden\Extensions\CubeGrid.cs" />
+    <Compile Include="SEGarden\Extensions\Entity.cs" />
+    <Compile Include="SEGarden\Extensions\PlayerExtension.cs" />
+    <Compile Include="SEGarden\Extensions\ScreenExtension.cs" />
+    <Compile Include="SEGarden\Extensions\SessionExtension.cs" />
+    <Compile Include="SEGarden\Files\Handler.cs" />
+    <Compile Include="SEGarden\Files\Manager.cs" />
+    <Compile Include="SEGarden\Logging\Logger.cs" />
+    <Compile Include="SEGarden\Logging\Severity.cs" />
+    <Compile Include="SEGarden\Logging\StaticLoggable.cs" />
+    <Compile Include="SEGarden\Messaging\Messengers\ClientMessenger.cs" />
+    <Compile Include="SEGarden\Messaging\Messengers\ServerMessenger.cs" />
+    <Compile Include="SEGarden\Messaging\Requests\BaseRequest.cs" />
+    <Compile Include="SEGarden\Messaging\Requests\FleetRequest.cs" />
+    <Compile Include="SEGarden\Messaging\Requests\SettingsRequest.cs" />
+    <Compile Include="SEGarden\Messaging\Responses\BaseResponse.cs" />
+    <Compile Include="SEGarden\Messaging\Responses\DialogResponse.cs" />
+    <Compile Include="SEGarden\Messaging\Responses\NotificationResponse.cs" />
+    <Compile Include="SEGarden\Messaging\Responses\SettingsResponse.cs" />
+    <Compile Include="SEGarden\Notifications\Notification.cs" />
+    <Compile Include="SEGarden\Text\TextFormatting.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="SEGarden\.git" />
+    <None Include="SEGarden\README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="SEGarden\.gitignore" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSHARP.Targets" />
+  <ProjectExtensions>
+    <VisualStudio AllowExistingFolder="true" />
+  </ProjectExtensions>
+</Project>
