@@ -77,7 +77,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Commands.cs" />
-    <Compile Include="Components\Concealer.cs" />
+    <Compile Include="Components\Concealment.cs" />
+    <Compile Include="Components\EssentialsConcealer.cs" />
     <Compile Include="Components\Session.cs" />
     <Compile Include="GardenPerformance.cs" />
     <Compile Include="SEGarden\Chat\ChatEvent.cs" />
