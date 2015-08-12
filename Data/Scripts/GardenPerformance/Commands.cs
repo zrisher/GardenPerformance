@@ -116,10 +116,10 @@ namespace GardenPerformance {
             "  * Not providing spawn points for players",
             0,
             new List<Node> {
+                ConcealmentConcealedCommand,
+                ConcealmentRevealCommand,
                 ConcealmentRevealedCommand,
                 ConcealmentConcealCommand,
-                ConcealmentConcealedCommand,
-                ConcealmentRevealCommand
             }
         );
 

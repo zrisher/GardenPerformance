@@ -33,6 +33,8 @@ namespace GardenPerformance.Components {
 
 	public static class Concealment {
 
+        #region Subclasses
+
         public abstract class ConcealedEntity {
             public long EntityId;
             public VRageMath.Vector3D Position;
@@ -69,6 +71,9 @@ namespace GardenPerformance.Components {
             public List<ConcealedGrid> ConcealedGrids;
         }
 
+        #endregion
+        #region Members
+
         //public enum EntityType { FloatingObject, Grid, Asteroid, Planet, Character }
 
         // I would love to store the builder within our ConcealEntitiy representations,
@@ -81,8 +86,36 @@ namespace GardenPerformance.Components {
         private static Dictionary<long, ConcealedEntity> ConcealedEntities = 
             new Dictionary<long, ConcealedEntity>();
 
-        private static SEGarden.Logging.Logger Logger = 
+        private static SEGarden.Logging.Logger Log = 
             new SEGarden.Logging.Logger("GardenPerformance.Components.Concealer");
+
+        private static readonly String STATE_FILENAME_SUFFIX = "_concealment_state";
+        private static readonly String GRIDS_FILENAME_SUFFIX = "_concealment_state";
+        private static readonly String FILE_EXT = ".txt";
+
+        
+        private static String WorldName;
+        private static String StateFileName;
+        private static String GridsFileName;
+
+        #endregion
+
+        public static void UpdateWorldName(){
+            Log.Info("Trying to figure out what to use for name:", "UpdateWorldName");
+            
+            Log.Info("Sector.ToString" + MyAPIGateway.Session.GetWorld().Sector.ToString(), "UpdateWorldName");
+            Log.Info("Sector.Position" + MyAPIGateway.Session.GetWorld().Sector.Position, "UpdateWorldName");
+            Log.Info("World.ToString" + MyAPIGateway.Session.GetWorld().ToString(), "UpdateWorldName");
+            Log.Info("Session.Name" + MyAPIGateway.Session.Name, "UpdateWorldName");
+            Log.Info("World.Session.Name " + MyAPIGateway.Session.GetWorld().Checkpoint.SessionName, "UpdateWorldName");
+            Log.Info("Session.ToString " + MyAPIGateway.Session.ToString(), "UpdateWorldName");
+            Log.Info("Session.WorkshopID " + MyAPIGateway.Session.WorkshopId, "UpdateWorldName");
+            Log.Info("Session.WorkshopID " + MyAPIGateway.Session.WorkshopId, "UpdateWorldName");
+
+            WorldName = "Example World";
+            StateFileName = WorldName + STATE_FILENAME_SUFFIX + FILE_EXT;
+            GridsFileName = WorldName + GRIDS_FILENAME_SUFFIX + FILE_EXT;
+        }
 
         #region Lists
 
@@ -134,19 +167,19 @@ namespace GardenPerformance.Components {
 
         private static void ConcealEntity(IMyEntity entity) {
             if (entity == null) {
-                Logger.Error("Received null entity, aborting", "ConcealEntity");
+                Log.Error("Received null entity, aborting", "ConcealEntity");
                 return;
             }
 
             if (entity.SyncObject == null) {
-                Logger.Error("SyncObject missing, aborting", "ConcealEntity");
+                Log.Error("SyncObject missing, aborting", "ConcealEntity");
                 return;
             }
 
             MyObjectBuilder_EntityBase builder = entity.GetObjectBuilder();
 
             if (builder == null) {
-                Logger.Error("Unable to retrieve builder for " + entity.EntityId +
+                Log.Error("Unable to retrieve builder for " + entity.EntityId +
                     ", aborting", "ConcealEntity");
                 return;
             }
@@ -154,7 +187,7 @@ namespace GardenPerformance.Components {
             // Track it
 
             if (ConcealedBuilders.ContainsKey(builder.EntityId)) {
-                Logger.Error("Attempting to store already-stored entity " + 
+                Log.Error("Attempting to store already-stored entity " + 
                     entity.EntityId, "ConcealEntity");
                 return;
             }
@@ -211,7 +244,6 @@ namespace GardenPerformance.Components {
             return Revealability.Revealable;
         }
 
-
         /// <summary>
         /// TODO: Actually queue, just like conceal
         /// </summary>
@@ -222,17 +254,17 @@ namespace GardenPerformance.Components {
 
 
         private static void revealEntity(ConcealedEntity entity) {
-            Logger.Trace("Start reveal " + entity.EntityId, "revealEntity");
+            Log.Trace("Start reveal " + entity.EntityId, "revealEntity");
 
             if (entity == null) {
-                Logger.Error("Received null entity, aborting", "RevealEntity");
+                Log.Error("Received null entity, aborting", "RevealEntity");
                 return;
             }
 
             MyObjectBuilder_EntityBase builder = ConcealedBuilders[entity.EntityId];
 
             if (builder == null) {
-                Logger.Error("Unable to retrieve builder for " + entity.EntityId +
+                Log.Error("Unable to retrieve builder for " + entity.EntityId +
                     ", aborting", "RevealEntity");
                 return;
             }
@@ -245,7 +277,7 @@ namespace GardenPerformance.Components {
                     builder as MyObjectBuilder_CubeGrid;
 
                 if (builder == null) {
-                    Logger.Error("Wrong builder type stored for " + entity.EntityId +
+                    Log.Error("Wrong builder type stored for " + entity.EntityId +
                         ", aborting", "RevealEntity");
                     return;
                 }
@@ -255,7 +287,7 @@ namespace GardenPerformance.Components {
 
                 if (MyAPIGateway.Entities.EntityExists(builder.EntityId)) {
                     gridBuilder.EntityId = 0;
-                    Logger.Trace("Reallocating entityId", "revealEntity");
+                    Log.Trace("Reallocating entityId", "revealEntity");
                 }
 
                 //builder.LinearVelocity = VRageMath.Vector3D.Zero;
@@ -263,12 +295,12 @@ namespace GardenPerformance.Components {
 
                 MyAPIGateway.Entities.CreateFromObjectBuilderAndAdd(gridBuilder);
 
-                Logger.Trace("Created object", "revealEntity");
+                Log.Trace("Created object", "revealEntity");
             }
 
             //Reveal
 
-            Logger.Trace("End reveal " + entity.EntityId, "revealEntity");
+            Log.Trace("End reveal " + entity.EntityId, "revealEntity");
         }
 
         #endregion
@@ -281,7 +313,7 @@ namespace GardenPerformance.Components {
         }
 
         private static void Save() {
-            Logger.Trace("Saving", "Save");
+            Log.Trace("Saving", "Save");
 
             // TODO: Get the world name
             String worldName = "TestWorld";
@@ -292,7 +324,8 @@ namespace GardenPerformance.Components {
                 ConcealedGrids = ConcealedGrids()
             };
 
-            SEGarden.Files.Manager.writeLine(
+
+            SEGarden.Files.Manager.Overwrite(
                 MyAPIGateway.Utilities.
                 SerializeToXML<ConcealmentState>(state),
                 worldName + "_concealment_state.txt"
@@ -310,17 +343,84 @@ namespace GardenPerformance.Components {
                 ConcealedBuilders.Values.Select(x => x as MyObjectBuilder_CubeGrid).
                 Where(x => x != null).ToList();
 
-            SEGarden.Files.Manager.writeLine(
+            SEGarden.Files.Manager.Overwrite(
                 MyAPIGateway.Utilities.
                 SerializeToXML<List<MyObjectBuilder_CubeGrid>>(concealedGridBuilderList),
                 worldName + "_concealed_grid_builders.txt"
             );
 
-            Logger.Trace("Finished saving", "Save");
+            Log.Trace("Finished saving", "Save");
         }
 
         #endregion
         #region Loading
+
+        private static void QueueLoad() {
+            // TODO: Set a flag to do this during update instead to multiple
+            // Want to wait a while too, this flag gets hit every conceal
+            Save();
+        }
+
+        private static void Load() {
+            Log.Trace("Loading", "Load");
+
+            if (StateFileName == null || GridsFileName == null) {
+                Log.Error("Tried to load settings before class ready", "Load");
+                return;
+            }
+            
+            if (!SEGarden.Files.Manager.Ready()) {
+                Log.Error("Tried to load settings before ModAPI ready", "Load");
+                return;
+            }
+
+            bool stateFileExists = SEGarden.Files.Manager.Exists(StateFileName);
+            bool gridsFileExists = SEGarden.Files.Manager.Exists(GridsFileName);
+
+            if (stateFileExists && gridsFileExists) goto Load;
+            else if (!stateFileExists && !gridsFileExists) goto NewFiles;
+            else {
+                Log.Error("Failed to load settings - one file missing." +
+                "StateFileExists?" + stateFileExists +
+                "GridsFileExists?" + gridsFileExists, "Load");
+                return;
+            }
+        
+        Load:
+
+            String serializedState = null;
+            String serializedGrids = null;
+            SEGarden.Files.Manager.Read<String>(StateFileName, ref serializedState);
+            SEGarden.Files.Manager.Read<String>(GridsFileName, ref serializedGrids);
+
+            if (serializedState == null || serializedState.Length < 1)
+                return;
+
+
+            ConcealmentState state = MyAPIGateway.Utilities.
+                SerializeFromXML<ConcealmentState>(serializedState);
+
+            ConcealedEntities = new Dictionary<long, ConcealedEntity>();
+
+            foreach (ConcealedGrid grid in state.ConcealedGrids)
+                ConcealedEntities.Add(grid.EntityId, grid);
+
+
+            List<MyObjectBuilder_CubeGrid> gridsList = MyAPIGateway.Utilities.
+                SerializeFromXML<List<MyObjectBuilder_CubeGrid>>(serializedGrids);
+
+            ConcealedBuilders = new Dictionary<long, MyObjectBuilder_EntityBase>();
+
+            foreach (MyObjectBuilder_CubeGrid builder in gridsList)
+                ConcealedBuilders.Add(builder.EntityId, builder);
+
+        NewFiles:
+
+
+            Log.Trace("Finished loading", "Load");
+        }
+
+
 
         #endregion
 
