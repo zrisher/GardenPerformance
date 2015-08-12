@@ -18,6 +18,7 @@ using Interfaces = Sandbox.ModAPI.Interfaces;
 using InGame = Sandbox.ModAPI.Ingame;
 
 using SEGarden.Chat;
+using SEGarden.Logging;
 using Commands = SEGarden.Chat.Commands;
 using SEGarden.Notifications;
 
@@ -86,8 +87,8 @@ namespace GardenPerformance.Components {
         private static Dictionary<long, ConcealedEntity> ConcealedEntities = 
             new Dictionary<long, ConcealedEntity>();
 
-        private static SEGarden.Logging.Logger Log = 
-            new SEGarden.Logging.Logger("GardenPerformance.Components.Concealer");
+        private static Logger Log = 
+            new Logger("GardenPerformance.Components.Concealer");
 
         private static readonly String STATE_FILENAME_SUFFIX = "_concealment_state";
         private static readonly String GRIDS_FILENAME_SUFFIX = "_concealment_state";

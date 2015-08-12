@@ -88,7 +88,9 @@
     <Compile Include="SEGarden\Chat\Commands\Processor.cs" />
     <Compile Include="SEGarden\Chat\Commands\Tree.cs" />
     <Compile Include="SEGarden\Chat\Example.cs" />
-    <Compile Include="SEGarden\ConquestSettings.cs" />
+    <Compile Include="SEGarden\Logic\GardenEntity.cs" />
+    <Compile Include="SEGarden\Session.cs" />
+    <Compile Include="SEGarden\Records\Settings.cs" />
     <Compile Include="SEGarden\Extensions\ByteStream.cs" />
     <Compile Include="SEGarden\Extensions\CubeGrid.cs" />
     <Compile Include="SEGarden\Extensions\Entity.cs" />
@@ -99,7 +101,6 @@
     <Compile Include="SEGarden\Files\Manager.cs" />
     <Compile Include="SEGarden\Logging\Logger.cs" />
     <Compile Include="SEGarden\Logging\Severity.cs" />
-    <Compile Include="SEGarden\Logging\StaticLoggable.cs" />
     <Compile Include="SEGarden\Messaging\Messengers\ClientMessenger.cs" />
     <Compile Include="SEGarden\Messaging\Messengers\ServerMessenger.cs" />
     <Compile Include="SEGarden\Messaging\Requests\BaseRequest.cs" />
@@ -111,6 +112,7 @@
     <Compile Include="SEGarden\Messaging\Responses\SettingsResponse.cs" />
     <Compile Include="SEGarden\Notifications\Notification.cs" />
     <Compile Include="SEGarden\Text\TextFormatting.cs" />
+    <Compile Include="SEGarden\Logic\GardenSession.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="SEGarden\.git" />
@@ -119,6 +121,7 @@
   <ItemGroup>
     <Content Include="SEGarden\.gitignore" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSHARP.Targets" />
   <ProjectExtensions>
     <VisualStudio AllowExistingFolder="true" />

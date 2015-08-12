@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -34,9 +35,8 @@ namespace GardenPerformance.Components {
             base.LoadData();
 
             Logger = new SEGarden.Logging.Logger("GardenPerformance.Components");
-            /*
-            Logger.info("Starting", "Init");
-             * */
+            //Logger.info("Starting", "Init");
+
 
             CommandProcessor = new SEGarden.Chat.Commands.Processor();
             CommandProcessor.LoadData();
@@ -61,11 +61,11 @@ namespace GardenPerformance.Components {
 
         }
 
-        /*
+
 		public override void Init(MyObjectBuilder_SessionComponent sessionComponent) {
 			base.Init(sessionComponent);
 		}
-         * */
+
 
 		public override void UpdateBeforeSimulation() {
 			base.UpdateBeforeSimulation();
@@ -75,14 +75,8 @@ namespace GardenPerformance.Components {
             if (Frame % 100 == 0) {
 
                 try {
-                    /*
-                    Logger.Info("GardenPerf", "updatePoop");
 
-                    testNotice = new AlertNotification() {
-                        Text = "Successfully logged - Perf"
-                    };
-                    testNotice.Raise();
-                     * */
+
                 }
                 catch (Exception e) {
                     testNotice = new AlertNotification() {
