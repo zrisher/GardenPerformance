@@ -77,17 +77,22 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Commands.cs" />
-    <Compile Include="Components\Concealment.cs" />
-    <Compile Include="Components\EssentialsConcealer.cs" />
-    <Compile Include="Components\Session.cs" />
-    <Compile Include="GardenPerformance.cs" />
-    <Compile Include="SEGarden\Chat\ChatEvent.cs" />
-    <Compile Include="SEGarden\Chat\ChatManager.cs" />
+    <Compile Include="Concealer.cs" />
+    <Compile Include="Concealment\Common.cs" />
+    <Compile Include="Concealment\Entities\RevealedGrid.cs" />
+    <Compile Include="Concealment\Entities\RevealedEntity.cs" />
+    <Compile Include="Concealment\Entities\ConcealedEntity.cs" />
+    <Compile Include="Concealment\Entities\ConcealedGrid.cs" />
+    <Compile Include="Concealment\ConcealableSector.cs" />
+    <Compile Include="Session.cs" />
     <Compile Include="SEGarden\Chat\Commands\Command.cs" />
     <Compile Include="SEGarden\Chat\Commands\Node.cs" />
-    <Compile Include="SEGarden\Chat\Commands\Processor.cs" />
+    <Compile Include="SEGarden\Chat\CommandProcessor.cs" />
     <Compile Include="SEGarden\Chat\Commands\Tree.cs" />
-    <Compile Include="SEGarden\Chat\Example.cs" />
+    <Compile Include="SEGarden\ConquestCommands.cs" />
+    <Compile Include="SEGarden\Files\Handlers\BinaryHandler.cs" />
+    <Compile Include="SEGarden\Files\Handlers\HandlerBase.cs" />
+    <Compile Include="SEGarden\Files\Handlers\TextHandler.cs" />
     <Compile Include="SEGarden\Logic\GardenEntity.cs" />
     <Compile Include="SEGarden\Session.cs" />
     <Compile Include="SEGarden\Records\Settings.cs" />
@@ -97,8 +102,7 @@
     <Compile Include="SEGarden\Extensions\PlayerExtension.cs" />
     <Compile Include="SEGarden\Extensions\ScreenExtension.cs" />
     <Compile Include="SEGarden\Extensions\SessionExtension.cs" />
-    <Compile Include="SEGarden\Files\Handler.cs" />
-    <Compile Include="SEGarden\Files\Manager.cs" />
+    <Compile Include="SEGarden\Files\FileManager.cs" />
     <Compile Include="SEGarden\Logging\Logger.cs" />
     <Compile Include="SEGarden\Logging\Severity.cs" />
     <Compile Include="SEGarden\Messaging\Messengers\ClientMessenger.cs" />
@@ -113,6 +117,7 @@
     <Compile Include="SEGarden\Notifications\Notification.cs" />
     <Compile Include="SEGarden\Text\TextFormatting.cs" />
     <Compile Include="SEGarden\Logic\GardenSession.cs" />
+    <Compile Include="SEGarden\GardenGateway.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="SEGarden\.git" />

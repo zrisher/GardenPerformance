@@ -7,31 +7,25 @@ using Sandbox.ModAPI;
 
 using SEGarden.Chat.Commands;
 using SEGarden.Notifications;
-using GardenPerformance.Components;
+using SEGarden.Logging;
+
+using GardenPerformance.Concealment.Entities;
 
 namespace GardenPerformance {
 
     static class Commands {
 
+        private static Logger Log = new Logger("GardenPerformance.Commands");
         private static List<IMyCubeGrid> RevealedGrids;
-
 
         static Command ConcealmentConcealedCommand = new Command(
             "concealed",
             "list all concealed grids",
             "list all concealed grids....",
-            (List<String> inputs) => {
-                String result = "Concealed Grids:\n\n";
-
-                foreach (Concealment.ConcealedGrid grid in Concealment.ConcealedGrids()) {
-                    result += grid.EntityId + "\n";
-                }
-
-                return new WindowNotification() {
-                    Text = result,
-                    BigLabel = "Garden Performance",
-                    SmallLabel = "Concealed Grids"
-                };
+            (List<String> args) => {
+                Log.Trace("Running command", "ConcealmentConcealedCommand");
+                Concealer.RequestConcealedGrids();
+                return new EmptyNotification();
             }
         );
 
@@ -39,21 +33,9 @@ namespace GardenPerformance {
             "revealed",
             "list all revealed grids",
             "list all revealed grids....",
-            (List<String> inputs) => {
-                RevealedGrids = Concealment.RevealedGrids();
-                String result = RevealedGrids.Count + " Revealed Grids:\n\n";
-                int i = 0;
-
-                foreach (IMyCubeGrid grid in RevealedGrids) {
-                    i++;
-                    result += i + " - " + grid.EntityId + "\n";
-                }
-
-                return new WindowNotification() {
-                    Text = result,
-                    BigLabel = "Garden Performance",
-                    SmallLabel = "Revealed Grids"
-                };
+            (List<String> args) => {
+                Concealer.RequestRevealedGrids();
+                return new EmptyNotification();
             }
         );
 
@@ -62,8 +44,8 @@ namespace GardenPerformance {
             "conceal the Nth grid on the list",
             "Conceal the Nth grid on the list. This will store it locally and " + 
             "prepare it for....",
-            (List<String> inputs) => {
-                int n = Int32.Parse(inputs[0]);
+            (List<String> args) => {
+                int n = Int32.Parse(args[0]);
 
                 if (RevealedGrids == null) return new ChatNotification() {
                     Text = "No list of revealed grids available.",
@@ -77,7 +59,7 @@ namespace GardenPerformance {
 
                 IMyCubeGrid grid = RevealedGrids[n - 1];
 
-                Concealment.RequestConceal(grid.EntityId);
+                Concealer.RequestConceal(grid.EntityId);
 
                 return new AlertNotification() {
                     Text = "Concealing grid " + n + " - " + grid.EntityId,
@@ -93,7 +75,7 @@ namespace GardenPerformance {
             "reveal",
             "reveal the Nth grid on the list",
             "Reveal a grid....",
-            (List<String> inputs) => {
+            (List<String> args) => {
                 return new AlertNotification() {
                     Text = "Revealed grid ''",
                     DisplaySeconds = 5,
