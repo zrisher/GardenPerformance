@@ -9,9 +9,9 @@ using SEGarden.Chat.Commands;
 using SEGarden.Notifications;
 using SEGarden.Logging;
 
-using GardenPerformance.Concealment.Entities;
 
-namespace GardenPerformance {
+
+namespace GardenPerformance.Concealment {
 
     static class Commands {
 
@@ -24,7 +24,7 @@ namespace GardenPerformance {
             "list all concealed grids....",
             (List<String> args) => {
                 Log.Trace("Running command", "ConcealmentConcealedCommand");
-                Concealer.RequestConcealedGrids();
+                //ClientConcealSession.RequestConcealedGrids();
                 return new EmptyNotification();
             }
         );
@@ -34,7 +34,7 @@ namespace GardenPerformance {
             "list all revealed grids",
             "list all revealed grids....",
             (List<String> args) => {
-                Concealer.RequestRevealedGrids();
+                //ClientConcealSession.RequestRevealedGrids();
                 return new EmptyNotification();
             }
         );
@@ -59,7 +59,7 @@ namespace GardenPerformance {
 
                 IMyCubeGrid grid = RevealedGrids[n - 1];
 
-                Concealer.RequestConceal(grid.EntityId);
+                //ClientConcealSession.RequestConceal(grid.EntityId);
 
                 return new AlertNotification() {
                     Text = "Concealing grid " + n + " - " + grid.EntityId,

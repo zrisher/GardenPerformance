@@ -5,7 +5,7 @@ using System.Text;
 
 using GardenPerformance.Concealment.Common;
 
-namespace GardenPerformance.Concealment.Entities {
+namespace GardenPerformance.Concealment.Records.Entities {
 
 
     public abstract class ConcealedEntity {

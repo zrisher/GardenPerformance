@@ -26,9 +26,9 @@ using SEGarden.Notifications;
 using SEGarden.Logging;
 
 using GardenPerformance.Concealment.Common;
-using GardenPerformance.Concealment.Entities;
+using GardenPerformance.Concealment.Records.Entities;
 
-namespace GardenPerformance.Concealment {
+namespace GardenPerformance.Concealment.Records {
 
     public class ConcealableSector {
 
