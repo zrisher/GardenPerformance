@@ -8,6 +8,12 @@ using SEGarden.Extensions;
 namespace GP.Concealment.Messaging.Messages.Responses {
     class RevealedGridsResponse : Response {
 
+        //private const int Size = sizeof(long);
+
+
+        public RevealedGridsResponse() :
+            base((ushort)MessageType.RevealedGridsResponse) { }
+
         public static RevealedGridsResponse FromBytes(byte[] bytes) {
             //VRage.ByteStream stream = new VRage.ByteStream(bytes, bytes.Length);
 
@@ -16,21 +22,6 @@ namespace GP.Concealment.Messaging.Messages.Responses {
 
             return request;
         }
-
-        //private const int Size = sizeof(long);
-
-        /*
-        public ConcealedGridsRequest() :
-            base((ushort)MessageDomains.ConcealServer, (ushort)MessageType.ConcealedGridsRequest) { }
-        */
-
-
-        protected override ushort TypeId {
-            get { return (ushort)MessageType.RevealedGridsResponse; } 
-        }
-
-
-        public long EntityId; // { get; private set; }
 
 
         protected override byte[] ToBytes() {
@@ -41,7 +32,6 @@ namespace GP.Concealment.Messaging.Messages.Responses {
             //return stream.Data;
             return new byte[0];
         }
-
 
 
     }

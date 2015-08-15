@@ -6,7 +6,7 @@ using System.Text;
 using SEGarden.Extensions;
 
 namespace GP.Concealment.Messaging.Messages.Requests {
-    class ConcealRequest : SEGarden.Messaging.MessageBase {
+    class ConcealRequest : Request {
 
         public static ConcealRequest FromBytes(byte[] bytes) {
             VRage.ByteStream stream = new VRage.ByteStream(bytes, bytes.Length);
@@ -19,17 +19,10 @@ namespace GP.Concealment.Messaging.Messages.Requests {
 
         private const int Size = sizeof(long);
 
-
-        protected override ushort TypeId {
-            get { return (ushort)MessageType.ConcealRequest; } 
-        }
-
-        protected override ushort DomainId {
-            get { return MessageDomain.ConcealServer; }
-        }
-
         public long EntityId;// { get; private set; }
 
+        public ConcealRequest() :
+            base((ushort)MessageType.ConcealRequest) { }
 
         protected override byte[] ToBytes() {
             VRage.ByteStream stream = new VRage.ByteStream(Size);

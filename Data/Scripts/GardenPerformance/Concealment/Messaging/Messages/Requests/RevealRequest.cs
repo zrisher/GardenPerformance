@@ -6,7 +6,7 @@ using System.Text;
 using SEGarden.Extensions;
 
 namespace GP.Concealment.Messaging.Messages.Requests {
-    class RevealRequest : SEGarden.Messaging.MessageBase {
+    class RevealRequest : Request {
 
         private const int Size = sizeof(long);
 
@@ -19,13 +19,8 @@ namespace GP.Concealment.Messaging.Messages.Requests {
             return request;
         }
 
-        protected override ushort TypeId {
-            get { return (ushort)MessageType.RevealRequest; }
-        }
-
-        protected override ushort DomainId {
-            get { return MessageDomain.ConcealServer; }
-        }
+        public RevealRequest() :
+            base((ushort)MessageType.RevealRequest) { }
 
 
         public long EntityId;// { get; private set; }

@@ -6,7 +6,7 @@ using System.Text;
 using SEGarden.Extensions;
 
 namespace GP.Concealment.Messaging.Messages.Requests {
-    class RevealedGridsRequest : SEGarden.Messaging.MessageBase {
+    class RevealedGridsRequest : Request {
 
         public static RevealedGridsRequest FromBytes(byte[] bytes) {
             //VRage.ByteStream stream = new VRage.ByteStream(bytes, bytes.Length);
@@ -25,13 +25,8 @@ namespace GP.Concealment.Messaging.Messages.Requests {
         */
 
 
-        protected override ushort TypeId {
-            get { return (ushort)MessageType.RevealedGridsRequest; } 
-        }
-
-        protected override ushort DomainId {
-            get { return MessageDomain.ConcealServer; }
-        }
+        public RevealedGridsRequest() :
+            base((ushort)MessageType.RevealedGridsRequest) { }
 
         public long EntityId; // { get; private set; }
 

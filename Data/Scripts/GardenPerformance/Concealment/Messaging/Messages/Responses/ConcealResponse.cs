@@ -7,9 +7,10 @@ using System.Text;
 namespace GP.Concealment.Messaging.Messages.Responses {
     class ConcealResponse : Response {
 
-        protected override ushort TypeId {
-            get { return (ushort)MessageType.ConcealResponse; }
-        }
+        private const int SizeInBytes = sizeof(long);
+
+        public ConcealResponse() :
+            base((ushort)MessageType.ConcealResponse) { }
 
         public static ConcealResponse FromBytes(byte[] bytes) {
             return new ConcealResponse();
