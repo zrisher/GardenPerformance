@@ -16,6 +16,8 @@ using SEGarden.Logic;
 using SEGarden.Logic.Common;
 //using SEGarden.Notifications;
 
+using GardenPerformance.Concealment.Messaging.Handlers;
+
 namespace GardenPerformance.Concealment.Sessions {
 
     class ClientConcealSession {
@@ -23,9 +25,11 @@ namespace GardenPerformance.Concealment.Sessions {
         private static Logger Log = 
             new Logger("GardenPerformance.Concealment.Sessions.ClientConcealSession");
 
+        public static ClientMessageHandler Messenger;
 
         public void Initialize() {
             GardenGateway.Commands.addCommands(Commands.FullTree);
+            Messenger = new ClientMessageHandler();
         }
 
         public void Terminate() {

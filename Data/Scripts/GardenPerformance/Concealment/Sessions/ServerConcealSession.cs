@@ -30,7 +30,7 @@ using GardenPerformance.Concealment;
 using GardenPerformance.Concealment.Common;
 using GardenPerformance.Concealment.Records;
 using GardenPerformance.Concealment.Records.Entities;
-using GardenPerformance.Concealment.Messaging.Messengers;
+using GardenPerformance.Concealment.Messaging.Handlers;
 
 namespace GardenPerformance.Concealment.Sessions {
 
@@ -39,11 +39,10 @@ namespace GardenPerformance.Concealment.Sessions {
         private static Logger Log =
             new Logger("GardenPerformance.Concealment.Sessions.ServerConcealSession");
 
-        private const ushort CONCEAL_MESSAGE_ID = 4747;
 
         private String WorldName;
         private ConcealableSector Sector;
-        private ServerMessenger Messenger = new ServerMessenger(CONCEAL_MESSAGE_ID);
+        private ServerMessageHandler Messenger = new ServerMessageHandler();
 
         public void Initialize() {
             //DebugWorldNames();

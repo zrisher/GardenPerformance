@@ -10,6 +10,9 @@ using SEGarden.Notifications;
 using SEGarden.Logging;
 
 
+using GardenPerformance.Concealment.Messaging.Messages;
+
+
 
 namespace GardenPerformance.Concealment {
 
@@ -24,7 +27,7 @@ namespace GardenPerformance.Concealment {
             "list all concealed grids....",
             (List<String> args) => {
                 Log.Trace("Running command", "ConcealmentConcealedCommand");
-                //ClientConcealSession.RequestConcealedGrids();
+                RequestConcealedGrids();
                 return new EmptyNotification();
             }
         );
@@ -113,6 +116,22 @@ namespace GardenPerformance.Concealment {
             0,
             new List<Node> { ConcealmentTree }
         );
+
+
+        public static void RequestConcealedGrids() {
+            Log.Info("Requesting Concealed Grids", "RequestConcealedGrids");
+
+            /*
+            MessageBase request = new MessageBase() {
+
+            };
+
+            request.Send();
+             * */
+        }
+
+
+
 
     }
 }
