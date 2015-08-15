@@ -19,30 +19,30 @@ namespace GP.Concealment.Messaging.Handlers {
         public ServerMessageHandler() : base((ushort)MessageDomain.ConcealServer) { }
 
         public override void HandleMessage(ushort messageTypeId, byte[] body,
-            long senderId, SEGarden.Logic.Common.RunLocation sourceType) {
+            ulong senderSteamId, SEGarden.Logic.Common.RunLocation sourceType) {
 
-                Log.Trace("Received message typeId " + messageTypeId, "HandleMessage");
+            Log.Trace("Received message typeId " + messageTypeId, "HandleMessage");
             MessageType messageType = (MessageType)messageTypeId;
             Log.Trace("Received message type " + messageType, "HandleMessage");
 
             switch (messageType) {
                 case MessageType.ConcealedGridsRequest:
-                    ReplyToConcealedGridsRequest(body, senderId);
+                    ReplyToConcealedGridsRequest(body, senderSteamId);
                     break;
                 case MessageType.ConcealRequest:
-                    ReceiveConcealRequest(body, senderId);
+                    ReceiveConcealRequest(body, senderSteamId);
                     break;
                 case MessageType.RevealedGridsRequest:
-                    ReceiveRevealedGridsRequest(body, senderId);
+                    ReceiveRevealedGridsRequest(body, senderSteamId);
                     break;
                 case MessageType.RevealRequest:
-                    ReceiveRevealRequest(body, senderId);
+                    ReceiveRevealRequest(body, senderSteamId);
                     break;
             }
 
         }
 
-        private void ReplyToConcealedGridsRequest(byte[] body, long senderId) {
+        private void ReplyToConcealedGridsRequest(byte[] body, ulong senderId) {
             Log.Trace("Receiving Concealed Grids Request", 
                 "ReceiveConcealedGridsRequest");
 
@@ -56,7 +56,7 @@ namespace GP.Concealment.Messaging.Handlers {
             response.SendToPlayer(senderId);
         }
 
-        private void ReceiveRevealedGridsRequest(byte[] body, long senderId) {
+        private void ReceiveRevealedGridsRequest(byte[] body, ulong senderId) {
             Log.Trace("Receiving Revealed Grids Request",
                 "ReceiveRevealedGridsRequest");
 
@@ -70,7 +70,7 @@ namespace GP.Concealment.Messaging.Handlers {
             response.SendToPlayer(senderId);
         }
 
-        private void ReceiveConcealRequest(byte[] body, long senderId) {
+        private void ReceiveConcealRequest(byte[] body, ulong senderId) {
             Log.Trace("Receiving Conceal Request", "ReceiveConcealRequest");
 
             ConcealRequest request = ConcealRequest.FromBytes(body);
@@ -83,7 +83,7 @@ namespace GP.Concealment.Messaging.Handlers {
 
         }
 
-        private void ReceiveRevealRequest(byte[] body, long senderId) {
+        private void ReceiveRevealRequest(byte[] body, ulong senderId) {
             Log.Trace("Receiving Reveal Request", "ReceiveRevealRequest");
 
             RevealRequest request = RevealRequest.FromBytes(body);

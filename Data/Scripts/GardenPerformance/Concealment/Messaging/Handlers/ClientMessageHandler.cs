@@ -18,8 +18,8 @@ namespace GP.Concealment.Messaging.Handlers {
 
         public ClientMessageHandler() : base((ushort)MessageDomain.ConcealClient) { }
 
-        public override void HandleMessage(ushort messageTypeId, byte[] body, 
-            long senderId, SEGarden.Logic.Common.RunLocation sourceType) {
+        public override void HandleMessage(ushort messageTypeId, byte[] body,
+            ulong senderSteamId, SEGarden.Logic.Common.RunLocation sourceType) {
 
             Log.Trace("Received message typeId " + messageTypeId, "HandleMessage");
             MessageType messageType = (MessageType)messageTypeId;

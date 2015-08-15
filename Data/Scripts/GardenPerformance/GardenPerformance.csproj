@@ -107,7 +107,6 @@
     <Compile Include="SEGarden\Logic\GardenLogicBase.cs" />
     <Compile Include="SEGarden\Logic\LogicManager.cs" />
     <Compile Include="SEGarden\Logic\ResourceManager.cs" />
-    <Compile Include="SEGarden\Messaging\Archive\Handlers\MessageHandlerBase.cs" />
     <Compile Include="SEGarden\Messaging\MessageBase.cs" />
     <Compile Include="SEGarden\Messaging\MessageManager.cs" />
     <Compile Include="SEGarden\Messaging\MessageHandlerBase.cs" />
@@ -134,15 +133,8 @@
     <Compile Include="SEGarden\Files\FileManager.cs" />
     <Compile Include="SEGarden\Logging\Logger.cs" />
     <Compile Include="SEGarden\Logging\Severity.cs" />
-    <Compile Include="SEGarden\Messaging\Archive\Messengers\ClientMessenger.cs" />
-    <Compile Include="SEGarden\Messaging\Archive\Messengers\ServerMessenger.cs" />
     <Compile Include="SEGarden\Messaging\MessageContainer.cs" />
-    <Compile Include="SEGarden\Messaging\Archive\Requests\FleetRequest.cs" />
-    <Compile Include="SEGarden\Messaging\Archive\Requests\SettingsRequest.cs" />
-    <Compile Include="SEGarden\Messaging\Archive\Responses\BaseResponse.cs" />
-    <Compile Include="SEGarden\Messaging\Archive\Responses\DialogResponse.cs" />
-    <Compile Include="SEGarden\Messaging\Archive\Responses\NotificationResponse.cs" />
-    <Compile Include="SEGarden\Messaging\Archive\Responses\SettingsResponse.cs" />
+    <Compile Include="SEGarden\Messaging\Archive\BaseResponse.cs" />
     <Compile Include="SEGarden\Notifications\Notification.cs" />
     <Compile Include="SEGarden\Extensions\TextFormatting.cs" />
     <Compile Include="SEGarden\Logic\GardenSession.cs" />
