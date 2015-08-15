@@ -28,7 +28,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <RootNamespace>GardenPerformance</RootNamespace>
+    <RootNamespace>GP</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
@@ -77,22 +77,31 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Concealment\Commands.cs" />
-    <Compile Include="Concealment\Messaging\Common.cs" />
+    <Compile Include="Concealment\Messaging\MessageDomain.cs" />
+    <Compile Include="Concealment\Messaging\MessageType.cs" />
     <Compile Include="Concealment\Messaging\Handlers\ServerMessageHandler.cs" />
     <Compile Include="Concealment\Messaging\Handlers\ClientMessageHandler.cs" />
-    <Compile Include="Concealment\Messaging\Messages\RevealResponse.cs" />
-    <Compile Include="Concealment\Messaging\Messages\RevealRequest.cs" />
-    <Compile Include="Concealment\Messaging\Messages\ConcealResponse.cs" />
-    <Compile Include="Concealment\Messaging\Messages\ConcealRequest.cs" />
-    <Compile Include="Concealment\Common.cs" />
+    <Compile Include="Concealment\Messaging\Messages\Responses\ConcealedGridsResponse.cs" />
+    <Compile Include="Concealment\Messaging\Messages\Responses\Response.cs" />
+    <Compile Include="Concealment\Messaging\Messages\Requests\Request.cs" />
+    <Compile Include="Concealment\Messaging\Messages\Responses\RevealedGridsResponse.cs" />
+    <Compile Include="Concealment\Messaging\Messages\Requests\RevealedGridsRequest.cs" />
+    <Compile Include="Concealment\Messaging\Messages\Requests\ConcealedGridsRequest.cs" />
+    <Compile Include="Concealment\Messaging\Messages\Responses\RevealResponse.cs" />
+    <Compile Include="Concealment\Messaging\Messages\Requests\RevealRequest.cs" />
+    <Compile Include="Concealment\Messaging\Messages\Responses\ConcealResponse.cs" />
+    <Compile Include="Concealment\Messaging\Messages\Requests\ConcealRequest.cs" />
+    <Compile Include="Concealment\Records\Entities\Common.cs" />
     <Compile Include="Concealment\Records\Entities\RevealedGrid.cs" />
     <Compile Include="Concealment\Records\Entities\RevealedEntity.cs" />
     <Compile Include="Concealment\Records\Entities\ConcealedEntity.cs" />
     <Compile Include="Concealment\Records\Entities\ConcealedGrid.cs" />
     <Compile Include="Concealment\Records\ConcealableSector.cs" />
+    <Compile Include="Concealment\Session.cs" />
     <Compile Include="Concealment\Sessions\ServerConcealSession.cs" />
     <Compile Include="Concealment\Sessions\ClientConcealSession.cs" />
     <Compile Include="SEGarden\Extensions\IMyFaction.cs" />
+    <Compile Include="SEGarden\Extensions\VRageMath\Vector3D.cs" />
     <Compile Include="SEGarden\Logging\LogManager.cs" />
     <Compile Include="SEGarden\Logic\Common.cs" />
     <Compile Include="SEGarden\Logic\GardenLogicBase.cs" />
@@ -103,6 +112,7 @@
     <Compile Include="SEGarden\Messaging\MessageManager.cs" />
     <Compile Include="SEGarden\Messaging\MessageHandlerBase.cs" />
     <Compile Include="SEGarden\Messaging\Messaging.cs" />
+    <Compile Include="SEGarden\Notes.cs" />
     <Compile Include="SEGarden\Records\RecordManager.cs" />
     <Compile Include="Session.cs" />
     <Compile Include="SEGarden\Chat\Commands\Command.cs" />

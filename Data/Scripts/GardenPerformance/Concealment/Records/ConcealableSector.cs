@@ -25,10 +25,9 @@ using SEGarden.Notifications;
 
 using SEGarden.Logging;
 
-using GardenPerformance.Concealment.Common;
-using GardenPerformance.Concealment.Records.Entities;
+using GP.Concealment.Records.Entities;
 
-namespace GardenPerformance.Concealment.Records {
+namespace GP.Concealment.Records {
 
     public class ConcealableSector {
 
@@ -167,15 +166,15 @@ namespace GardenPerformance.Concealment.Records {
             }
 
             State = loaded;
-            Log.Info("Concealed Sector State successfully loaded", "LoadState");
+            Log.Trace("Concealed Sector State successfully loaded", "LoadState");
         }
 
         private void LoadBuilders() {
-            Log.Info("Loading Builders for sector from " + State.SectorName, "LoadBuilders");
+            Log.Trace("Loading Builders for sector from " + State.SectorName, "LoadBuilders");
 
             LoadGridBuilders();
 
-            Log.Info("Finished loading builders", "LoadBuilders");
+            Log.Trace("Finished loading builders", "LoadBuilders");
         }
 
         private void LoadGridBuilders() {

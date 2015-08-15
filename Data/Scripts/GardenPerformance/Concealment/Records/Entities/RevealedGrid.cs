@@ -6,10 +6,7 @@ using System.Text;
 using Sandbox.ModAPI;
 using VRage.ModAPI;
 
-using GardenPerformance.Concealment.Common;
-
-
-namespace GardenPerformance.Concealment.Records.Entities {
+namespace GP.Concealment.Records.Entities {
 
     public class RevealedGrid : RevealedEntity {
 

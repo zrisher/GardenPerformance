@@ -26,13 +26,12 @@ using SEGarden.Logic;
 using SEGarden.Logic.Common;
 //using SEGarden.Notifications;
 
-using GardenPerformance.Concealment;
-using GardenPerformance.Concealment.Common;
-using GardenPerformance.Concealment.Records;
-using GardenPerformance.Concealment.Records.Entities;
-using GardenPerformance.Concealment.Messaging.Handlers;
+using GP.Concealment;
+using GP.Concealment.Records;
+using GP.Concealment.Records.Entities;
+using GP.Concealment.Messaging.Handlers;
 
-namespace GardenPerformance.Concealment.Sessions {
+namespace GP.Concealment.Sessions {
 
     class ServerConcealSession {
 
@@ -45,6 +44,7 @@ namespace GardenPerformance.Concealment.Sessions {
         private ServerMessageHandler Messenger = new ServerMessageHandler();
 
         public void Initialize() {
+            Log.Trace("Initializing Server Conceal Session", "Initialize");
             //DebugWorldNames();
 
             // TODO: Load via static method and stop init if fail
@@ -56,12 +56,15 @@ namespace GardenPerformance.Concealment.Sessions {
 
             MyAPIGateway.Entities.OnEntityAdd += Sector.EntityAdded;
             MyAPIGateway.Entities.OnEntityRemove += Sector.EntityRemoved;
+            Log.Trace("Finished Initializing Server Conceal Session", "Initialize");
         }
 
         public void Terminate() {
+            Log.Trace("Terminating Server Conceal Session", "Initialize");
             //Sector.Save();
             MyAPIGateway.Entities.OnEntityAdd -= Sector.EntityAdded;
             MyAPIGateway.Entities.OnEntityRemove -= Sector.EntityRemoved;
+            Log.Trace("Finished Terminating Server Conceal Session", "Initialize");
         }
 
 

@@ -9,40 +9,45 @@ using SEGarden.Chat.Commands;
 using SEGarden.Notifications;
 using SEGarden.Logging;
 
+using GP.Concealment.Records.Entities;
+using GP.Concealment.Messaging.Messages.Requests;
 
-using GardenPerformance.Concealment.Messaging.Messages;
 
-
-
-namespace GardenPerformance.Concealment {
+namespace GP.Concealment {
 
     static class Commands {
 
         private static Logger Log = new Logger("GardenPerformance.Commands");
-        private static List<IMyCubeGrid> RevealedGrids;
 
-        static Command ConcealmentConcealedCommand = new Command(
+        static Command ConcealedCommand = new Command(
             "concealed",
             "list all concealed grids",
             "list all concealed grids....",
             (List<String> args) => {
-                Log.Trace("Running command", "ConcealmentConcealedCommand");
-                RequestConcealedGrids();
+                Log.Trace("Requesting Concealed Grids", "ConcealedCommand");
+
+                ConcealedGridsRequest request = new ConcealedGridsRequest();
+                request.SendToServer();
+
                 return new EmptyNotification();
             }
         );
 
-        static Command ConcealmentRevealedCommand = new Command(
+        static Command RevealedCommand = new Command(
             "revealed",
             "list all revealed grids",
             "list all revealed grids....",
             (List<String> args) => {
-                //ClientConcealSession.RequestRevealedGrids();
+                Log.Trace("Requesting Revealed Grids", "RevealedCommand");
+
+                RevealedGridsRequest request = new RevealedGridsRequest();
+                request.SendToServer();
+
                 return new EmptyNotification();
             }
         );
 
-        static Command ConcealmentConcealCommand = new Command(
+        static Command ConcealCommand = new Command(
             "conceal",
             "conceal the Nth grid on the list",
             "Conceal the Nth grid on the list. This will store it locally and " + 
@@ -50,40 +55,59 @@ namespace GardenPerformance.Concealment {
             (List<String> args) => {
                 int n = Int32.Parse(args[0]);
 
-                if (RevealedGrids == null) return new ChatNotification() {
+                List<RevealedGrid> revealedGrids = Session.Client.RevealedGrids;
+                
+                if (revealedGrids == null) return new ChatNotification() {
                     Text = "No list of revealed grids available.",
                     Sender = "GP"
                 };
 
-                if (n < 1 || n > RevealedGrids.Count) return new ChatNotification() {
+                if (n < 1 || n > revealedGrids.Count) return new ChatNotification() {
                     Text = "Incorrect index for list",
                     Sender = "GP"
                 };
 
-                IMyCubeGrid grid = RevealedGrids[n - 1];
+                RevealedGrid grid = revealedGrids[n - 1];
+                long entityId = grid.EntityId;
 
-                //ClientConcealSession.RequestConceal(grid.EntityId);
+                Log.Trace("Requesting Conceal Grid " + entityId, "ConcealCommand");
+                ConcealRequest request = new ConcealRequest { EntityId = entityId };
+                request.SendToServer();
 
-                return new AlertNotification() {
-                    Text = "Concealing grid " + n + " - " + grid.EntityId,
-                    DisplaySeconds = 5,
-                    Color = Sandbox.Common.MyFontEnum.White,
-                };
+                return null;
+
             },
             new List<String> { "N" },
             0
         );
 
-        static Command ConcealmentRevealCommand = new Command(
+        static Command RevealCommand = new Command(
             "reveal",
             "reveal the Nth grid on the list",
             "Reveal a grid....",
             (List<String> args) => {
-                return new AlertNotification() {
-                    Text = "Revealed grid ''",
-                    DisplaySeconds = 5,
-                    Color = Sandbox.Common.MyFontEnum.White,
+                int n = Int32.Parse(args[0]);
+
+                List<ConcealedGrid> grids = Session.Client.ConcealedGrids;
+
+                if (grids == null) return new ChatNotification() {
+                    Text = "No list of concealed grids available.",
+                    Sender = "GP"
                 };
+
+                if (n < 1 || n > grids.Count) return new ChatNotification() {
+                    Text = "Incorrect index for list",
+                    Sender = "GP"
+                };
+
+                ConcealedGrid grid = grids[n - 1];
+                long entityId = grid.EntityId;
+
+                Log.Trace("Requesting Reveal Grid " + entityId, "RevealCommand");
+                RevealRequest request = new RevealRequest { EntityId = entityId };
+                request.SendToServer();
+
+                return null;
             },
             new List<String> { "N" },
             0
@@ -101,10 +125,10 @@ namespace GardenPerformance.Concealment {
             "  * Not providing spawn points for players",
             0,
             new List<Node> {
-                ConcealmentConcealedCommand,
-                ConcealmentRevealCommand,
-                ConcealmentRevealedCommand,
-                ConcealmentConcealCommand,
+                ConcealedCommand,
+                RevealCommand,
+                RevealedCommand,
+                ConcealCommand,
             }
         );
 
@@ -117,21 +141,6 @@ namespace GardenPerformance.Concealment {
             new List<Node> { ConcealmentTree }
         );
 
-
-        public static void RequestConcealedGrids() {
-            Log.Info("Requesting Concealed Grids", "RequestConcealedGrids");
-
-            /*
-            MessageBase request = new MessageBase() {
-
-            };
-
-            request.Send();
-             * */
-        }
-
-
-
-
     }
+
 }

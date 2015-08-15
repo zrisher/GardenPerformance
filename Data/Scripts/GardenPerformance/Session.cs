@@ -16,77 +16,40 @@ using SEGarden.Logic;
 using SEGarden.Logic.Common;
 //using SEGarden.Notifications;
 
-using GardenPerformance.Concealment.Sessions;
+using GP;
+//using GP.Concealment.Sessions;
 
-namespace GardenPerformance {
-
-    // TODO: Server vs Client vs Singleplayer logic
-    // various classes for each? Handle it all from here?
-    // Until GardenSession is managed by update manager, we'd have to have 3 
-    // registered sessions if we wanted to subclass it. So manage from one for now
-    // TODO: Message processing in SEGarden
-
+namespace GP {
+    
     /// <summary>
-    /// LoadData, UnloadData, Update Before/After/Simulate, UpdatingStopped
+    /// The main session for GardenPerformance.
+    /// Initializes, updates, and terminates all sub sessions.
+    /// 
+    /// This is started by SE as a Session Logic Component,
+    /// but GardenSession ensures its not initialized until SEGarden is.
     /// </summary>
 	[Sandbox.Common.MySessionComponentDescriptor(Sandbox.Common.MyUpdateOrder.BeforeSimulation)]
     class Session : GardenSession {
 
-        private static Logger Log = new Logger("GardenPerformance.Components");
+        private static Logger Log = new Logger("GardenPerformance.Session");
 
-        protected override RunLocation RunOn { get { return RunLocation.Any; } }
+        public static readonly String Version = "0.3.5";
 
-        private ClientConcealSession ClientConcealSession;
-        private ServerConcealSession ServerConcealSession;
+        public Session() : base(RunLocation.Any) { }
 
         protected override void Initialize() {
             base.Initialize();
-
-            Log.Trace("Starting Conceal Sessions", "Initialize");
-
-            switch (RunningOn) {
-                case RunLocation.Client:
-                    ClientConcealSession = new ClientConcealSession();
-                    ClientConcealSession.Initialize();
-                    break;
-                case RunLocation.Server:
-                    ServerConcealSession = new ServerConcealSession();
-                    ServerConcealSession.Initialize();
-                    break;
-                case RunLocation.Singleplayer:
-                    ServerConcealSession = new ServerConcealSession();
-                    ServerConcealSession.Initialize();
-                    ClientConcealSession = new ClientConcealSession();
-                    ClientConcealSession.Initialize();
-                    break;
-            }
-
-            Log.Trace("Finished Starting Conceal Sessions", "Initialize");
+            Log.Trace("Initializing Garden Performance v" + Version, "Initialize");
+            Concealment.Session.Initialize(RunningOn);
+            Log.Trace("Finished Initializing Garden Performance", "Initialize");
         }
 
         protected override void Terminate() {
             base.Terminate();
+            Log.Trace("Terminating Garden Performance", "Initialize");
+            Concealment.Session.Terminate();
+            Log.Trace("Finished Terminating Garden Performance", "Initialize");
 
-            Log.Trace("Terminating Conceal Sessions", "Initialize");
-
-            switch (RunningOn) {
-                case RunLocation.Client:
-                    ClientConcealSession.Terminate();
-                    ClientConcealSession = null;
-                    break;
-                case RunLocation.Server:
-                    ServerConcealSession.Terminate();
-                    ServerConcealSession = null;
-                    break;
-                case RunLocation.Singleplayer:
-                    ServerConcealSession.Terminate();
-                    ServerConcealSession = null;
-                    ClientConcealSession.Terminate();
-                    ClientConcealSession = null;
-                    break;
-            }
-
-            Log.Trace("Finished Terminating Conceal Sessions", "Initialize");
         }
 
     }

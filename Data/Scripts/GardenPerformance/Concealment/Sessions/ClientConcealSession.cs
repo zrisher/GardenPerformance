@@ -16,9 +16,9 @@ using SEGarden.Logic;
 using SEGarden.Logic.Common;
 //using SEGarden.Notifications;
 
-using GardenPerformance.Concealment.Messaging.Handlers;
+using GP.Concealment.Messaging.Handlers;
 
-namespace GardenPerformance.Concealment.Sessions {
+namespace GP.Concealment.Sessions {
 
     class ClientConcealSession {
 
@@ -27,13 +27,19 @@ namespace GardenPerformance.Concealment.Sessions {
 
         public static ClientMessageHandler Messenger;
 
+        public List<Records.Entities.RevealedGrid> RevealedGrids;
+        public List<Records.Entities.ConcealedGrid> ConcealedGrids;
+
         public void Initialize() {
+            Log.Trace("Initializing Client Conceal Session", "Initialize");
             GardenGateway.Commands.addCommands(Commands.FullTree);
             Messenger = new ClientMessageHandler();
+            Log.Trace("Finished Initializing Client Conceal Session", "Initialize");
         }
 
         public void Terminate() {
-
+            Log.Trace("Terminating Client Conceal Session", "Initialize");
+            Log.Trace("Finished Initializing Client Conceal Session", "Initialize");
         }
 
         public static void DebugWorldNames() {

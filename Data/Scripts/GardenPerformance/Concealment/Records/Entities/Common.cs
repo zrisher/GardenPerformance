@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace GardenPerformance.Concealment.Common {
+namespace GP.Concealment.Records.Entities {
 
     public enum EntityType { 
         Unknown,
@@ -15,7 +15,7 @@ namespace GardenPerformance.Concealment.Common {
     }
 
     [FlagsAttribute]
-    public enum Concealability : short {
+    public enum Concealability : ushort {
         Concealable = 0,
         Controlled = 1,
         NearControlled = 2,
@@ -26,7 +26,7 @@ namespace GardenPerformance.Concealment.Common {
     };
 
     [FlagsAttribute]
-    public enum Revealability : short {
+    public enum Revealability : ushort {
         Revealable = 0,
         Blocked = 1,
     };

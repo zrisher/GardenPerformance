@@ -4,15 +4,11 @@ using System.Linq;
 using System.Text;
 
 
-namespace GardenPerformance.Concealment.Messaging.Messages {
-    class ConcealResponse : SEGarden.Messaging.MessageBase {
+namespace GP.Concealment.Messaging.Messages.Responses {
+    class ConcealResponse : Response {
 
         protected override ushort TypeId {
-            get { return (ushort)MessageType.ConcealRequest; }
-        }
-
-        protected override ushort DomainId {
-            get { return MessageDomains.ConcealClient; }
+            get { return (ushort)MessageType.ConcealResponse; }
         }
 
         public static ConcealResponse FromBytes(byte[] bytes) {
