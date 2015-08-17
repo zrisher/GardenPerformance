@@ -11,32 +11,16 @@ namespace GP.Concealment.Messaging.Messages.Requests {
 
         static Logger Log = new Logger("GP.Concealment.ConcealedGridsRequest");
 
-        //private const int Size = sizeof(long);
+        public static ConcealedGridsRequest FromBytes(byte[] bytes) {
+            return new ConcealedGridsRequest();
+        }
 
         public ConcealedGridsRequest() :
             base((ushort)MessageType.ConcealedGridsRequest) { }
 
-
-        public static ConcealedGridsRequest FromBytes(byte[] bytes) {
-            //VRage.ByteStream stream = new VRage.ByteStream(bytes, bytes.Length);
-
-            ConcealedGridsRequest request = new ConcealedGridsRequest();
-            //request.EntityId = stream.getLong();
-
-            return request;
-        }
-
-
         protected override byte[] ToBytes() {
-            //VRage.ByteStream stream = new VRage.ByteStream(Size);
-
-            //stream.addLong(EntityId);
-
-            //return stream.Data;
             return new byte[0];
         }
-
-
 
     }
 }

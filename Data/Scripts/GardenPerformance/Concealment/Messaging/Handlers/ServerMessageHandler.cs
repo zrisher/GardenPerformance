@@ -46,13 +46,16 @@ namespace GP.Concealment.Messaging.Handlers {
             Log.Trace("Receiving Concealed Grids Request", 
                 "ReceiveConcealedGridsRequest");
 
+            Log.Trace("Deserializing request", "ReceiveConcealedGridsRequest");
             // nothing to read, but doing this anyway to test
             ConcealedGridsRequest request = ConcealedGridsRequest.FromBytes(body);
 
-
+            Log.Trace("Preparing response", "ReceiveConcealedGridsRequest");
             ConcealedGridsResponse response = new ConcealedGridsResponse {
-                // TODO: add server's concealed grids
+                ConcealedGrids = Session.Server.Sector.ConcealedGridsList()
             };
+
+            Log.Trace("Sending to player", "ReceiveConcealedGridsRequest");
             response.SendToPlayer(senderId);
         }
 
@@ -64,7 +67,7 @@ namespace GP.Concealment.Messaging.Handlers {
             RevealedGridsRequest request = RevealedGridsRequest.FromBytes(body);
 
             RevealedGridsResponse response = new RevealedGridsResponse() {
-                // TODO: add server's revealed grids
+                RevealedGrids = Session.Server.Sector.RevealedGridsList()
             };
 
             response.SendToPlayer(senderId);
@@ -74,9 +77,15 @@ namespace GP.Concealment.Messaging.Handlers {
             Log.Trace("Receiving Conceal Request", "ReceiveConcealRequest");
 
             ConcealRequest request = ConcealRequest.FromBytes(body);
+            bool success = false;
+
+            if (Session.Server.CanConceal(request.EntityId)) {
+                success = Session.Server.QueueConceal(request.EntityId);
+            }
 
             ConcealResponse response = new ConcealResponse() {
-                // TODO: tell them if we are going to conceal it
+                EntityId = request.EntityId,
+                Success = success
             };
 
             response.SendToPlayer(senderId);
@@ -87,13 +96,21 @@ namespace GP.Concealment.Messaging.Handlers {
             Log.Trace("Receiving Reveal Request", "ReceiveRevealRequest");
 
             RevealRequest request = RevealRequest.FromBytes(body);
+            bool success = false;
+
+            if (Session.Server.CanReveal(request.EntityId)) {
+                success = Session.Server.QueueReveal(request.EntityId);
+                Log.Trace("Successfully revealed", "ReceiveRevealRequest");
+            }
 
             RevealResponse response = new RevealResponse() {
-                // TODO: tell them if we are going to reveal it
+                EntityId = request.EntityId,
+                Success = success
             };
 
-            response.SendToPlayer(senderId);
+            Log.Trace("Sending response success ? " + response.Success, "ReceiveRevealRequest");
 
+            response.SendToPlayer(senderId);
         }
 
     }

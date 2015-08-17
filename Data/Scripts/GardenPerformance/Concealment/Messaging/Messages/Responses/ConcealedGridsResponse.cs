@@ -5,39 +5,41 @@ using System.Text;
 
 using SEGarden.Extensions;
 
+using GP.Concealment.Records.Entities;
+
 namespace GP.Concealment.Messaging.Messages.Responses {
 
     class ConcealedGridsResponse : Response {
 
-        private const int SizeInBytes = sizeof(long);
+        public static ConcealedGridsResponse FromBytes(byte[] bytes) {
+            VRage.ByteStream stream = new VRage.ByteStream(bytes, bytes.Length);
+            ConcealedGridsResponse response = new ConcealedGridsResponse();
 
-        public List<Records.Entities.ConcealedGrid> ConcealedGrids =
-            new List<Records.Entities.ConcealedGrid>();
+            ConcealableGrid grid;
+            ushort count = stream.getUShort();
+            for (int i = 0; i < count; i++) {
+                grid = new ConcealableGrid();
+                grid.RemoveFromByteStream(stream);
+                response.ConcealedGrids.Add(grid);
+            }
+
+            return response;
+        }
+
+        public List<ConcealableGrid> ConcealedGrids = new List<ConcealableGrid>();
 
         public ConcealedGridsResponse() :
             base((ushort)MessageType.ConcealedGridsResponse) { }
 
-        public static ConcealedGridsResponse FromBytes(byte[] bytes) {
-            //VRage.ByteStream stream = new VRage.ByteStream(bytes, bytes.Length);
-
-            ConcealedGridsResponse request = new ConcealedGridsResponse();
-
-            // TODO: Deserialize concealed grids
-
-            //request.EntityId = stream.getLong();
-
-            return request;
-        }
-
         protected override byte[] ToBytes() {
-            VRage.ByteStream stream = new VRage.ByteStream(SizeInBytes);
+            VRage.ByteStream stream = new VRage.ByteStream(32, true);
 
-            // TODO : Serialize concealed grids
+            stream.addUShort((ushort)ConcealedGrids.Count);
+            foreach (ConcealableGrid grid in ConcealedGrids) {
+                grid.AddToByteStream(stream);
+            }
 
-            //stream.addLong(EntityId);
-
-            //return stream.Data;
-            return new byte[0];
+            return stream.Data;
         }
 
     }

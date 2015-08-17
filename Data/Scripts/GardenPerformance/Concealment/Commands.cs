@@ -55,7 +55,7 @@ namespace GP.Concealment {
             (List<String> args) => {
                 int n = Int32.Parse(args[0]);
 
-                List<RevealedGrid> revealedGrids = Session.Client.RevealedGrids;
+                List<ConcealableGrid> revealedGrids = Session.Client.RevealedGrids;
                 
                 if (revealedGrids == null) return new ChatNotification() {
                     Text = "No list of revealed grids available.",
@@ -67,7 +67,7 @@ namespace GP.Concealment {
                     Sender = "GP"
                 };
 
-                RevealedGrid grid = revealedGrids[n - 1];
+                ConcealableGrid grid = revealedGrids[n - 1];
                 long entityId = grid.EntityId;
 
                 Log.Trace("Requesting Conceal Grid " + entityId, "ConcealCommand");
@@ -88,7 +88,7 @@ namespace GP.Concealment {
             (List<String> args) => {
                 int n = Int32.Parse(args[0]);
 
-                List<ConcealedGrid> grids = Session.Client.ConcealedGrids;
+                List<ConcealableGrid> grids = Session.Client.ConcealedGrids;
 
                 if (grids == null) return new ChatNotification() {
                     Text = "No list of concealed grids available.",
@@ -100,7 +100,7 @@ namespace GP.Concealment {
                     Sender = "GP"
                 };
 
-                ConcealedGrid grid = grids[n - 1];
+                ConcealableGrid grid = grids[n - 1];
                 long entityId = grid.EntityId;
 
                 Log.Trace("Requesting Reveal Grid " + entityId, "RevealCommand");
@@ -111,6 +111,26 @@ namespace GP.Concealment {
             },
             new List<String> { "N" },
             0
+        );
+
+        static Command SaveCommand = new Command(
+            "save",
+            "save the current conceal state",
+            "Blah blah blah longtext about saving",
+            (List<String> args) => {              
+                //Session.Server.SaveSector();
+                return new ChatNotification() { Text = "Saving..." };
+            }
+        );
+
+        static Command LoadCommand = new Command(
+            "load",
+            "load the current conceal state",
+            "Blah blah blah longtext about loading",
+            (List<String> args) => {
+                //Session.Server.LoadSector();
+                return new ChatNotification() { Text = "Loading..." };
+            }
         );
 
         static Tree ConcealmentTree = new Tree(
@@ -129,6 +149,8 @@ namespace GP.Concealment {
                 RevealCommand,
                 RevealedCommand,
                 ConcealCommand,
+                SaveCommand,
+                LoadCommand
             }
         );
 

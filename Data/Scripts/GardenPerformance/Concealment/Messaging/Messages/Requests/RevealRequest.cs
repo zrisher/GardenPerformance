@@ -8,7 +8,7 @@ using SEGarden.Extensions;
 namespace GP.Concealment.Messaging.Messages.Requests {
     class RevealRequest : Request {
 
-        private const int Size = sizeof(long);
+        private const int SIZE = sizeof(long);
 
         public static RevealRequest FromBytes(byte[] bytes) {
             VRage.ByteStream stream = new VRage.ByteStream(bytes, bytes.Length);
@@ -22,18 +22,15 @@ namespace GP.Concealment.Messaging.Messages.Requests {
         public RevealRequest() :
             base((ushort)MessageType.RevealRequest) { }
 
-
-        public long EntityId;// { get; private set; }
-
+        public long EntityId;
 
         protected override byte[] ToBytes() {
-            VRage.ByteStream stream = new VRage.ByteStream(Size);
+            VRage.ByteStream stream = new VRage.ByteStream(SIZE);
 
             stream.addLong(EntityId);
 
             return stream.Data;
         }
-
 
     }
 }

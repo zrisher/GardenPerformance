@@ -77,6 +77,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Concealment\Commands.cs" />
+    <Compile Include="Concealment\Records\BuilderListHelper.cs" />
     <Compile Include="Concealment\Messaging\MessageDomain.cs" />
     <Compile Include="Concealment\Messaging\MessageType.cs" />
     <Compile Include="Concealment\Messaging\Handlers\ServerMessageHandler.cs" />
@@ -91,15 +92,13 @@
     <Compile Include="Concealment\Messaging\Messages\Requests\RevealRequest.cs" />
     <Compile Include="Concealment\Messaging\Messages\Responses\ConcealResponse.cs" />
     <Compile Include="Concealment\Messaging\Messages\Requests\ConcealRequest.cs" />
-    <Compile Include="Concealment\Records\Entities\Common.cs" />
-    <Compile Include="Concealment\Records\Entities\RevealedGrid.cs" />
-    <Compile Include="Concealment\Records\Entities\RevealedEntity.cs" />
-    <Compile Include="Concealment\Records\Entities\ConcealedEntity.cs" />
-    <Compile Include="Concealment\Records\Entities\ConcealedGrid.cs" />
+    <Compile Include="Concealment\Records\Entities\ConcealableEntity.cs" />
+    <Compile Include="Concealment\Records\Entities\ConcealableGrid.cs" />
     <Compile Include="Concealment\Records\ConcealableSector.cs" />
     <Compile Include="Concealment\Session.cs" />
     <Compile Include="Concealment\Sessions\ServerConcealSession.cs" />
     <Compile Include="Concealment\Sessions\ClientConcealSession.cs" />
+    <Compile Include="ConcealableSector.cs" />
     <Compile Include="SEGarden\Extensions\IMyFaction.cs" />
     <Compile Include="SEGarden\Extensions\VRageMath\Vector3D.cs" />
     <Compile Include="SEGarden\Logging\LogManager.cs" />

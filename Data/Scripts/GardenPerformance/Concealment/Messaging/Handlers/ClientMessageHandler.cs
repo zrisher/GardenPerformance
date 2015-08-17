@@ -48,13 +48,17 @@ namespace GP.Concealment.Messaging.Handlers {
 
             ConcealedGridsResponse response = ConcealedGridsResponse.FromBytes(body);
 
-            Session.Client.ConcealedGrids = new List<Records.Entities.ConcealedGrid>();
+            Session.Client.ConcealedGrids = response.ConcealedGrids;
 
             String result = "Concealed Grids:\n\n";
-
-            foreach (Records.Entities.ConcealedGrid grid in Session.Client.ConcealedGrids) {
-                result += grid.EntityId + "\n";
+            /*
+            int i = 1;
+            foreach (Records.Entities.ConcealableGrid grid in Session.Client.ConcealedGrids) {
+                result += String.Format("{0}: \"{1}\" - Revealability: {2}\n", 
+                    i, grid.DisplayName, grid.Revealability);
+                i++;
             }
+            */
 
             Notification notice = new WindowNotification() {
                 Text = result,
@@ -72,16 +76,17 @@ namespace GP.Concealment.Messaging.Handlers {
 
             RevealedGridsResponse response = RevealedGridsResponse.FromBytes(body);
 
-            Session.Client.RevealedGrids = new List<Records.Entities.RevealedGrid>();
+            Session.Client.RevealedGrids = response.RevealedGrids;
 
             String result = Session.Client.RevealedGrids.Count + " Revealed Grids:\n\n";
-            int i = 0;
-
-            foreach (Records.Entities.RevealedGrid grid in Session.Client.RevealedGrids) {
+            /*
+            int i = 1;
+            foreach (Records.Entities.ConcealableGrid grid in Session.Client.RevealedGrids) {
+                result += String.Format("{0}: \"{1}\" - Concealability: {2}\n",
+                    i, grid.DisplayName, grid.Concealability);
                 i++;
-                result += i + " - " + grid.EntityId + "\n";
             }
-
+            */
             Notification notice = new WindowNotification() {
                 Text = result,
                 BigLabel = "Garden Performance",
@@ -96,10 +101,15 @@ namespace GP.Concealment.Messaging.Handlers {
 
             ConcealResponse response = ConcealResponse.FromBytes(body);
 
-            Notification notice = new AlertNotification() {
-                Text = "Revealed grid ''",
-                DisplaySeconds = 5,
-                Color = Sandbox.Common.MyFontEnum.White,
+            String result = response.Success ? 
+                "Successfully concealed" :
+                "Failed to conceal";
+
+            result += " grid " + response.EntityId;
+
+            Notification notice = new ChatNotification() {
+                Text = result,
+                Sender = "GP"
             };
 
             notice.Raise();
@@ -110,10 +120,15 @@ namespace GP.Concealment.Messaging.Handlers {
 
             RevealResponse response = RevealResponse.FromBytes(body);
 
-            Notification notice = new AlertNotification() {
-                Text = "Revealed grid ''",
-                DisplaySeconds = 5,
-                Color = Sandbox.Common.MyFontEnum.White,
+            String result = response.Success ?
+                "Successfully revealed" :
+                "Failed to reveal";
+
+            result += " grid " + response.EntityId;
+
+            Notification notice = new ChatNotification() {
+                Text = result,
+                Sender = "GP"
             };
 
             notice.Raise();

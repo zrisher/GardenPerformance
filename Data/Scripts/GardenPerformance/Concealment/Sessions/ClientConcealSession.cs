@@ -27,8 +27,8 @@ namespace GP.Concealment.Sessions {
 
         public static ClientMessageHandler Messenger;
 
-        public List<Records.Entities.RevealedGrid> RevealedGrids;
-        public List<Records.Entities.ConcealedGrid> ConcealedGrids;
+        public List<Records.Entities.ConcealableGrid> RevealedGrids;
+        public List<Records.Entities.ConcealableGrid> ConcealedGrids;
 
         public void Initialize() {
             Log.Trace("Initializing Client Conceal Session", "Initialize");
