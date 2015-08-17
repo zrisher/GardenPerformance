@@ -92,6 +92,7 @@ namespace GP.Concealment.Sessions {
             Log.Trace("Finished Initializing Server Conceal Session", "Initialize");
         }
 
+
         public void Terminate() {
             Log.Trace("Terminating Server Conceal Session", "Initialize");
 

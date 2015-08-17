@@ -77,7 +77,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Concealment\Commands.cs" />
-    <Compile Include="Concealment\Records\BuilderListHelper.cs" />
     <Compile Include="Concealment\Messaging\MessageDomain.cs" />
     <Compile Include="Concealment\Messaging\MessageType.cs" />
     <Compile Include="Concealment\Messaging\Handlers\ServerMessageHandler.cs" />
@@ -98,8 +97,8 @@
     <Compile Include="Concealment\Session.cs" />
     <Compile Include="Concealment\Sessions\ServerConcealSession.cs" />
     <Compile Include="Concealment\Sessions\ClientConcealSession.cs" />
-    <Compile Include="ConcealableSector.cs" />
     <Compile Include="SEGarden\Extensions\IMyFaction.cs" />
+    <Compile Include="SEGarden\Extensions\ObjectBuilders\ObjectBuilders.cs" />
     <Compile Include="SEGarden\Extensions\VRageMath\Vector3D.cs" />
     <Compile Include="SEGarden\Logging\LogManager.cs" />
     <Compile Include="SEGarden\Logic\Common.cs" />

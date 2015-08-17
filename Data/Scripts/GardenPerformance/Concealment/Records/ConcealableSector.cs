@@ -94,30 +94,16 @@ namespace GP.Concealment.Records {
         [XmlElement("SectorPosition")]
         public VRageMath.Vector3D SectorPosition = new Vector3D();
 
-        //[XmlElement("GridBuildersFileName")]
-        /*
-        [XmlIgnore]
-        public String GridBuildersFileName { get { return BuilderListHelper.FileName(Name);  } }
-        */
-
         // Can't serialize dictionaries
         [XmlIgnore]
         public Dictionary<long, ConcealableGrid> ConcealedGrids =
             new Dictionary<long, ConcealableGrid>();
 
-        // Don't use this, only used to hold the above dictionary for storage
+        // Only used to hold the above dictionary for storage
         [XmlArray("ConcealedGrids")]
         [XmlArrayItem("ConcealedGrid")]
         public List<ConcealableGrid> CachedConcealedGridsList =
             new List<ConcealableGrid>();
-
-        // Having trouble saving this as part of an existing class,
-        // see BuilderListHelper
-        /*
-        [XmlIgnore]
-        public Dictionary<long, MyObjectBuilder_EntityBase> ConcealedGridBuilders =
-            new Dictionary<long, MyObjectBuilder_EntityBase>();
-        */
 
         // No point in saving this, much easier to load it from the world
         [XmlIgnore]
@@ -139,9 +125,9 @@ namespace GP.Concealment.Records {
         }
 
         public List<ConcealableGrid> RevealedGridsList() {
-            Log.Trace("Retrieving revealed grids list", "RevealedGridsList");
-            Log.Trace("RevealedGrids.Keys: " + RevealedGrids.Keys, "RevealedGridsList");
-            Log.Trace("RevealedGrids.Count: " + RevealedGrids.Count, "RevealedGridsList");
+            //Log.Trace("Retrieving revealed grids list", "RevealedGridsList");
+            //Log.Trace("RevealedGrids.Keys: " + RevealedGrids.Keys, "RevealedGridsList");
+            //Log.Trace("RevealedGrids.Count: " + RevealedGrids.Count, "RevealedGridsList");
 
             return RevealedGrids.Select((x) => x.Value).ToList();
         }
@@ -153,110 +139,101 @@ namespace GP.Concealment.Records {
 
             CachedConcealedGridsList = ConcealedGridsList();
 
-            CachedConcealedGridsList = new List<ConcealableGrid>() {
-                new ConcealableGrid { },
-                new ConcealableGrid { },
-                new ConcealableGrid { },
-                new ConcealableGrid { },
-            };
-
             // check for nulls
-            if (WorldName == null || SectorPosition == null || CachedConcealedGridsList == null) {
+            if (WorldName == null || SectorPosition == null || 
+                CachedConcealedGridsList == null) {
+
                 Log.Error("Sector object had a null, aborting", "Save");
                 return;
             }
 
-            foreach (ConcealableGrid grid in CachedConcealedGridsList) {
-                if (grid.Builder == null) {
+            bool canSaveAllGrids = true;
+            CachedConcealedGridsList = CachedConcealedGridsList.Where(
+                (grid) => {
+                    if (!grid.Saveable()) {
+                        canSaveAllGrids = false;
+                        return false;
+                    }
+                    return true; 
+                }).ToList();
 
-                    Log.Error("ConcealableGrid had a null builder, aborting", "Save");
-                    return;
-                }
+            if (!canSaveAllGrids) {
+                Log.Error("Errors make some grids impossible to save! Continuing.", 
+                    "Save");
             }
 
-            foreach (ConcealableGrid grid in CachedConcealedGridsList) {
-                if (grid.Builder.AngularVelocity == null ||
-                    grid.Builder.BlockGroups == null ||
-                    grid.Builder.ComponentContainer == null ||
-                    grid.Builder.ConveyorLines == null ||
-                    grid.Builder.CreatePhysics == null ||
-                    grid.Builder.CubeBlocks == null ||
-                    grid.Builder.DampenersEnabled == null ||                    
-                    grid.Builder.DestructibleBlocks == null ||
-                    grid.Builder.DisplayName == null ||
-                    grid.Builder.EnableSmallToLargeConnections == null ||                    
-                    grid.Builder.EntityDefinitionId == null ||
-                    grid.Builder.EntityId == null ||
-                    grid.Builder.GridSizeEnum == null ||      
-                    grid.Builder.Handbrake == null ||
-                    grid.Builder.IsStatic == null ||
-                    grid.Builder.JumpDriveDirection == null ||       
-                    grid.Builder.JumpElapsedTicks == null ||
-                    grid.Builder.LinearVelocity == null ||
-                    grid.Builder.Name == null ||       
-                    grid.Builder.OxygenAmount == null ||
-                    grid.Builder.PersistentFlags == null ||
-                    grid.Builder.PositionAndOrientation== null ||       
-                    grid.Builder.Skeleton == null ||
-                    grid.Builder.SubtypeId == null ||
-                    grid.Builder.SubtypeName == null //||       
-                    //grid.Builder.TypeId == null ||       
-                    ) {
-
-                    Log.Error("ConcealableGrid builder had a null value, aborting", "Save");
-                    return;
-                }
-            }
-
+            Log.Trace("Skipping actual save, trying example.", "Save");
             /*
-            foreach (ConcealableGrid grid in CachedConcealedGridsList) {
-                if (grid.BigOwners == null || 
-                    grid.Builder == null ||
-                    grid.Concealability == null ||
-                    grid.DisplayName == null ||
-                    grid.EntityId == null ||
-                    grid.IsStatic == null ||
-                    grid.Position == null ||
-                    grid.Revealability == null ||
-                    grid.SpawnOwners == null ||
-                    grid.Status == null ||
-                    grid.Transparent == null ||
-                    grid.Type == null) {
-
-                    Log.Error("ConcealableGrid had a null, aborting", "Save");
-                    return;
-                }
-            }
-            */
-
-            //CachedConcealedGridsList = new List<ConcealableGrid>();
-
             GardenGateway.Files.Overwrite(
                 MyAPIGateway.Utilities.SerializeToXML<ConcealableSector>(this),
                 FileName
             );
-
-            //SaveBuilders();
+             * */
+            SaveBuilders();
 
             Log.Trace("Finished saving", "Save");
         }
 
         private void SaveBuilders(){
 
-            /*
-            HashSet<IMyEntity> allEntities = new HashSet<IMyEntity>();
-            MyAPIGateway.Entities.GetEntities(allEntities);
+            String GridBuildersFileName = "poo_test.txt";
+
+            HashSet<IMyEntity> allGrids = new HashSet<IMyEntity>();
+            MyAPIGateway.Entities.GetEntities(allGrids, (x) => x is IMyCubeGrid);
 
             List<MyObjectBuilder_CubeGrid> concealedGridBuilderList =
-                allEntities.Select(x => x.GetObjectBuilder() as MyObjectBuilder_CubeGrid).ToList();
-            
+                allGrids.Select(x => x.GetObjectBuilder() as MyObjectBuilder_CubeGrid).ToList();
+
+            Log.Trace("Trying to save pulled from world", "Save");
             GardenGateway.Files.Overwrite(
                 MyAPIGateway.Utilities.
                     SerializeToXML<List<MyObjectBuilder_CubeGrid>>(concealedGridBuilderList),
                 GridBuildersFileName
             );
+            Log.Trace("Finished saving pulled from world!!!", "Save");
 
-            *//*
+            // Fails
+            //concealedGridBuilderList =
+            //    RevealedGrids.Select(kvp => kvp.Value.Builder).ToList();
+            /*
+            concealedGridBuilderList =
+                allGrids.Select((x) => {
+                    var concealable = new ConcealableGrid();
+                    concealable.LoadFromCubeGrid(x)
+                    return x.GetObjectBuilder() as MyObjectBuilder_CubeGrid;
+                }).ToList();
+            */
+
+            concealedGridBuilderList =
+                allGrids.Select((x) => {
+                    IMyCubeGrid grid = x as IMyCubeGrid;
+
+                    //return x.GetObjectBuilder() as MyObjectBuilder_CubeGrid;
+                    //return grid.GetObjectBuilder() as MyObjectBuilder_CubeGrid;
+
+                    var concealable = new ConcealableGrid();
+                    concealable.LoadFromCubeGrid(grid);
+
+                    //return concealable.IngameGrid.GetObjectBuilder() as MyObjectBuilder_CubeGrid;
+                    //return concealable.Builder as MyObjectBuilder_CubeGrid;
+                    // /\ success
+
+                    return concealable.Builder;
+
+                    // \/ failure
+
+                    //return concealable.Builder;
+                }).ToList();
+
+
+            Log.Trace("Trying to save pulled from cache", "Save");
+            GardenGateway.Files.Overwrite(
+                MyAPIGateway.Utilities.
+                    SerializeToXML<List<MyObjectBuilder_CubeGrid>>(concealedGridBuilderList),
+                "real_" + GridBuildersFileName
+            );
+            Log.Trace("Finished saving pulled from cache!!!", "Save");
+            /*
 
             List<MyObjectBuilder_EntityBase> concealedGridBuilderList =
                 ConcealedGrids.Values.Select(x => x.Builder).ToList();
@@ -355,7 +332,8 @@ namespace GP.Concealment.Records {
 
             if (RevealedGrids.ContainsKey(entityId)) {
                 concealableGrid = RevealedGrids[entityId];
-                Log.Trace("Found entity " + entityId, "ConcealEntity");
+                Log.Trace("Found stored revealed entity " + 
+                    concealableGrid.EntityId, "ConcealEntity");
             }
 
             if (concealableGrid == null) {
@@ -363,10 +341,15 @@ namespace GP.Concealment.Records {
                 return false;
             }
 
-            IMyCubeGrid grid = concealableGrid.IngameGrid;
+            //IMyCubeGrid grid = concealableGrid.IngameGrid;
+            IMyEntity entity = null;
+            IMyCubeGrid grid = null;
+            MyAPIGateway.Entities.TryGetEntityById(entityId, out entity);
+            grid = entity as IMyCubeGrid;
+
 
             if (grid == null) {
-                Log.Error("Received null grid, aborting", "ConcealEntity");
+                Log.Error("Stored cubegrid reference is null, aborting", "ConcealEntity");
                 return false;
             }
 
@@ -375,41 +358,32 @@ namespace GP.Concealment.Records {
                 return false;
             }
 
+            // Refresh the info before saving
             concealableGrid.LoadFromCubeGrid(grid);
 
-
-            //RevealedGrids.Remove(concealableGrid.EntityId);
-            // Should be taken care of automatically by onRemoved hook
-            
-            ConcealedGrids.Add(concealableGrid.EntityId, concealableGrid);
-
-            /*
-            MyObjectBuilder_EntityBase builder = grid.GetObjectBuilder() as MyObjectBuilder_EntityBase;
-
-            if (builder == null) {
-                Log.Error("Unable to retrieve builder for " + grid.EntityId +
-                    ", aborting", "ConcealEntity");
-                return;
+            if (!concealableGrid.Saveable()) {
+                Log.Error("Won't be able to save this grid, aborting conceal.",
+                    "ConcealEntity");
+                return false;
             }
-            */
 
             // Track it
-            /*
-            if (ConcealedGridBuilders.ContainsKey(builder.EntityId)) {
+            if (ConcealedGrids.ContainsKey(grid.EntityId)) {
                 Log.Error("Attempting to store already-stored entity " +
                     grid.EntityId, "ConcealEntity");
-                return;
+                return false;
             }
 
-            ConcealedGridBuilders.Add(builder.EntityId, builder);
-            */
-            //ConcealedGrids.Add(builder.EntityId, concealableGrid);
+            ConcealedGrids.Add(concealableGrid.EntityId, concealableGrid);
 
-            //NeedsSave = true;
-            Save();
+            // Should be taken care of automatically by onRemoved hook
+            //RevealedGrids.Remove(concealableGrid.EntityId);
 
             // Remove it from the world
             grid.SyncObject.SendCloseRequest();
+
+            //NeedsSave = true;
+            Save();
 
             return true;
         }
@@ -428,20 +402,18 @@ namespace GP.Concealment.Records {
                 return false;
             }
 
-            /*
             MyObjectBuilder_CubeGrid builder = concealableGrid.Builder;
 
             if (builder == null) {
                 Log.Error("Unable to retrieve builder for " + concealableGrid.EntityId +
                     ", aborting", "RevealEntity");
-                return;
+                return false;
             }
 
             ConcealedGrids.Remove(concealableGrid.EntityId);
 
             // Should be taken care of automatically by onAdded hook
-            //ConcealedGrids.Add(concealableGrid.EntityId, concealableGrid);
-
+            //RevealedGrids.Add(concealableGrid.EntityId, concealableGrid);
 
             Log.Trace("Start reveal " + concealableGrid.EntityId, "revealEntity");
 
@@ -454,11 +426,7 @@ namespace GP.Concealment.Records {
             //builder.AngularVelocity = VRageMath.Vector3D.Zero;
 
             MyAPIGateway.Entities.CreateFromObjectBuilderAndAdd(builder);
-
             Log.Trace("Created object", "revealEntity");
-
-            //Reveal
-            */
 
             Log.Trace("End reveal " + concealableGrid.EntityId, "revealEntity");
             return true;
@@ -468,44 +436,64 @@ namespace GP.Concealment.Records {
         #region Entity Add/Remove from game world
 
         public void AddIngameEntity(IMyEntity entity) {
+            Log.Trace("Adding entity " + entity.EntityId + " of type " + 
+                entity.GetType(), "AddIngameEntity");
 
-            // Add cubegrids
-            IMyCubeGrid grid = entity as IMyCubeGrid;
-            if (grid == null) return;
-            var revealedGrid = new ConcealableGrid();
-            revealedGrid.LoadFromCubeGrid(grid);
-            RevealedGrids[grid.EntityId] = revealedGrid;
-            Log.Trace("Added " + grid.EntityId, "AddIngameEntity");
+            if (entity.Transparent) {
+                Log.Trace("It's Transparent, skipping", "AddIngameEntity");
+                return;
+            }
+
+            // TODO: Store other types of entities
+            if (entity is IMyCubeGrid) {
+                Log.Trace("It's a CubeGrid.", "AddIngameEntity");
+                IMyCubeGrid grid = entity as IMyCubeGrid;
+                var revealedGrid = new ConcealableGrid();
+                revealedGrid.LoadFromCubeGrid(grid);
+                RevealedGrids[grid.EntityId] = revealedGrid;
+            }
+            if (entity is IMyCharacter) {
+                Log.Trace("It's a Character", "AddIngameEntity");
+            }
+            if (entity is IMyCubeBlock) {
+                Log.Trace("It's a CubeBlock", "AddIngameEntity");
+            }
+            if (entity is IMyCubeBuilder) {
+                Log.Trace("It's a CubeBuilder", "AddIngameEntity");
+            }
 
         }
 
         public void AddIngameEntities(HashSet<IMyEntity> entities) {
             Log.Trace("Adding " + entities.Count + " entities", "AddIngameEntities");
 
-            List<ConcealableGrid> revealedGrids = entities.
-                Select(x => x as IMyCubeGrid).
-                Where(x => x != null).
-                Select((x) => { 
-                    var grid= new ConcealableGrid(); 
-                    grid.LoadFromCubeGrid(x);
-                    return grid;
-                }). 
-                ToList();
-
-            foreach (ConcealableGrid grid in revealedGrids) {
-                RevealedGrids[grid.EntityId] = grid;
-                Log.Trace("Added " + grid.EntityId, "AddIngameEntities");
+            foreach (IMyEntity entity in entities) {
+                AddIngameEntity(entity);
             }
         }
 
         public void RemoveIngameEntity(IMyEntity entity) {
+            Log.Trace("Removing entity " + entity.EntityId + " of type " +
+                entity.GetType(), "RemoveIngameEntity");
 
-            // Remove cubegrid
-            IMyCubeGrid grid = entity as IMyCubeGrid;
-            if (grid == null) return;
-            RevealedGrids.Remove(entity.EntityId);
-            Log.Trace("Added " + entity.EntityId, "AddIngameEntities");
+            if (entity.Transparent) {
+                Log.Trace("It's Transparent, skipping", "AddIngameEntity");
+                return;
+            }
 
+            // TODO: Store other types of entities
+            if (entity is IMyCubeGrid) {
+                IMyCubeGrid grid = entity as IMyCubeGrid;
+                Log.Trace("Removing CubeGrid " + grid.EntityId, "RemoveIngameEntity");
+
+                if (!RevealedGrids.ContainsKey(entity.EntityId)) {
+                    Log.Trace("Removed CubeGrid wasn't stored " + grid.EntityId, "RemoveIngameEntity");
+                }
+                else {
+                    RevealedGrids.Remove(entity.EntityId);
+                    Log.Trace("Removed " + entity.EntityId, "RemoveIngameEntity");
+                }
+            }
         }
 
 

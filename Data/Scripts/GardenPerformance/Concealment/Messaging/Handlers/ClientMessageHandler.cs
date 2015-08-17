@@ -51,14 +51,13 @@ namespace GP.Concealment.Messaging.Handlers {
             Session.Client.ConcealedGrids = response.ConcealedGrids;
 
             String result = "Concealed Grids:\n\n";
-            /*
+
             int i = 1;
             foreach (Records.Entities.ConcealableGrid grid in Session.Client.ConcealedGrids) {
                 result += String.Format("{0}: \"{1}\" - Revealability: {2}\n", 
                     i, grid.DisplayName, grid.Revealability);
                 i++;
             }
-            */
 
             Notification notice = new WindowNotification() {
                 Text = result,
@@ -79,14 +78,14 @@ namespace GP.Concealment.Messaging.Handlers {
             Session.Client.RevealedGrids = response.RevealedGrids;
 
             String result = Session.Client.RevealedGrids.Count + " Revealed Grids:\n\n";
-            /*
+
             int i = 1;
             foreach (Records.Entities.ConcealableGrid grid in Session.Client.RevealedGrids) {
                 result += String.Format("{0}: \"{1}\" - Concealability: {2}\n",
                     i, grid.DisplayName, grid.Concealability);
                 i++;
             }
-            */
+
             Notification notice = new WindowNotification() {
                 Text = result,
                 BigLabel = "Garden Performance",

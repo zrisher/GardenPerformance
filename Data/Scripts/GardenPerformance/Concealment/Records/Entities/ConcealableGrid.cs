@@ -11,6 +11,7 @@ using VRage.ModAPI;
 using VRage.ObjectBuilders;
 
 using SEGarden.Extensions;
+using SEGarden.Extensions.Objectbuilders;
 using SEGarden.Logging;
 
 namespace GP.Concealment.Records.Entities {
@@ -31,30 +32,69 @@ namespace GP.Concealment.Records.Entities {
         #endregion
         #region Instance
 
-
         public List<long> SpawnOwners = new List<long>();
         public String DisplayName = "";
         public List<long> BigOwners = new List<long>();
-        public MyObjectBuilder_CubeGrid Builder = new MyObjectBuilder_CubeGrid();
 
-        /*
+        // Giving this a default value of new MyObjectBuilder_CubeGrid() does NOT work
+        // The new object will have null fields, which makes it unsaveable.
+        public MyObjectBuilder_CubeGrid Builder;
+        //public MyObjectBuilder_EntityBase Builder;
 
-        */
-        [XmlIgnore]
+        //[XmlIgnore]
         public IMyCubeGrid IngameGrid;
         
         public ConcealableGrid() {
             Type = EntityType.Grid;
+        }
 
-            Log.Trace("Initializing new ConcealedGrid", "ctr");
-            Log.Trace("DisplayName == null? " + (DisplayName == null), "ctr");
-            Log.Trace("Builder == null? " + (Builder == null), "ctr");
+        public bool Saveable() {
 
-            try {
+            if (BigOwners == null || DisplayName == null || Position == null ||  
+                SpawnOwners == null) 
+            {
+                Log.Error("ConcealableGrid had a null, not saveable", "Saveable");
+                return false;
             }
-            catch (Exception e) {
 
+            if (Builder == null) {
+                Log.Trace("Null builder for entity " + EntityId + "trying reload", 
+                    "Saveable");
+
+                AttemptReloadFromModAPI();
+
+                if (Builder == null) {
+                    Log.Error("Null builder for entity " + EntityId + ", cannot save.",
+                        "Saveable");
+                    return false;
+                }
+
+                Builder.FillNullsWithDefaults();
             }
+
+            return true;
+        }
+
+        private void AttemptReloadFromModAPI() {
+            Log.Error("AttemptReloadFromModAPI", "AttemptReloadFromModAPI");
+
+            IMyEntity entity = null;
+            MyAPIGateway.Entities.TryGetEntityById(EntityId, out entity);
+
+            if (entity == null) {
+                Log.Error("Couldn't find entity via Gateway", "AttemptReloadFromModAPI");
+                return;
+            }
+
+            IMyCubeGrid grid = entity as IMyCubeGrid;
+
+            if (grid == null) {
+                Log.Error("Entity not grid", "AttemptReloadFromModAPI");
+                return;
+            }
+
+            LoadFromCubeGrid(grid);
+            Log.Error("Reloaded.", "AttemptReloadFromModAPI");
         }
 
         public void LoadFromCubeGrid(IMyCubeGrid grid) {
@@ -62,38 +102,40 @@ namespace GP.Concealment.Records.Entities {
 
             IngameGrid = grid;
 
-            /*
+            //IngameGrid = grid;
             DisplayName = grid.DisplayName;
             // ToDo: get all owners instead of big (for targeting)
             BigOwners = grid.BigOwners;
             // ToDo: get real spawn owners (for spawning)
             SpawnOwners = grid.BigOwners;
+            //IMyEntity entity = grid as IMyEntity;
             Builder = grid.GetObjectBuilder() as MyObjectBuilder_CubeGrid;
 
-            if (Builder == null) {
-                Log.Error("Got null builder for entity " + EntityId, "LoadFromCubeGrid");
-                Builder = new MyObjectBuilder_CubeGrid();
 
+            if (Builder == null) {
+                Log.Error("Got null builder for entity " + EntityId +
+                    ". We will be unable to save it now.", "LoadFromCubeGrid");
             }
-            */
+            else {
+                //Log.Error("Filling builder nulls for " + EntityId, "LoadFromCubeGrid");
+                //Builder.FillNullsWithDefaults();
+            }
+
+
         }
 
         public void AddToByteStream(VRage.ByteStream stream) {
             base.AddToByteStream(stream);
-            /*
             stream.addLongList(SpawnOwners);
             stream.addString(DisplayName);
             stream.addLongList(BigOwners);
-            */
         }
 
         public void RemoveFromByteStream(VRage.ByteStream stream) {
             base.RemoveFromByteStream(stream);
-            /*
             SpawnOwners = stream.getLongList();
             DisplayName = stream.getString();
             BigOwners = stream.getLongList();
-            */
         }
 
         #endregion

@@ -151,7 +151,8 @@ namespace GP.Concealment {
                 ConcealCommand,
                 SaveCommand,
                 LoadCommand
-            }
+            },
+            "c"
         );
 
         public static Tree FullTree = new Tree(
