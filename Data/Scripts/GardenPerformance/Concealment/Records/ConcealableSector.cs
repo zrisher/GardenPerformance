@@ -89,7 +89,7 @@ namespace GP.Concealment.Records {
         #region Instance Fields
 
         [XmlElement("WorldName")]
-        public String WorldName = "";
+        public String WorldName = "Test world name";
 
         [XmlElement("SectorPosition")]
         public VRageMath.Vector3D SectorPosition = new Vector3D();
@@ -147,6 +147,8 @@ namespace GP.Concealment.Records {
                 return;
             }
 
+           // WorldName = "Test World"; // why isnt this applied from init?
+
             bool canSaveAllGrids = true;
             CachedConcealedGridsList = CachedConcealedGridsList.Where(
                 (grid) => {
@@ -162,26 +164,75 @@ namespace GP.Concealment.Records {
                     "Save");
             }
 
-            Log.Trace("Skipping actual save, trying example.", "Save");
+
+            //Log.Trace("Trying ingame builder list save.", "Save");
+            //SaveBuilders();
+            //Log.Trace("Finished saving ingame builder list", "Save");
+
+
+            Log.Trace("Trying concealed grid builder list save", "Save");
+            String GridBuildersFileName2 = "concealed_grid_builder_list.txt";
+            List<MyObjectBuilder_CubeGrid> concealedGridBuilderList;
+            concealedGridBuilderList = ConcealedGrids.Select((x) => {
+                return x.Value.Builder;
+            }).ToList();
+
+            GardenGateway.Files.Overwrite(
+                MyAPIGateway.Utilities.
+                    SerializeToXML<List<MyObjectBuilder_CubeGrid>>(concealedGridBuilderList),
+                GridBuildersFileName2
+            );
+            Log.Trace("Finished concealed grid builder list save", "Save");
+
             /*
+            Log.Trace("Trying concealed grid list unsafe", "Save");
+            String GridBuildersFileName3 = "concealed_grid_list_unsafe.txt";
+
+            GardenGateway.Files.Overwrite(
+                MyAPIGateway.Utilities.
+                    SerializeToXML<List<ConcealableGrid>>(ConcealedGridsList()),
+                GridBuildersFileName3
+            );
+            Log.Trace("Finished concealed grid list save", "Save");
+            */
+
+            Log.Trace("Trying concealed grid list safe", "Save");
+            String GridBuildersFileName4 = "concealed_grid_list_safe.txt";
+            List<ConcealableGrid> saveableConcealedGridList;
+            saveableConcealedGridList = ConcealedGridsList().
+                Where((x) => x.Saveable()).ToList();
+
+            GardenGateway.Files.Overwrite(
+                MyAPIGateway.Utilities.
+                    SerializeToXML<List<ConcealableGrid>>(saveableConcealedGridList),
+                GridBuildersFileName4
+            );
+            Log.Trace("Finished concealed grid list safe", "Save");
+
+
+
+            Log.Trace("Trying sector save next.", "Save");
             GardenGateway.Files.Overwrite(
                 MyAPIGateway.Utilities.SerializeToXML<ConcealableSector>(this),
                 FileName
             );
-             * */
-            SaveBuilders();
+            Log.Trace("Successful sector save!", "Save");
+
+
 
             Log.Trace("Finished saving", "Save");
         }
 
         private void SaveBuilders(){
 
-            String GridBuildersFileName = "poo_test.txt";
+            String GridBuildersFileName = "build_list_test.txt";
+            List<MyObjectBuilder_CubeGrid> concealedGridBuilderList;
 
             HashSet<IMyEntity> allGrids = new HashSet<IMyEntity>();
             MyAPIGateway.Entities.GetEntities(allGrids, (x) => x is IMyCubeGrid);
 
-            List<MyObjectBuilder_CubeGrid> concealedGridBuilderList =
+            /*
+            concealedGridBuilderList =
                 allGrids.Select(x => x.GetObjectBuilder() as MyObjectBuilder_CubeGrid).ToList();
 
             Log.Trace("Trying to save pulled from world", "Save");
@@ -191,6 +242,7 @@ namespace GP.Concealment.Records {
                 GridBuildersFileName
             );
             Log.Trace("Finished saving pulled from world!!!", "Save");
+            */
 
             // Fails
             //concealedGridBuilderList =
@@ -215,7 +267,7 @@ namespace GP.Concealment.Records {
                     concealable.LoadFromCubeGrid(grid);
 
                     //return concealable.IngameGrid.GetObjectBuilder() as MyObjectBuilder_CubeGrid;
-                    //return concealable.Builder as MyObjectBuilder_CubeGrid;
+  
                     // /\ success
 
                     return concealable.Builder;
@@ -226,13 +278,12 @@ namespace GP.Concealment.Records {
                 }).ToList();
 
 
-            Log.Trace("Trying to save pulled from cache", "Save");
             GardenGateway.Files.Overwrite(
                 MyAPIGateway.Utilities.
                     SerializeToXML<List<MyObjectBuilder_CubeGrid>>(concealedGridBuilderList),
                 "real_" + GridBuildersFileName
             );
-            Log.Trace("Finished saving pulled from cache!!!", "Save");
+
             /*
 
             List<MyObjectBuilder_EntityBase> concealedGridBuilderList =

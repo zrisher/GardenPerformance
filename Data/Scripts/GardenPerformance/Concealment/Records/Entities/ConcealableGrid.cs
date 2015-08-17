@@ -41,7 +41,7 @@ namespace GP.Concealment.Records.Entities {
         public MyObjectBuilder_CubeGrid Builder;
         //public MyObjectBuilder_EntityBase Builder;
 
-        //[XmlIgnore]
+        [XmlIgnore]
         public IMyCubeGrid IngameGrid;
         
         public ConcealableGrid() {
@@ -49,6 +49,11 @@ namespace GP.Concealment.Records.Entities {
         }
 
         public bool Saveable() {
+
+            if (!base.Saveable()) {
+                Log.Error("Concealable Entity had a null, not saveable", "Saveable");
+                return false;
+            }
 
             if (BigOwners == null || DisplayName == null || Position == null ||  
                 SpawnOwners == null) 
@@ -61,7 +66,7 @@ namespace GP.Concealment.Records.Entities {
                 Log.Trace("Null builder for entity " + EntityId + "trying reload", 
                     "Saveable");
 
-                AttemptReloadFromModAPI();
+                //AttemptReloadFromModAPI();
 
                 if (Builder == null) {
                     Log.Error("Null builder for entity " + EntityId + ", cannot save.",
@@ -69,7 +74,7 @@ namespace GP.Concealment.Records.Entities {
                     return false;
                 }
 
-                Builder.FillNullsWithDefaults();
+                //Builder.FillNullsWithDefaults();
             }
 
             return true;

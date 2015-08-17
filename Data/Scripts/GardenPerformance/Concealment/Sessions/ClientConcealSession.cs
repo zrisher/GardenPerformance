@@ -42,18 +42,6 @@ namespace GP.Concealment.Sessions {
             Log.Trace("Finished Initializing Client Conceal Session", "Initialize");
         }
 
-        public static void DebugWorldNames() {
-            Log.Info("Trying to figure out what to use for name:", "SetSectorFromWorldName");
-            Log.Info("Sector.ToString " + MyAPIGateway.Session.GetWorld().Sector.ToString(), "UpdateWorldName");
-            Log.Info("Sector.Position " + MyAPIGateway.Session.GetWorld().Sector.Position, "UpdateWorldName");
-            Log.Info("World.ToString" + MyAPIGateway.Session.GetWorld().ToString(), "UpdateWorldName");
-            Log.Info("Session.Name " + MyAPIGateway.Session.Name, "UpdateWorldName");
-            Log.Info("World.Session.Name  " + MyAPIGateway.Session.GetWorld().Checkpoint.SessionName, "UpdateWorldName");
-            Log.Info("Session.ToString " + MyAPIGateway.Session.ToString(), "UpdateWorldName");
-            Log.Info("Session.WorkshopID " + MyAPIGateway.Session.WorkshopId, "UpdateWorldName");
-            Log.Info("Session.WorkshopID " + MyAPIGateway.Session.WorkshopId, "UpdateWorldName");
-        }
-
     }
 
 }

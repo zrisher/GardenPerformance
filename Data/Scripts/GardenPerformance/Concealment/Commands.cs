@@ -123,16 +123,6 @@ namespace GP.Concealment {
             }
         );
 
-        static Command LoadCommand = new Command(
-            "load",
-            "load the current conceal state",
-            "Blah blah blah longtext about loading",
-            (List<String> args) => {
-                //Session.Server.LoadSector();
-                return new ChatNotification() { Text = "Loading..." };
-            }
-        );
-
         static Tree ConcealmentTree = new Tree(
             "concealment",
             "manage entity concealment",
@@ -150,7 +140,6 @@ namespace GP.Concealment {
                 RevealedCommand,
                 ConcealCommand,
                 SaveCommand,
-                LoadCommand
             },
             "c"
         );

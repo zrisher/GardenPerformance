@@ -72,6 +72,14 @@ namespace GP.Concealment.Records.Entities {
         // Only the concealed sector really knows this
         public ConcealStatus Status = ConcealStatus.Unknown;
 
+        public bool Saveable() {
+            if (Position == null || Revealability == null || 
+                Concealability == null || Type == null || Status == null)
+                return false;
+
+            return true;
+        }
+
         public void AddToByteStream(VRage.ByteStream stream) {
             stream.addLong(EntityId);
             stream.addUShort((ushort)Type);

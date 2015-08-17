@@ -38,7 +38,6 @@ namespace GP.Concealment.Sessions {
         private static Logger Log =
             new Logger("GardenPerformance.Concealment.Sessions.ServerConcealSession");
 
-
         public ConcealableSector Sector;
         private String SaveFileName;
         private ServerMessageHandler Messenger;
