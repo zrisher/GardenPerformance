@@ -92,6 +92,8 @@
     <Compile Include="Concealment\Messaging\Messages\Responses\ConcealResponse.cs" />
     <Compile Include="Concealment\Messaging\Messages\Requests\ConcealRequest.cs" />
     <Compile Include="Concealment\Records\Entities\ConcealableEntity.cs" />
+    <Compile Include="Concealment\Records\Entities\BuilderEntity.cs" />
+    <Compile Include="Concealment\Records\Entities\TestEntity.cs" />
     <Compile Include="Concealment\Records\Entities\ConcealableGrid.cs" />
     <Compile Include="Concealment\Records\ConcealableSector.cs" />
     <Compile Include="Concealment\Session.cs" />

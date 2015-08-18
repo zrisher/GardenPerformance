@@ -169,6 +169,10 @@ namespace GP.Concealment.Records {
             //SaveBuilders();
             //Log.Trace("Finished saving ingame builder list", "Save");
 
+            Log.Trace("ConcealedEntity count: " + ConcealedGridsList().Count +
+                ", with null builders: " + ConcealedGridsList().Where((x) => x.Builder == null).ToList().Count()
+                , "Save");
+
 
             Log.Trace("Trying concealed grid builder list save", "Save");
             String GridBuildersFileName2 = "concealed_grid_builder_list.txt";
@@ -184,6 +188,79 @@ namespace GP.Concealment.Records {
             );
             Log.Trace("Finished concealed grid builder list save", "Save");
 
+            Log.Trace("Trying concealed entity list save", "Save");
+            String ConcealedEntitiesFileName = "concealed_entity_list.txt";
+            List<ConcealableEntity> concealedEntitiesList;
+            concealedEntitiesList = ConcealedGrids.Select((x) => {
+                ConcealableEntity ce = new ConcealableEntity();
+                ce.Concealability = x.Value.Concealability;
+                ce.EntityId = x.Value.EntityId;
+                ce.IsStatic = x.Value.IsStatic;
+                ce.Position = x.Value.Position;
+                ce.Revealability = x.Value.Revealability;
+                ce.Status = x.Value.Status;
+                ce.Transparent = x.Value.Transparent;
+                ce.Type = x.Value.Type;
+
+                return ce;
+            }).ToList();
+
+            GardenGateway.Files.Overwrite(
+                MyAPIGateway.Utilities.
+                    SerializeToXML<List<ConcealableEntity>>(concealedEntitiesList),
+                ConcealedEntitiesFileName
+            );
+            Log.Trace("Finished concealed entity list save", "Save");
+
+            Log.Trace("Trying test entity list save", "Save");
+            String TestEntitiesFileName = "test_entity_list.txt";
+            List<TestEntity> testEntitiesList;
+            testEntitiesList = ConcealedGrids.Select((x) => {
+                TestEntity ce = new TestEntity();
+                ce.Concealability = x.Value.Concealability;
+                ce.EntityId = x.Value.EntityId;
+                ce.IsStatic = x.Value.IsStatic;
+                ce.Position = x.Value.Position;
+                ce.Revealability = x.Value.Revealability;
+                ce.Status = x.Value.Status;
+                ce.Transparent = x.Value.Transparent;
+                ce.Type = x.Value.Type;
+                ce.SpawnOwners = x.Value.SpawnOwners;
+                ce.DisplayName = x.Value.DisplayName;
+                ce.BigOwners = x.Value.BigOwners;
+                //ce.Builder = x.Value.Builder;
+                //if (ce.Builder == null)
+                    //Log.Error("Builder was null!", "Save");
+
+                return ce;
+            }).ToList();
+
+            GardenGateway.Files.Overwrite(
+                MyAPIGateway.Utilities.
+                    SerializeToXML<List<TestEntity>>(testEntitiesList),
+                TestEntitiesFileName
+            );
+            Log.Trace("Finished test entity list save", "Save");
+
+
+            Log.Trace("Trying builder entity list save", "Save");
+            String builderEntitiesFileName = "test_entity_list.txt";
+            List<BuilderEntity> builderEntitiesList = ConcealedGrids.Select((x) => {
+                BuilderEntity ce = new BuilderEntity();
+                ce.Builder = x.Value.Builder;
+                if (ce.Builder == null)
+                    Log.Error("Builder was null!", "Save");
+
+                return ce;
+            }).ToList();
+
+            GardenGateway.Files.Overwrite(
+                MyAPIGateway.Utilities.
+                    SerializeToXML<List<BuilderEntity>>(builderEntitiesList),
+                builderEntitiesFileName
+            );
+            Log.Trace("Finished builder entity list save", "Save");
+
             /*
             Log.Trace("Trying concealed grid list unsafe", "Save");
             String GridBuildersFileName3 = "concealed_grid_list_unsafe.txt";
@@ -194,8 +271,8 @@ namespace GP.Concealment.Records {
                 GridBuildersFileName3
             );
             Log.Trace("Finished concealed grid list save", "Save");
-            */
 
+            
             Log.Trace("Trying concealed grid list safe", "Save");
             String GridBuildersFileName4 = "concealed_grid_list_safe.txt";
             List<ConcealableGrid> saveableConcealedGridList;
@@ -218,7 +295,7 @@ namespace GP.Concealment.Records {
             );
             Log.Trace("Successful sector save!", "Save");
 
-
+            */
 
             Log.Trace("Finished saving", "Save");
         }
