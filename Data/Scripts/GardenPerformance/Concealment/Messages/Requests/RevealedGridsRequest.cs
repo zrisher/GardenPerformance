@@ -5,7 +5,7 @@ using System.Text;
 
 using SEGarden.Extensions;
 
-namespace GP.Concealment.Messaging.Messages.Requests {
+namespace GP.Concealment.Messages.Requests {
     class RevealedGridsRequest : Request {
 
         public static RevealedGridsRequest FromBytes(byte[] bytes) {

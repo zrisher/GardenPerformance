@@ -6,7 +6,7 @@ using System.Text;
 using SEGarden.Extensions;
 using SEGarden.Logging;
 
-namespace GP.Concealment.Messaging.Messages.Requests {
+namespace GP.Concealment.Messages.Requests {
     class ConcealedGridsRequest : Request {
 
         static Logger Log = new Logger("GP.Concealment.ConcealedGridsRequest");

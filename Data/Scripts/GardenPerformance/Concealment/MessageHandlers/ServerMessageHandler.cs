@@ -4,26 +4,39 @@ using System.Linq;
 using System.Text;
 
 using SEGarden.Logging;
+using SEGarden.Logic;
 
 using GP.Concealment.Sessions;
-using GP.Concealment.Messaging.Messages.Requests;
-using GP.Concealment.Messaging.Messages.Responses;
+using GP.Concealment.Messages;
+using GP.Concealment.Messages.Requests;
+using GP.Concealment.Messages.Responses;
 
-namespace GP.Concealment.Messaging.Handlers {
+using SEGarden.Messaging;
 
-    class ServerMessageHandler : SEGarden.Messaging.MessageHandlerBase {
+namespace GP.Concealment.MessageHandlers {
+
+    class ServerMessageHandler : MessageHandlerBase {
 
         private static Logger Log = 
             new Logger("GP.Concealment.Messaging.Handlers.ServerMessageHandler");
 
+        public bool Disabled = false;
+
         public ServerMessageHandler() : base((ushort)MessageDomain.ConcealServer) { }
 
         public override void HandleMessage(ushort messageTypeId, byte[] body,
-            ulong senderSteamId, SEGarden.Logic.Common.RunLocation sourceType) {
+            ulong senderSteamId, RunLocation sourceType) {
 
             Log.Trace("Received message typeId " + messageTypeId, "HandleMessage");
             MessageType messageType = (MessageType)messageTypeId;
             Log.Trace("Received message type " + messageType, "HandleMessage");
+
+            /*
+            if (Disabled) {
+                SendDisabledNotice(senderSteamId);
+                return;
+            }
+
 
             switch (messageType) {
                 case MessageType.ConcealedGridsRequest:
@@ -39,9 +52,11 @@ namespace GP.Concealment.Messaging.Handlers {
                     ReceiveRevealRequest(body, senderSteamId);
                     break;
             }
+             * */
 
         }
 
+        /*
         private void ReplyToConcealedGridsRequest(byte[] body, ulong senderId) {
             Log.Trace("Receiving Concealed Grids Request", 
                 "ReceiveConcealedGridsRequest");
@@ -52,7 +67,7 @@ namespace GP.Concealment.Messaging.Handlers {
 
             Log.Trace("Preparing response", "ReceiveConcealedGridsRequest");
             ConcealedGridsResponse response = new ConcealedGridsResponse {
-                ConcealedGrids = Session.Server.Sector.ConcealedGridsList()
+                ConcealedGrids = Session.Server.ConcealedSector0.ConcealedGridsList()
             };
 
             Log.Trace("Sending to player", "ReceiveConcealedGridsRequest");
@@ -67,7 +82,7 @@ namespace GP.Concealment.Messaging.Handlers {
             RevealedGridsRequest request = RevealedGridsRequest.FromBytes(body);
 
             RevealedGridsResponse response = new RevealedGridsResponse() {
-                RevealedGrids = Session.Server.Sector.RevealedGridsList()
+                RevealedGrids = Session.Server.RevealedSector0.RevealedGridsList()
             };
 
             response.SendToPlayer(senderId);
@@ -98,8 +113,8 @@ namespace GP.Concealment.Messaging.Handlers {
             RevealRequest request = RevealRequest.FromBytes(body);
             bool success = false;
 
-            if (Session.Server.CanReveal(request.EntityId)) {
-                success = Session.Server.QueueReveal(request.EntityId);
+            if (Session.Server.QueueReveal(request.EntityId)) {
+                success = true;
                 Log.Trace("Successfully revealed", "ReceiveRevealRequest");
             }
 
@@ -113,5 +128,14 @@ namespace GP.Concealment.Messaging.Handlers {
             response.SendToPlayer(senderId);
         }
 
+        private void SendDisabledNotice(ulong senderId) {
+            StatusResponse response = new StatusResponse() {
+                ServerRunning = false
+            };
+
+            response.SendToPlayer(senderId);
+        }
+
+         * */
     }
 }

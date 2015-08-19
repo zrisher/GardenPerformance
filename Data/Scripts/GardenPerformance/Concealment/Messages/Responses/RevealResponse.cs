@@ -5,7 +5,7 @@ using System.Text;
 
 using SEGarden.Extensions;
 
-namespace GP.Concealment.Messaging.Messages.Responses {
+namespace GP.Concealment.Messages.Responses {
     class RevealResponse : Response {
 
         private const int SIZE = sizeof(long) + sizeof(bool);
@@ -14,7 +14,9 @@ namespace GP.Concealment.Messaging.Messages.Responses {
             VRage.ByteStream stream = new VRage.ByteStream(bytes, bytes.Length);
 
             RevealResponse response = new RevealResponse();
+            response.LoadFromByteStream(stream);
             response.EntityId = stream.getLong();
+            response.Success = stream.getBoolean();
 
             return response;
         }
@@ -28,6 +30,7 @@ namespace GP.Concealment.Messaging.Messages.Responses {
 
         protected override byte[] ToBytes() {
             VRage.ByteStream stream = new VRage.ByteStream(SIZE);
+            base.AddToByteStream(stream);
 
             stream.addLong(EntityId);
             stream.addBoolean(Success);

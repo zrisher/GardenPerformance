@@ -6,9 +6,9 @@ using System.Text;
 using SEGarden.Logging;
 using SEGarden.Extensions;
 
-using GP.Concealment.Records.Entities;
+using GP.Concealment.World.Entities;
 
-namespace GP.Concealment.Messaging.Messages.Responses {
+namespace GP.Concealment.Messages.Responses {
     class RevealedGridsResponse : Response {
 
         private static Logger Log =
@@ -16,7 +16,8 @@ namespace GP.Concealment.Messaging.Messages.Responses {
 
         public static RevealedGridsResponse FromBytes(byte[] bytes) {
             VRage.ByteStream stream = new VRage.ByteStream(bytes, bytes.Length);
-            RevealedGridsResponse response = new RevealedGridsResponse();   
+            RevealedGridsResponse response = new RevealedGridsResponse();
+            response.LoadFromByteStream(stream);
   
             ConcealableGrid grid;
             ushort count = stream.getUShort();
@@ -38,6 +39,7 @@ namespace GP.Concealment.Messaging.Messages.Responses {
 
         protected override byte[] ToBytes() {
             VRage.ByteStream stream = new VRage.ByteStream(32, true);
+            base.AddToByteStream(stream);
 
             //Log.Trace("Adding grids to response", "ToBytes");
             stream.addUShort((ushort)RevealedGrids.Count);

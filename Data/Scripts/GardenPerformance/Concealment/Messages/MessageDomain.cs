@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace GP.Concealment.Messaging {
+namespace GP.Concealment.Messages {
 
     public class MessageDomain {
         public static readonly ushort ConcealClient = 14747;

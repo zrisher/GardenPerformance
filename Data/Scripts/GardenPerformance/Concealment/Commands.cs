@@ -9,8 +9,10 @@ using SEGarden.Chat.Commands;
 using SEGarden.Notifications;
 using SEGarden.Logging;
 
-using GP.Concealment.Records.Entities;
-using GP.Concealment.Messaging.Messages.Requests;
+using GP.Concealment.World.Entities;
+using GP.Concealment.Messages.Requests;
+
+using GP.Concealment.Sessions;
 
 
 namespace GP.Concealment {
@@ -18,6 +20,10 @@ namespace GP.Concealment {
     static class Commands {
 
         private static Logger Log = new Logger("GardenPerformance.Commands");
+
+        private static ClientConcealSession Session { 
+            get { return ClientConcealSession.Instance; } 
+        }
 
         static Command ConcealedCommand = new Command(
             "concealed",
@@ -55,7 +61,7 @@ namespace GP.Concealment {
             (List<String> args) => {
                 int n = Int32.Parse(args[0]);
 
-                List<ConcealableGrid> revealedGrids = Session.Client.RevealedGrids;
+                List<ConcealableGrid> revealedGrids = Session.RevealedGrids;
                 
                 if (revealedGrids == null) return new ChatNotification() {
                     Text = "No list of revealed grids available.",
@@ -88,7 +94,7 @@ namespace GP.Concealment {
             (List<String> args) => {
                 int n = Int32.Parse(args[0]);
 
-                List<ConcealableGrid> grids = Session.Client.ConcealedGrids;
+                List<ConcealableGrid> grids = Session.ConcealedGrids;
 
                 if (grids == null) return new ChatNotification() {
                     Text = "No list of concealed grids available.",

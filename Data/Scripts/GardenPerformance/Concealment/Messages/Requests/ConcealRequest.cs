@@ -5,7 +5,7 @@ using System.Text;
 
 using SEGarden.Extensions;
 
-namespace GP.Concealment.Messaging.Messages.Requests {
+namespace GP.Concealment.Messages.Requests {
     class ConcealRequest : Request {
 
         private const int SIZE_IN_BYTES = sizeof(long);

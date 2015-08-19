@@ -14,7 +14,7 @@ using SEGarden.Extensions;
 using SEGarden.Extensions.Objectbuilders;
 using SEGarden.Logging;
 
-namespace GP.Concealment.Records.Entities {
+namespace GP.Concealment.World.Entities {
 
     public class ConcealableGrid : ConcealableEntity {
 
@@ -34,11 +34,11 @@ namespace GP.Concealment.Records.Entities {
 
         public List<long> SpawnOwners = new List<long>();
         public String DisplayName = "";
-        public List<long> BigOwners = new List<long>();
+        //public List<long> BigOwners = new List<long>();
 
         // Giving this a default value of new MyObjectBuilder_CubeGrid() does NOT work
         // The new object will have null fields, which makes it unsaveable.
-        public MyObjectBuilder_CubeGrid Builder;
+        //public MyObjectBuilder_CubeGrid Builder;
         //public MyObjectBuilder_EntityBase Builder;
 
         [XmlIgnore]
@@ -48,6 +48,7 @@ namespace GP.Concealment.Records.Entities {
             Type = EntityType.Grid;
         }
 
+        /*
         public bool Saveable() {
 
             if (!base.Saveable()) {
@@ -62,6 +63,7 @@ namespace GP.Concealment.Records.Entities {
                 return false;
             }
 
+            /*
             if (Builder == null) {
                 Log.Trace("Null builder for entity " + EntityId + "trying reload", 
                     "Saveable");
@@ -76,10 +78,12 @@ namespace GP.Concealment.Records.Entities {
 
                 //Builder.FillNullsWithDefaults();
             }
-
+            *//*
             return true;
         }
+        */
 
+        /*
         private void AttemptReloadFromModAPI() {
             Log.Error("AttemptReloadFromModAPI", "AttemptReloadFromModAPI");
 
@@ -101,6 +105,7 @@ namespace GP.Concealment.Records.Entities {
             LoadFromCubeGrid(grid);
             Log.Error("Reloaded.", "AttemptReloadFromModAPI");
         }
+        */
 
         public void LoadFromCubeGrid(IMyCubeGrid grid) {
             base.LoadFromEntity(grid as IMyEntity);
@@ -110,13 +115,13 @@ namespace GP.Concealment.Records.Entities {
             //IngameGrid = grid;
             DisplayName = grid.DisplayName;
             // ToDo: get all owners instead of big (for targeting)
-            BigOwners = grid.BigOwners;
+            //BigOwners = grid.BigOwners;
             // ToDo: get real spawn owners (for spawning)
             SpawnOwners = grid.BigOwners;
             //IMyEntity entity = grid as IMyEntity;
-            Builder = grid.GetObjectBuilder() as MyObjectBuilder_CubeGrid;
+            //Builder = grid.GetObjectBuilder() as MyObjectBuilder_CubeGrid;
 
-
+            /*
             if (Builder == null) {
                 Log.Error("Got null builder for entity " + EntityId +
                     ". We will be unable to save it now.", "LoadFromCubeGrid");
@@ -125,7 +130,7 @@ namespace GP.Concealment.Records.Entities {
                 //Log.Error("Filling builder nulls for " + EntityId, "LoadFromCubeGrid");
                 //Builder.FillNullsWithDefaults();
             }
-
+            */
 
         }
 
@@ -133,14 +138,14 @@ namespace GP.Concealment.Records.Entities {
             base.AddToByteStream(stream);
             stream.addLongList(SpawnOwners);
             stream.addString(DisplayName);
-            stream.addLongList(BigOwners);
+            //stream.addLongList(BigOwners);
         }
 
         public void RemoveFromByteStream(VRage.ByteStream stream) {
             base.RemoveFromByteStream(stream);
             SpawnOwners = stream.getLongList();
             DisplayName = stream.getString();
-            BigOwners = stream.getLongList();
+            //BigOwners = stream.getLongList();
         }
 
         #endregion

@@ -5,15 +5,16 @@ using System.Text;
 
 using SEGarden.Extensions;
 
-using GP.Concealment.Records.Entities;
+using GP.Concealment.World.Entities;
 
-namespace GP.Concealment.Messaging.Messages.Responses {
+namespace GP.Concealment.Messages.Responses {
 
     class ConcealedGridsResponse : Response {
 
         public static ConcealedGridsResponse FromBytes(byte[] bytes) {
             VRage.ByteStream stream = new VRage.ByteStream(bytes, bytes.Length);
             ConcealedGridsResponse response = new ConcealedGridsResponse();
+            response.LoadFromByteStream(stream);
 
             ConcealableGrid grid;
             ushort count = stream.getUShort();
@@ -33,6 +34,7 @@ namespace GP.Concealment.Messaging.Messages.Responses {
 
         protected override byte[] ToBytes() {
             VRage.ByteStream stream = new VRage.ByteStream(32, true);
+            base.AddToByteStream(stream);
 
             stream.addUShort((ushort)ConcealedGrids.Count);
             foreach (ConcealableGrid grid in ConcealedGrids) {

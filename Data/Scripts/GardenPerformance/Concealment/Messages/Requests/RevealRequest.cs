@@ -5,7 +5,7 @@ using System.Text;
 
 using SEGarden.Extensions;
 
-namespace GP.Concealment.Messaging.Messages.Requests {
+namespace GP.Concealment.Messages.Requests {
     class RevealRequest : Request {
 
         private const int SIZE = sizeof(long);

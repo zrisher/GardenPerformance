@@ -24,84 +24,96 @@ using VRageMath;
 using SEGarden;
 using SEGarden.Logging;
 using SEGarden.Logic;
-using SEGarden.Logic.Common;
 //using SEGarden.Notifications;
 
 using GP.Concealment;
-using GP.Concealment.Records;
-using GP.Concealment.Records.Entities;
-using GP.Concealment.Messaging.Handlers;
+using GP.Concealment.World;
+using GP.Concealment.World.Entities;
+using GP.Concealment.MessageHandlers;
 
 namespace GP.Concealment.Sessions {
 
-    class ServerConcealSession {
+    class ServerConcealSession : SessionComponent {
 
+        public static ServerConcealSession Instance;
+
+        /*
         private static Logger Log =
             new Logger("GardenPerformance.Concealment.Sessions.ServerConcealSession");
 
-        public ConcealableSector Sector;
-        private String SaveFileName;
-        private ServerMessageHandler Messenger;
         private RunStatus Status = RunStatus.NotInitialized;
 
-        public void Initialize() {
+        private ServerMessageHandler Messenger;
+
+        // ConcealedSector - load and save
+        public ConcealedSector ConcealedSector0;
+
+        public RevealedSector RevealedSector0;
+        
+        public String Name { get { return "ServerConcealSession"; } }
+
+        // RevealedSector - hook to gameworld, update
+        //   revealNeededEntities
+        //   concealUnneededEntities
+
+        public override void Initialize() {
             Log.Trace("Initializing Server Conceal Session", "Initialize");
 
-            if (Status == RunStatus.Initialized) {
+            if (Status == RunStatus.Running) {
                 Log.Warning("Duplicate initialization attempt, already initialized.", 
                     "Initialize");
                 return;
             }
 
+            // === Load Messenger
+            Log.Trace("Registering message handler", "Load");
+            Messenger = new ServerMessageHandler();
+
             // === Load Sector
 
-            SaveFileName = ConcealableSector.GenFileName(
-                MyAPIGateway.Session.Name,
-                MyAPIGateway.Session.GetWorld().Sector.Position);
+            String worldName = MyAPIGateway.Session.Name;
+            VRageMath.Vector3I sectorPos = MyAPIGateway.Session.GetWorld().Sector.Position;
+            String saveFileName = ConcealedSector.GenFileName(worldName, sectorPos);
 
-            if (!GardenGateway.Files.Exists(SaveFileName)) {
+            if (!GardenGateway.Files.Exists(saveFileName)) {
                 Log.Info("No existing save file, starting fresh.", "Load");
-                Sector = new ConcealableSector();
-                Sector.FileName = SaveFileName;
-                //Sector.WorldName = 
+                ConcealedSector0 = new ConcealedSector();
+                ConcealedSector0.FileName = saveFileName;
+                ConcealedSector0.WorldName = worldName;
+                ConcealedSector0.SectorPosition = sectorPos;
             }
             else {
-                Sector = ConcealableSector.Load(SaveFileName);
+                ConcealedSector0 = ConcealedSector.Load(saveFileName);
 
-                if (Sector == null) {
+                if (ConcealedSector0 == null) {
                     Log.Error("Error loading sector! Aborting functionality", "Load");
                     Terminate();
                     return;
                 }
             }
 
-            // Add all in-world entities
-            Log.Trace("Registering existing entities into sector", "Load");
-            HashSet<IMyEntity> allEntities = new HashSet<IMyEntity>();
-            MyAPIGateway.Entities.GetEntities(allEntities);
-            Sector.AddIngameEntities(allEntities);
+            Log.Trace("Registering Revealed Sector", "Load");
+            RevealedSector0 = new RevealedSector();
+            RevealedSector0.Initialize();
 
-            MyAPIGateway.Entities.OnEntityAdd += Sector.AddIngameEntity;
-            MyAPIGateway.Entities.OnEntityRemove += Sector.RemoveIngameEntity;
-
-            // === Load Messenger
-            Log.Trace("Registering message handler", "Load");
-            Messenger = new ServerMessageHandler();
-
-            Status = RunStatus.Initialized;
+            Status = RunStatus.Running;
             Log.Trace("Finished Initializing Server Conceal Session", "Initialize");
         }
 
 
-        public void Terminate() {
+        public override void Terminate() {
             Log.Trace("Terminating Server Conceal Session", "Initialize");
 
             if (Status == RunStatus.Terminated) return;
 
-            if (Sector != null) {
-                Sector.Save();
-                MyAPIGateway.Entities.OnEntityAdd -= Sector.AddIngameEntity;
-                MyAPIGateway.Entities.OnEntityRemove -= Sector.RemoveIngameEntity;
+            Messenger.Disabled = true;
+
+            if (ConcealedSector0 != null) {
+                ConcealedSector0.Save();
+            }
+
+            if (RevealedSector0 != null) {
+                RevealedSector0.Terminate();
             }
 
             Status = RunStatus.Terminated;
@@ -112,7 +124,7 @@ namespace GP.Concealment.Sessions {
         public bool QueueConceal(long entityId) {
             // TODO: wait to conceal after notifying other mods for a few frames
             //ConcealEntity(entity);
-            return Sector.ConcealEntity(entityId);
+            return ConcealedSector0.ConcealEntity(entityId);
         }
 
         /// <summary>
@@ -121,7 +133,7 @@ namespace GP.Concealment.Sessions {
         /// <param name="entity"></param>
         public bool QueueReveal(long entityId) {
             //revealEntity(entity);
-            return Sector.RevealEntity(entityId);
+            return ConcealedSector0.RevealEntity(entityId);
         }
 
         public bool CanConceal(long entityId) {
@@ -279,7 +291,7 @@ namespace GP.Concealment.Sessions {
         public void LoadSector() { }
 
         public void SaveSector() {
-            if (Sector != null) Sector.Save();
+            if (ConcealedSector0 != null) ConcealedSector0.Save();
         }
 
         private static void QueueSave() {
@@ -298,6 +310,7 @@ namespace GP.Concealment.Sessions {
         }
 
         #endregion
+         * */
     }
 
 }

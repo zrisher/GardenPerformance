@@ -10,47 +10,11 @@ using VRage.ModAPI;
 using SEGarden.Extensions;
 using SEGarden.Extensions.VRageMath;
 
-namespace GP.Concealment.Records.Entities {
+namespace GP.Concealment.World.Entities {
 
 
     public class ConcealableEntity {
 
-        #region Subclasses
-
-        public enum EntityType : ushort {
-            Unknown,
-            Asteroid,
-            Character,
-            FloatingObject,
-            Grid,
-            Planet,
-        }
-
-        public enum ConcealStatus : ushort {
-            Unknown,
-            Concealed,
-            Revealed,
-        };
-
-        public enum EntityRevealability : ushort {
-            Unknown,
-            Revealable,
-            Blocked,
-        };
-
-        [FlagsAttribute]
-        public enum EntityConcealability : ushort {
-            Unknown = 0,
-            Concealable = 1,
-            Controlled = 2,
-            NearControlled = 4,
-            Moving = 8,
-            Working = 16,
-            NearAsteroid = 32,
-            NeededForSpawn = 64,
-        };
-
-        #endregion
         #region Static
 
         //public const int SizeInBytes = sizeof(long) + sizeof(ushort) +
@@ -72,6 +36,7 @@ namespace GP.Concealment.Records.Entities {
         // Only the concealed sector really knows this
         public ConcealStatus Status = ConcealStatus.Unknown;
 
+        /*
         public bool Saveable() {
             if (Position == null || Revealability == null || 
                 Concealability == null || Type == null || Status == null)
@@ -79,6 +44,7 @@ namespace GP.Concealment.Records.Entities {
 
             return true;
         }
+        */
 
         public void AddToByteStream(VRage.ByteStream stream) {
             stream.addLong(EntityId);
@@ -106,34 +72,23 @@ namespace GP.Concealment.Records.Entities {
             EntityId = entity.EntityId;
             Position = entity.GetPosition();
             Transparent = entity.Transparent;
-            
-            // DO the timer-taker updates later when we have time:
-            //RefreshRevealability();
-            //RefreshConcealability();
-
         }
 
-        public void Refresh() {
-            //IMyEntity ingameEntity = null;
-            //MyAPIGateway.Entities.TryGetEntityById(EntityId, out ingameEntity);
-
-
-        }
-
+        /*
         public void RefreshRevealability() {
-            if (Status == ConcealStatus.Revealed) return;
+            //if (Status == ConcealStatus.Revealed) return;
 
             // TODO: check for concealment conditionals
             Revealability = EntityRevealability.Revealable;
         }
 
         public void RefreshConcealability() {
-            if (Status == ConcealStatus.Concealed) return;
+            //if (Status == ConcealStatus.Concealed) return;
 
             // TODO: check for revealment conditionals
             Concealability = EntityConcealability.Concealable;
         }
-
+        */
 
         #endregion
 

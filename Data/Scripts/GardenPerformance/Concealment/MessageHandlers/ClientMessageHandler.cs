@@ -4,22 +4,33 @@ using System.Linq;
 using System.Text;
 
 using SEGarden.Logging;
+using SEGarden.Logic;
+using SEGarden.Messaging;
 using SEGarden.Notifications;
 
-using GP.Concealment.Messaging;
-using GP.Concealment.Messaging.Messages.Responses;
+using GP.Concealment.Messages;
+using GP.Concealment.Messages.Responses;
 using GP.Concealment.Sessions;
+using GP.Concealment.World.Entities;
 
-namespace GP.Concealment.Messaging.Handlers {
-    class ClientMessageHandler : SEGarden.Messaging.MessageHandlerBase {
+
+
+
+
+namespace GP.Concealment.MessageHandlers {
+    class ClientMessageHandler : MessageHandlerBase {
 
         private static Logger Log =
             new Logger("GP.Concealment.Messaging.Handlers.ClientMessageHandler");
 
+        private static ClientConcealSession Session {
+            get { return ClientConcealSession.Instance; }
+        }
+
         public ClientMessageHandler() : base((ushort)MessageDomain.ConcealClient) { }
 
         public override void HandleMessage(ushort messageTypeId, byte[] body,
-            ulong senderSteamId, SEGarden.Logic.Common.RunLocation sourceType) {
+            ulong senderSteamId, RunLocation sourceType) {
 
             Log.Trace("Received message typeId " + messageTypeId, "HandleMessage");
             MessageType messageType = (MessageType)messageTypeId;
@@ -38,6 +49,9 @@ namespace GP.Concealment.Messaging.Handlers {
                 case MessageType.RevealResponse:
                     ReceiveRevealResponse(body);
                     break;
+                case MessageType.StatusResponse:
+                    ReceiveStatusResponse(body);
+                    break;
             }
 
         }
@@ -48,12 +62,12 @@ namespace GP.Concealment.Messaging.Handlers {
 
             ConcealedGridsResponse response = ConcealedGridsResponse.FromBytes(body);
 
-            Session.Client.ConcealedGrids = response.ConcealedGrids;
+            Session.ConcealedGrids = response.ConcealedGrids;
 
             String result = "Concealed Grids:\n\n";
 
             int i = 1;
-            foreach (Records.Entities.ConcealableGrid grid in Session.Client.ConcealedGrids) {
+            foreach (World.Entities.ConcealableGrid grid in Session.ConcealedGrids) {
                 result += String.Format("{0}: \"{1}\" - Revealability: {2}\n", 
                     i, grid.DisplayName, grid.Revealability);
                 i++;
@@ -75,12 +89,12 @@ namespace GP.Concealment.Messaging.Handlers {
 
             RevealedGridsResponse response = RevealedGridsResponse.FromBytes(body);
 
-            Session.Client.RevealedGrids = response.RevealedGrids;
+            Session.RevealedGrids = response.RevealedGrids;
 
-            String result = Session.Client.RevealedGrids.Count + " Revealed Grids:\n\n";
+            String result = Session.RevealedGrids.Count + " Revealed Grids:\n\n";
 
             int i = 1;
-            foreach (Records.Entities.ConcealableGrid grid in Session.Client.RevealedGrids) {
+            foreach (ConcealableGrid grid in Session.RevealedGrids) {
                 result += String.Format("{0}: \"{1}\" - Concealability: {2}\n",
                     i, grid.DisplayName, grid.Concealability);
                 i++;
@@ -124,6 +138,22 @@ namespace GP.Concealment.Messaging.Handlers {
                 "Failed to reveal";
 
             result += " grid " + response.EntityId;
+
+            Notification notice = new ChatNotification() {
+                Text = result,
+                Sender = "GP"
+            };
+
+            notice.Raise();
+        }
+
+        private void ReceiveStatusResponse(byte[] body) {
+            Log.Trace("Receiving Reveal Response", "ReceiveRevealResponse");
+
+            StatusResponse response = StatusResponse.FromBytes(body);
+
+            String result = "Server is ";
+            result += response.ServerRunning ? "Running." : "Terminated.";
 
             Notification notice = new ChatNotification() {
                 Text = result,
