@@ -40,14 +40,14 @@ namespace GP.Concealment.Records.Entities {
 
         [FlagsAttribute]
         public enum EntityConcealability : ushort {
-            Unknown,
-            Concealable,
-            Controlled,
-            NearControlled,
-            Moving,
-            Working,
-            NearAsteroid,
-            NeededForSpawn,
+            Unknown = 0,
+            Concealable = 1,
+            Controlled = 2,
+            NearControlled = 4,
+            Moving = 8,
+            Working = 16,
+            NearAsteroid = 32,
+            NeededForSpawn = 64,
         };
 
         #endregion
