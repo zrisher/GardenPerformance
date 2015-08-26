@@ -30,8 +30,8 @@ namespace GP.Concealment.Sessions {
         public static ClientMessageHandler Messenger;
         public static ClientConcealSession Instance;
 
-        public List<ConcealableGrid> RevealedGrids;
-        public List<ConcealableGrid> ConcealedGrids;
+        public List<ConcealedGrid> RevealedGrids;
+        public List<ConcealedGrid> ConcealedGrids;
 
         public String Name { get { return "ClientConcealSession"; } }
 

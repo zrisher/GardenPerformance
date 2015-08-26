@@ -77,10 +77,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Concealment\Settings.cs" />
-    <Compile Include="Concealment\World\Entities\Common.cs" />
+    <Compile Include="Concealment\World\Entities\RevealedGrid.cs" />
     <Compile Include="Concealment\World\Entities\ControllableEntity.cs" />
-    <Compile Include="Concealment\World\Sectors\ConcealedSectorState.cs" />
-    <Compile Include="Concealment\World\PruningStructure.cs" />
+    <Compile Include="Concealment\World\Entities\Character.cs" />
+    <Compile Include="Concealment\World\Entities\Common.cs" />
+    <Compile Include="Concealment\World\Sectors\ConcealedSector.cs" />
+    <Compile Include="SEGarden\Math\AABBEntity.cs" />
+    <Compile Include="SEGarden\Math\AABBTree.cs" />
     <Compile Include="Concealment\Messages\Responses\StatusResponse.cs" />
     <Compile Include="Concealment\Commands.cs" />
     <Compile Include="Concealment\Messages\MessageDomain.cs" />
@@ -97,10 +100,9 @@
     <Compile Include="Concealment\Messages\Requests\RevealRequest.cs" />
     <Compile Include="Concealment\Messages\Responses\ConcealResponse.cs" />
     <Compile Include="Concealment\Messages\Requests\ConcealRequest.cs" />
-    <Compile Include="Concealment\World\Entities\ConcealableEntity.cs" />
-    <Compile Include="Concealment\World\Entities\ConcealableGrid.cs" />
-    <Compile Include="Concealment\World\Sectors\ConcealedSector.cs" />
-    <Compile Include="Concealment\World\Entities\RevealedGrid.cs" />
+    <Compile Include="Concealment\World\Entities\ConcealedEntity.cs" />
+    <Compile Include="Concealment\World\Entities\ConcealedGrid.cs" />
+    <Compile Include="Concealment\ConcealmentManager.cs" />
     <Compile Include="Concealment\World\Sectors\RevealedSector.cs" />
     <Compile Include="Concealment\Sessions\ServerConcealSession.cs" />
     <Compile Include="Concealment\Sessions\ClientConcealSession.cs" />

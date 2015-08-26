@@ -61,7 +61,7 @@ namespace GP.Concealment {
             (List<String> args) => {
                 int n = Int32.Parse(args[0]);
 
-                List<ConcealableGrid> revealedGrids = Session.RevealedGrids;
+                List<ConcealedGrid> revealedGrids = Session.RevealedGrids;
                 
                 if (revealedGrids == null) return new ChatNotification() {
                     Text = "No list of revealed grids available.",
@@ -73,7 +73,7 @@ namespace GP.Concealment {
                     Sender = "GP"
                 };
 
-                ConcealableGrid grid = revealedGrids[n - 1];
+                ConcealedGrid grid = revealedGrids[n - 1];
                 long entityId = grid.EntityId;
 
                 Log.Trace("Requesting Conceal Grid " + entityId, "ConcealCommand");
@@ -94,7 +94,7 @@ namespace GP.Concealment {
             (List<String> args) => {
                 int n = Int32.Parse(args[0]);
 
-                List<ConcealableGrid> grids = Session.ConcealedGrids;
+                List<ConcealedGrid> grids = Session.ConcealedGrids;
 
                 if (grids == null) return new ChatNotification() {
                     Text = "No list of concealed grids available.",
@@ -106,7 +106,7 @@ namespace GP.Concealment {
                     Sender = "GP"
                 };
 
-                ConcealableGrid grid = grids[n - 1];
+                ConcealedGrid grid = grids[n - 1];
                 long entityId = grid.EntityId;
 
                 Log.Trace("Requesting Reveal Grid " + entityId, "RevealCommand");

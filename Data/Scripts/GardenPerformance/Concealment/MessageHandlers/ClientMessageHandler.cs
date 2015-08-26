@@ -67,7 +67,7 @@ namespace GP.Concealment.MessageHandlers {
             String result = "Concealed Grids:\n\n";
 
             int i = 1;
-            foreach (World.Entities.ConcealableGrid grid in Session.ConcealedGrids) {
+            foreach (World.Entities.ConcealedGrid grid in Session.ConcealedGrids) {
                 result += String.Format("{0}: \"{1}\" - Revealability: {2}\n", 
                     i, grid.DisplayName, grid.Revealability);
                 i++;
@@ -94,7 +94,7 @@ namespace GP.Concealment.MessageHandlers {
             String result = Session.RevealedGrids.Count + " Revealed Grids:\n\n";
 
             int i = 1;
-            foreach (ConcealableGrid grid in Session.RevealedGrids) {
+            foreach (ConcealedGrid grid in Session.RevealedGrids) {
                 result += String.Format("{0}: \"{1}\" - Concealability: {2}\n",
                     i, grid.DisplayName, grid.Concealability);
                 i++;

@@ -24,23 +24,24 @@ namespace GP.Concealment.World.Entities {
 
 
     public enum EntityRevealability : ushort {
-        Unknown,
         Revealable,
         Blocked,
     }
 
     [FlagsAttribute]
     public enum EntityConcealability : ushort {
-        Unknown,
-        Concealable,
-        Controlled,
-        Visible,
-        Detectable,
-        Communicative,
-        Moving,
-        Working,
-        NearAsteroid,
-        SpawnPoint,
+        Concealable = 0,
+        Controlled = 1,
+        NearControlled = 2,
+        Visible = 4,
+        Detectable = 8,
+        Communicative = 16,
+        Moving = 32,
+        Working = 64,
+        NearAsteroid = 128,
+        SpawnPoint = 256,
     }
 
 }
+
+

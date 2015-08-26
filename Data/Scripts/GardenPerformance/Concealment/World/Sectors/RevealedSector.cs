@@ -7,8 +7,10 @@ using Sandbox.Game.Entities;
 using Sandbox.Game.World;
 using Sandbox.ModAPI;
 using VRage.ModAPI;
+using VRageMath;
 
 using SEGarden.Logging;
+using SEGarden.Math;
 
 using GP.Concealment.World.Entities;
 
@@ -26,199 +28,176 @@ namespace GP.Concealment.World.Sectors {
     /// </remarks>
     class RevealedSector {
 
-        /*
         private static Logger Log = 
-            new Logger("GP.Concealment.Revealed.RevealedSector");
+            new Logger("GP.Concealment.World.Sectors.RevealedSector");
+
+        //ControllableEntity.ControllableEntityAdded -= ControllableEntityAdded;
+        //ControllableEntity.ControllableEntityMoved -= ControllableEntityMoved;
+        //ControllableEntity.ControllableEntityRemoved -= ControllableEntityRemoved;
 
         #region Instance Fields
 
-        public List<long> ActivePlayerIDs;
+        // These cause us to reveal things
+        private List<ulong> ActiveSteamIDs = new List<ulong>();
 
-        // public List<Sandbox.ModAPI.Ingame.IMyShipController> Controllers;
-        // public List<IMyControllableEntity> ControlledEntities
+        private Dictionary<long, ControllableEntity> ControlledEntities =
+            new Dictionary<long, ControllableEntity>();
 
-        public List<RevealedGrid> ControlledGrids;
-        public List<RevealedGrid> UncontrolledGrids;
+        // These can be concealed or marked to remain revealed
+        private Dictionary<long, RevealedGrid> Grids =
+            new Dictionary<long, RevealedGrid>();
+
+        private AABBTree GridTree = new AABBTree();
+
+        #endregion
+        #region Field Access Helpers
+
+        private void RememberControlledEntity(ControllableEntity e) {
+            long id = e.EntityId;
+            if (ControlledEntities.ContainsKey(id)) {
+                Log.Error("Already added " + id, "RememberControlledEntity");
+                return;
+            }
+
+            Log.Error("Adding " + id, "RememberControlledEntity");
+            ControlledEntities.Add(id, e);
+        }
+
+        private void ForgetControlledEntity(ControllableEntity e) {
+            long id = e.EntityId;
+            if (!ControlledEntities.ContainsKey(id)) {
+                Log.Error("Not stored " + id, "ForgetControlledEntity");
+                return;
+            }
+
+            Log.Error("Removing " + id, "ForgetControlledEntity");
+            ControlledEntities.Remove(id);
+        }
+
+        private void RememberGrid(RevealedGrid e) {
+            long id = e.EntityId;
+            if (Grids.ContainsKey(id)) {
+                Log.Error("Already added " + id, "RememberGrid");
+                return;
+            }
+
+            Log.Error("Adding " + id, "RememberGrid");
+            Grids.Add(id, e);
+        }
+
+        private void ForgetGrid(RevealedGrid e) {
+            long id = e.EntityId;
+            if (!Grids.ContainsKey(id)) {
+                Log.Error("Not stored " + id, "ForgetGrid");
+                return;
+            }
+
+            Log.Error("Removing " + id, "ForgetGrid");
+            Grids.Remove(id);
+        }
+
+        private void RememberPlayerId(ulong id) {
+            if (ActiveSteamIDs.Contains(id)) {
+                Log.Error("Already added steam id: " + id, "RememberPlayerId");
+                return;
+            }
+
+            Log.Error("Adding steam id" + id, "RememberPlayerId");
+            ActiveSteamIDs.Add(id);
+        }
+
+        private void ForgetPlayerId(ulong id) {
+            if (!ActiveSteamIDs.Contains(id)) {
+                Log.Error("Steam id not stored: " + id, "RememberPlayerId");
+                return;
+            }
+
+            Log.Error("Removing steam id" + id, "RememberPlayerId");
+            ActiveSteamIDs.Remove(id);
+        }
+
+        #endregion
+        #region Public Accessors 
+   
+        public List<RevealedGrid> RevealedGridsList() {
+            return Grids.Values.ToList();
+        }
+
+        #endregion
+        #region Entity Updates
+
+        private void ControllableEntityAdded(ControllableEntity e) {
+            Log.Trace("Controllable Entity Added", "ControllableEntityAdded");
+
+            if (e.IsControlled) RememberControlledEntity(e);
+            RevealedGrid grid = e as RevealedGrid;
+            if (grid != null) RememberGrid(grid);
+        }
+
+        private void ControllableEntityMoved(ControllableEntity e) {
+            Log.Trace("Controllable Entity Moved", "ControllableEntityAdded");
+        }
+
+        private void ControllableEntityRemoved(ControllableEntity e) {
+            Log.Trace("Controllable Entity Added", "ControllableEntityAdded");
+
+            if (e.IsControlled) ForgetControlledEntity(e);
+            RevealedGrid grid = e as RevealedGrid;
+            if (grid != null) ForgetGrid(grid);
+        }
+
+        private void ControllableEntityControlled(ControllableEntity e) {
+            Log.Trace("Controllable Entity Added", "ControllableEntityAdded");
+            RememberControlledEntity(e);
+        }
+
+        private void ControllableEntityReleased(ControllableEntity e) {
+            Log.Trace("Controllable Entity Added", "ControllableEntityAdded");
+            ForgetControlledEntity(e);
+        }
+
+        public void PlayedLoggedIn(ulong steamId) {
+            RememberPlayerId(steamId);
+        }
+
+        public void PlayedLoggedOff(ulong steamId) {
+            ForgetPlayerId(steamId);
+        }
+
+        private void MarkForRevealNear(ControllableEntity e) {
+            // Call when an entity is added or moves past a certain distance
+            // can store lastrevealcheckpos on entity
+
+            // Both concealed and revealed
+            // Get max distance and reason from entity
+
+            // character
+            // visibility        public int REVEAL_VISIBILITY_KM = 35;
+
+            // cubegrid
+            // public int REVEAL_DETECTABILITY_KM = 50;
+            // public int REVEAL_COMMUNICATION_KM = 50;
+            // public int REVEAL_VISIBILITY_KM = 35;
+            // public int REVEAL_COLLIDABLE_KM = 10;
+        }
 
         #endregion
         #region Session Updates
 
-        public void Initialize() {
-            Log.Trace("Registering existing entities into sector", "Load");
+        public void Conceal() {
+            // look through all grids for those that are revealable
+            // send their entity Ids to concealed sector for conceal
+            // or maybe actually do the hard part here? A few at a time?
+            // it's really working with revealed entities until they are concealed,
+            // so maybe it makes sense to manage that queue here and let the
+            // concealed work handle the reveal queue and concealed grids that need
+            // to be revealed
 
-
-            //HashSet<IMyEntity> allEntities = new HashSet<IMyEntity>();
-            //MyAPIGateway.Entities.GetEntities(allEntities);
-            //AddIngameEntities(allEntities);
-
-            //MyAPIGateway.Entities.OnEntityAdd += AddIngameEntity;
-            //MyAPIGateway.Entities.OnEntityRemove += RemoveIngameEntity;
-
-        }
-
-        public void Terminate() {
-
-            //MyAPIGateway.Entities.OnEntityAdd -= AddIngameEntity;
-            //MyAPIGateway.Entities.OnEntityRemove -= RemoveIngameEntity;
-
-        }
-
-        public void Update100() {
-            RevealNeededEntities();
-        }
-
-        public void Update1000() {
-            ConcealUnneededEntities();
+            // Grid should handle concealability based on marked near controlled
+            // + asteroid, working, internal controlled (moving/has pilots)
         }
 
         #endregion
-        #region Public Requests (chat commands)
-
-        public List<ConcealableGrid> RevealedGridsList() {
-            return RevealedGrids.Select((x) => x as ConcealableGrid).ToList();
-        }
-
-        #endregion
-        #region Concealment Updates
-
-        // process queue of reveal-causing registered entities
-        // look for nearby things that need revealing
-        // if they are concealed, queue their revealing
-        // if they are reveal, ensure they're marked as needed
-        private void RevealNeededEntities() {
-
-            List<IMyCharacter> controlledCharacters;
-            List<RevealedGrid> controlledGrids;
-            ConcealedSector concealedSector;
-
-            foreach (var character in controlledCharacters) {
-                // visible check
-                // visibility        public int REVEAL_VISIBILITY_KM = 35;
-                //concealedSector.MarkConcealabilityNear(character.center, )
-
-            }
-
-            foreach (var grid in controlledGrids) {
-                //        public int REVEAL_DETECTABILITY_KM = 50;
-                // public int REVEAL_COMMUNICATION_KM = 50;
-                // public int REVEAL_VISIBILITY_KM = 35;
-                // public int REVEAL_COLLIDABLE_KM = 10;
-
-                // Mark concealed
-            }
-
-            foreach (IMyControllableEntity controllable in ControlledEntities) {
-                if (controllable.ControllerInfo) {
-                    //
-                }
-            }
-
-        }
-
-        // process queue of concealable entities
-        // if they're not needed and can be concealed, queue them for conceal
-        private void ConcealUnneededEntities() {
-
-            // List of entities to check
-
-            // Check a couple 
-
-            // check map of uncontrolled grids
-
-        }
-
-        #endregion
-        #region Entity Add/Remove from game world
-
-        private void AddIngameEntity(IMyEntity entity) {
-            Log.Trace("Adding entity " + entity.EntityId + " of type " +
-                entity.GetType(), "AddIngameEntity");
-
-            if (entity.Transparent) {
-                Log.Trace("It's Transparent, skipping", "AddIngameEntity");
-                return;
-            }
-
-            if (entity is IMyCubeGrid) {
-                Log.Trace("It's a CubeGrid.", "AddIngameEntity");
-
-                IMyCubeGrid grid = entity as IMyCubeGrid;
-                RevealedGrid revealed = new RevealedGrid();
-                revealed.LoadFromCubeGrid(grid);
-
-                grid.
-                var revealedGrid = new Concealed.Entities.ConcealableGrid();
-                revealedGrid.LoadFromCubeGrid(grid);
-                RevealedGrids[grid.EntityId] = revealedGrid;
-            }
-
-
-            if (entity is IMyCharacter) {
-                Log.Trace("It's a CubeGrid.", "AddIngameEntity");
-                IMyCubeGrid grid = entity as IMyCubeGrid;
-                var revealedGrid = new Concealed.Entities.ConcealableGrid();
-                revealedGrid.LoadFromCubeGrid(grid);
-                RevealedGrids[grid.EntityId] = revealedGrid;
-            }
-
-            Sandbox.Game.World.MyEntityController a;
-            a.
-
-            if (entity is IMyControllableEntity) {
-                var controllable = entity as IMyControllableEntity;
-                controllable.Entity.
-                if (controllable.ControllerInfo != null) {
-                    controllable.ControllerInfo.ControlAcquired += new Action<Sandbox.Game.World.MyEntityController>((x) => { x; });
-                }
-
-            }
-
-        }
-
-        private void AddIngameEntities(HashSet<IMyEntity> entities) {
-            Log.Trace("Adding " + entities.Count + " entities", "AddIngameEntities");
-
-            foreach (IMyEntity entity in entities) {
-                AddIngameEntity(entity);
-            }
-        }
-
-        private void RemoveIngameEntity(IMyEntity entity) {
-            Log.Trace("Removing entity " + entity.EntityId + " of type " +
-                entity.GetType(), "RemoveIngameEntity");
-
-            if (entity.Transparent) {
-                Log.Trace("It's Transparent, skipping", "AddIngameEntity");
-                return;
-            }
-
-            // TODO: Store other types of entities
-            if (entity is IMyCubeGrid) {
-                IMyCubeGrid grid = entity as IMyCubeGrid;
-                Log.Trace("Removing CubeGrid " + grid.EntityId, "RemoveIngameEntity");
-
-                if (!RevealedGrids.ContainsKey(entity.EntityId)) {
-                    Log.Trace("Removed CubeGrid wasn't stored " + grid.EntityId, "RemoveIngameEntity");
-                }
-                else {
-                    RevealedGrids.Remove(entity.EntityId);
-                    Log.Trace("Removed " + entity.EntityId, "RemoveIngameEntity");
-                }
-            }
-        }
-
-        public void entityControlAquired(MyEntityController controller) {
-            MyEntity parent = controller.ControlledEntity.Entity.GetTopMostParent();
-
-            if (!ControlledEntities)
-
-        }
-
-
-
-
-        #endregion
-               * */
 
     }
 

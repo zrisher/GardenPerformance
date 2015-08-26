@@ -20,7 +20,7 @@ namespace GP.Concealment.MessageHandlers {
         private static Logger Log = 
             new Logger("GP.Concealment.Messaging.Handlers.ServerMessageHandler");
 
-        public bool Disabled = false;
+        public bool Disabled = true; //false;
 
         public ServerMessageHandler() : base((ushort)MessageDomain.ConcealServer) { }
 
@@ -31,13 +31,13 @@ namespace GP.Concealment.MessageHandlers {
             MessageType messageType = (MessageType)messageTypeId;
             Log.Trace("Received message type " + messageType, "HandleMessage");
 
-            /*
+
             if (Disabled) {
                 SendDisabledNotice(senderSteamId);
                 return;
             }
 
-
+                        /*
             switch (messageType) {
                 case MessageType.ConcealedGridsRequest:
                     ReplyToConcealedGridsRequest(body, senderSteamId);
@@ -127,7 +127,7 @@ namespace GP.Concealment.MessageHandlers {
 
             response.SendToPlayer(senderId);
         }
-
+         * */
         private void SendDisabledNotice(ulong senderId) {
             StatusResponse response = new StatusResponse() {
                 ServerRunning = false
@@ -136,6 +136,6 @@ namespace GP.Concealment.MessageHandlers {
             response.SendToPlayer(senderId);
         }
 
-         * */
+
     }
 }

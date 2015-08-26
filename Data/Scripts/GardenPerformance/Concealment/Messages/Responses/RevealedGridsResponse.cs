@@ -19,11 +19,11 @@ namespace GP.Concealment.Messages.Responses {
             RevealedGridsResponse response = new RevealedGridsResponse();
             response.LoadFromByteStream(stream);
   
-            ConcealableGrid grid;
+            ConcealedGrid grid;
             ushort count = stream.getUShort();
             //Log.Trace("Retrieving " + count + " grids from response", "ToBytes");
             for (int i = 0; i < count; i++) {
-                grid = new ConcealableGrid();
+                grid = new ConcealedGrid();
                 grid.RemoveFromByteStream(stream);
                 response.RevealedGrids.Add(grid);
                 //Log.Trace("Added grid " + grid.EntityId, "ToBytes");
@@ -32,7 +32,7 @@ namespace GP.Concealment.Messages.Responses {
             return response;
         }
 
-        public List<ConcealableGrid> RevealedGrids = new List<ConcealableGrid>();
+        public List<ConcealedGrid> RevealedGrids = new List<ConcealedGrid>();
 
         public RevealedGridsResponse() :
             base((ushort)MessageType.RevealedGridsResponse) { }
@@ -43,7 +43,7 @@ namespace GP.Concealment.Messages.Responses {
 
             //Log.Trace("Adding grids to response", "ToBytes");
             stream.addUShort((ushort)RevealedGrids.Count);
-            foreach (ConcealableGrid grid in RevealedGrids) {
+            foreach (ConcealedGrid grid in RevealedGrids) {
                 grid.AddToByteStream(stream);
                 //Log.Trace("Added Grid", "ToBytes");
             }

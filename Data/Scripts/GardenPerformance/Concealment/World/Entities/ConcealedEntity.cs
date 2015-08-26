@@ -13,7 +13,7 @@ using SEGarden.Extensions.VRageMath;
 namespace GP.Concealment.World.Entities {
 
 
-    public class ConcealableEntity {
+    public class ConcealedEntity {
 
         #region Static
 
@@ -26,8 +26,8 @@ namespace GP.Concealment.World.Entities {
         public long EntityId = 0;
         public VRageMath.Vector3D Position = new VRageMath.Vector3D();
         public bool Transparent = false;
-        public EntityRevealability Revealability = EntityRevealability.Unknown;
-        public EntityConcealability Concealability = EntityConcealability.Unknown;
+        public EntityRevealability Revealability;
+        public EntityConcealability Concealability;
 
         // All inherited types should be able to determine these
         public EntityType Type = EntityType.Unknown;

@@ -13,10 +13,13 @@ using VRage.ObjectBuilders;
 using SEGarden.Extensions;
 using SEGarden.Extensions.Objectbuilders;
 using SEGarden.Logging;
+using SEGarden.Math;
+
+using VRageMath;
 
 namespace GP.Concealment.World.Entities {
 
-    public class ConcealableGrid : ConcealableEntity {
+    public class ConcealedGrid : ConcealedEntity, AABBEntity {
 
         /*
         public class SpawnPoint {
@@ -36,6 +39,13 @@ namespace GP.Concealment.World.Entities {
         public String DisplayName = "";
         //public List<long> BigOwners = new List<long>();
 
+        // AABBEntity details
+        // TODO: Update these details
+        public BoundingBoxD BoundingBox { get; set; }
+        public int TreeProxyID { get; set; }
+        public Vector3D WorldTranslation { get; set; }
+        public Vector3D LinearVelocity { get; set; }
+
         // Giving this a default value of new MyObjectBuilder_CubeGrid() does NOT work
         // The new object will have null fields, which makes it unsaveable.
         //public MyObjectBuilder_CubeGrid Builder;
@@ -44,7 +54,7 @@ namespace GP.Concealment.World.Entities {
         [XmlIgnore]
         public IMyCubeGrid IngameGrid;
         
-        public ConcealableGrid() {
+        public ConcealedGrid() {
             Type = EntityType.Grid;
         }
 
