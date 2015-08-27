@@ -12,6 +12,8 @@ namespace GP.Concealment.Messages {
         ConcealResponse,
         ConcealedGridsRequest,
         ConcealedGridsResponse,
+        LoginRequest,
+        LogoutRequest,
         RevealRequest,
         RevealResponse,
         RevealedGridsRequest,

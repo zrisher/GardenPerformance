@@ -26,14 +26,10 @@ namespace GP.Concealment.World.Sectors {
     /// Do collide detects on moving cubegrids - need higher level org than just "entities with physics"
     /// Do spawn check on all spawned players
     /// </remarks>
-    class RevealedSector {
+    public class RevealedSector {
 
         private static Logger Log = 
             new Logger("GP.Concealment.World.Sectors.RevealedSector");
-
-        //ControllableEntity.ControllableEntityAdded -= ControllableEntityAdded;
-        //ControllableEntity.ControllableEntityMoved -= ControllableEntityMoved;
-        //ControllableEntity.ControllableEntityRemoved -= ControllableEntityRemoved;
 
         #region Instance Fields
 
@@ -50,7 +46,14 @@ namespace GP.Concealment.World.Sectors {
         private AABBTree GridTree = new AABBTree();
 
         #endregion
-        #region Field Access Helpers
+        #region Public Field Access Helpers
+
+        public List<RevealedGrid> RevealedGridsList() {
+            return Grids.Values.ToList();
+        }
+
+        #endregion
+        #region Private Field Access Helpers
 
         private void RememberControlledEntity(ControllableEntity e) {
             long id = e.EntityId;
@@ -83,6 +86,7 @@ namespace GP.Concealment.World.Sectors {
 
             Log.Error("Adding " + id, "RememberGrid");
             Grids.Add(id, e);
+            GridTree.Add(e);
         }
 
         private void ForgetGrid(RevealedGrid e) {
@@ -94,6 +98,7 @@ namespace GP.Concealment.World.Sectors {
 
             Log.Error("Removing " + id, "ForgetGrid");
             Grids.Remove(id);
+            GridTree.Remove(e);
         }
 
         private void RememberPlayerId(ulong id) {
@@ -102,7 +107,7 @@ namespace GP.Concealment.World.Sectors {
                 return;
             }
 
-            Log.Error("Adding steam id" + id, "RememberPlayerId");
+            Log.Error("Adding steam id " + id, "RememberPlayerId");
             ActiveSteamIDs.Add(id);
         }
 
@@ -112,21 +117,14 @@ namespace GP.Concealment.World.Sectors {
                 return;
             }
 
-            Log.Error("Removing steam id" + id, "RememberPlayerId");
+            Log.Error("Removing steam id " + id, "RememberPlayerId");
             ActiveSteamIDs.Remove(id);
-        }
-
-        #endregion
-        #region Public Accessors 
-   
-        public List<RevealedGrid> RevealedGridsList() {
-            return Grids.Values.ToList();
         }
 
         #endregion
         #region Entity Updates
 
-        private void ControllableEntityAdded(ControllableEntity e) {
+        public void ControllableEntityAdded(ControllableEntity e) {
             Log.Trace("Controllable Entity Added", "ControllableEntityAdded");
 
             if (e.IsControlled) RememberControlledEntity(e);
@@ -134,11 +132,11 @@ namespace GP.Concealment.World.Sectors {
             if (grid != null) RememberGrid(grid);
         }
 
-        private void ControllableEntityMoved(ControllableEntity e) {
+        public void ControllableEntityMoved(ControllableEntity e) {
             Log.Trace("Controllable Entity Moved", "ControllableEntityAdded");
         }
 
-        private void ControllableEntityRemoved(ControllableEntity e) {
+        public void ControllableEntityRemoved(ControllableEntity e) {
             Log.Trace("Controllable Entity Added", "ControllableEntityAdded");
 
             if (e.IsControlled) ForgetControlledEntity(e);
@@ -146,40 +144,26 @@ namespace GP.Concealment.World.Sectors {
             if (grid != null) ForgetGrid(grid);
         }
 
-        private void ControllableEntityControlled(ControllableEntity e) {
+        public void ControllableEntityControlled(ControllableEntity e) {
             Log.Trace("Controllable Entity Added", "ControllableEntityAdded");
             RememberControlledEntity(e);
         }
 
-        private void ControllableEntityReleased(ControllableEntity e) {
+        public void ControllableEntityReleased(ControllableEntity e) {
             Log.Trace("Controllable Entity Added", "ControllableEntityAdded");
             ForgetControlledEntity(e);
         }
 
-        public void PlayedLoggedIn(ulong steamId) {
+        public void PlayerLoggedIn(ulong steamId) {
             RememberPlayerId(steamId);
         }
 
-        public void PlayedLoggedOff(ulong steamId) {
+        public void PlayerLoggedOut(ulong steamId) {
             ForgetPlayerId(steamId);
         }
 
-        private void MarkForRevealNear(ControllableEntity e) {
-            // Call when an entity is added or moves past a certain distance
-            // can store lastrevealcheckpos on entity
-
-            // Both concealed and revealed
-            // Get max distance and reason from entity
-
-            // character
-            // visibility        public int REVEAL_VISIBILITY_KM = 35;
-
-            // cubegrid
-            // public int REVEAL_DETECTABILITY_KM = 50;
-            // public int REVEAL_COMMUNICATION_KM = 50;
-            // public int REVEAL_VISIBILITY_KM = 35;
-            // public int REVEAL_COLLIDABLE_KM = 10;
-        }
+        #endregion
+        #region Marking
 
         #endregion
         #region Session Updates

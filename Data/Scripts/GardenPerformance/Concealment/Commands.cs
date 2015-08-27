@@ -61,7 +61,7 @@ namespace GP.Concealment {
             (List<String> args) => {
                 int n = Int32.Parse(args[0]);
 
-                List<ConcealedGrid> revealedGrids = Session.RevealedGrids;
+                List<RevealedGrid> revealedGrids = Session.RevealedGrids;
                 
                 if (revealedGrids == null) return new ChatNotification() {
                     Text = "No list of revealed grids available.",
@@ -73,7 +73,7 @@ namespace GP.Concealment {
                     Sender = "GP"
                 };
 
-                ConcealedGrid grid = revealedGrids[n - 1];
+                RevealedGrid grid = revealedGrids[n - 1];
                 long entityId = grid.EntityId;
 
                 Log.Trace("Requesting Conceal Grid " + entityId, "ConcealCommand");
@@ -119,16 +119,6 @@ namespace GP.Concealment {
             0
         );
 
-        static Command SaveCommand = new Command(
-            "save",
-            "save the current conceal state",
-            "Blah blah blah longtext about saving",
-            (List<String> args) => {              
-                //Session.Server.SaveSector();
-                return new ChatNotification() { Text = "Saving..." };
-            }
-        );
-
         static Tree ConcealmentTree = new Tree(
             "concealment",
             "manage entity concealment",
@@ -145,7 +135,6 @@ namespace GP.Concealment {
                 RevealCommand,
                 RevealedCommand,
                 ConcealCommand,
-                SaveCommand,
             },
             "c"
         );

@@ -19,6 +19,7 @@ using SEGarden.Logic;
 
 using GP.Concealment.MessageHandlers;
 using GP.Concealment.World.Entities;
+using GP.Concealment.Messages.Requests;
 
 namespace GP.Concealment.Sessions {
 
@@ -30,7 +31,7 @@ namespace GP.Concealment.Sessions {
         public static ClientMessageHandler Messenger;
         public static ClientConcealSession Instance;
 
-        public List<ConcealedGrid> RevealedGrids;
+        public List<RevealedGrid> RevealedGrids;
         public List<ConcealedGrid> ConcealedGrids;
 
         public String Name { get { return "ClientConcealSession"; } }
@@ -39,6 +40,12 @@ namespace GP.Concealment.Sessions {
             Log.Trace("Initializing Client Conceal Session", "Initialize");
             GardenGateway.Commands.addCommands(Commands.FullTree);
             Messenger = new ClientMessageHandler();
+
+            // Tell server we're here so it can reveal our spawn points
+            // I couldn't find any existing events for playerLoggedIn
+            LoginRequest request = new LoginRequest();
+            request.SendToServer();
+
             Instance = this;
             Log.Trace("Finished Initializing Client Conceal Session", "Initialize");
 
@@ -48,6 +55,12 @@ namespace GP.Concealment.Sessions {
 
         public override void Terminate() {
             Log.Trace("Terminating Client Conceal Session", "Terminate");
+
+            // Tell server we're leaving so it can conceal our spawn points
+            // I couldn't find any existing events for playerLoggedOut
+            LogoutRequest request = new LogoutRequest();
+            request.SendToServer();
+
             Instance = null;
             Log.Trace("Finished Terminate Client Conceal Session", "Terminate");
         }

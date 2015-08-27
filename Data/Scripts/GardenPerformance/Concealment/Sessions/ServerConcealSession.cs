@@ -57,15 +57,21 @@ namespace GP.Concealment.Sessions {
         public override void Initialize() {
             Log.Trace("Initializing Server Conceal Session", "Initialize");
 
+            Log.Trace("Loading settings", "Initialize");
+            Settings.Load();
+
             Log.Trace("Registering message handler", "Initialize");
             Messenger = new ServerMessageHandler();
 
             Log.Trace("Registering concealment manager", "Initialize");
             Manager = new ConcealmentManager();
+            Manager.Initialize();
             if (!Manager.Loaded) {
                 Log.Error("Error loading sector, conceal disabled.", "Initialize");
                 Messenger.Disabled = true;
             }
+
+
             base.Initialize();
             Instance = this;
             Log.Trace("Finished Initializing Server Conceal Session", "Initialize");
@@ -75,7 +81,7 @@ namespace GP.Concealment.Sessions {
             Log.Trace("Terminating Server Conceal Session", "Terminate");
 
             Log.Trace("Terminating concealment manager", "Terminate");
-            if (Manager.Loaded) Manager.Save();
+            Manager.Terminate();
 
             Log.Trace("Terminating server messenger", "Terminate");
             Messenger.Disabled = true;

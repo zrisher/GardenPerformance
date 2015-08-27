@@ -55,8 +55,8 @@ namespace GP.Concealment {
 
         // eventually multiple sectors
         private Vector3D SectorPosition; 
-        private ConcealedSector Concealed;
-        private RevealedSector Revealed;
+        public ConcealedSector Concealed;
+        public RevealedSector Revealed;
 
         private Queue<ConcealedGrid> GridRevealQueue = new Queue<ConcealedGrid>();
         private Queue<RevealedGrid> GridConcealQueue = new Queue<RevealedGrid>();
@@ -69,18 +69,39 @@ namespace GP.Concealment {
         #endregion
         #region Constructor
 
-        public ConcealmentManager() {
-            //ControllableEntity.ControllableEntityAdded += ControllableEntityAdded;
-            //ControllableEntity.ControllableEntityMoved += ControllableEntityMoved;
+        public ConcealmentManager() {}
 
+        #endregion
+        #region Initialize/Terminate
+
+        public void Initialize() {
+            Log.Trace("Initializing ConcealmentManager", "Initialize");
             WorldName = MyAPIGateway.Session.Name;
             SectorPosition = MyAPIGateway.Session.GetWorld().Sector.Position;
+            Concealed = ConcealedSector.LoadOrNew(WorldName, SectorPosition);
+
             Revealed = new RevealedSector();
-            Concealed = ConcealedSector.LoadOrNew(WorldName,SectorPosition);
+            ControllableEntity.ControllableEntityAdded += Revealed.ControllableEntityAdded;
+            ControllableEntity.ControllableEntityMoved += Revealed.ControllableEntityMoved;
+            ControllableEntity.ControllableEntityRemoved += Revealed.ControllableEntityRemoved;
+            ControllableEntity.ControlAcquired += Revealed.ControllableEntityControlled;
+            ControllableEntity.ControlReleased += Revealed.ControllableEntityReleased;
 
             if (Concealed != null) Loaded = true;
+            Log.Trace("Done Initializing ConcealmentManager", "Initialize");
+        }
 
-            Log.Trace("Registering Revealed Sector", "Load");
+        public void Terminate() {
+            Log.Trace("Terminating ConcealmentManager", "Terminate");
+            if (Loaded) Concealed.Save();
+
+            ControllableEntity.ControllableEntityAdded -= Revealed.ControllableEntityAdded;
+            ControllableEntity.ControllableEntityMoved -= Revealed.ControllableEntityMoved;
+            ControllableEntity.ControllableEntityRemoved -= Revealed.ControllableEntityRemoved;
+            ControllableEntity.ControlAcquired -= Revealed.ControllableEntityControlled;
+            ControllableEntity.ControlReleased -= Revealed.ControllableEntityReleased;
+
+            Log.Trace("Done Terminating ConcealmentManager", "Terminate");
         }
 
         #endregion

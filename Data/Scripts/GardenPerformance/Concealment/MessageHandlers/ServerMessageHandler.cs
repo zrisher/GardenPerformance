@@ -20,7 +20,11 @@ namespace GP.Concealment.MessageHandlers {
         private static Logger Log = 
             new Logger("GP.Concealment.Messaging.Handlers.ServerMessageHandler");
 
-        public bool Disabled = true; //false;
+        private static ServerConcealSession Session {
+            get { return ServerConcealSession.Instance; }
+        }
+
+        public bool Disabled = false;
 
         public ServerMessageHandler() : base((ushort)MessageDomain.ConcealServer) { }
 
@@ -37,13 +41,18 @@ namespace GP.Concealment.MessageHandlers {
                 return;
             }
 
-                        /*
             switch (messageType) {
                 case MessageType.ConcealedGridsRequest:
                     ReplyToConcealedGridsRequest(body, senderSteamId);
                     break;
                 case MessageType.ConcealRequest:
                     ReceiveConcealRequest(body, senderSteamId);
+                    break;
+                case MessageType.LoginRequest:
+                    ReceiveLoginRequest(body, senderSteamId);
+                    break;
+                case MessageType.LogoutRequest:
+                    ReceiveLogoutRequest(body, senderSteamId);
                     break;
                 case MessageType.RevealedGridsRequest:
                     ReceiveRevealedGridsRequest(body, senderSteamId);
@@ -52,11 +61,8 @@ namespace GP.Concealment.MessageHandlers {
                     ReceiveRevealRequest(body, senderSteamId);
                     break;
             }
-             * */
-
         }
 
-        /*
         private void ReplyToConcealedGridsRequest(byte[] body, ulong senderId) {
             Log.Trace("Receiving Concealed Grids Request", 
                 "ReceiveConcealedGridsRequest");
@@ -67,7 +73,7 @@ namespace GP.Concealment.MessageHandlers {
 
             Log.Trace("Preparing response", "ReceiveConcealedGridsRequest");
             ConcealedGridsResponse response = new ConcealedGridsResponse {
-                ConcealedGrids = Session.Server.ConcealedSector0.ConcealedGridsList()
+                ConcealedGrids = Session.Manager.Concealed.ConcealedGridsList()
             };
 
             Log.Trace("Sending to player", "ReceiveConcealedGridsRequest");
@@ -82,7 +88,7 @@ namespace GP.Concealment.MessageHandlers {
             RevealedGridsRequest request = RevealedGridsRequest.FromBytes(body);
 
             RevealedGridsResponse response = new RevealedGridsResponse() {
-                RevealedGrids = Session.Server.RevealedSector0.RevealedGridsList()
+                RevealedGrids = Session.Manager.Revealed.RevealedGridsList()
             };
 
             response.SendToPlayer(senderId);
@@ -94,8 +100,8 @@ namespace GP.Concealment.MessageHandlers {
             ConcealRequest request = ConcealRequest.FromBytes(body);
             bool success = false;
 
-            if (Session.Server.CanConceal(request.EntityId)) {
-                success = Session.Server.QueueConceal(request.EntityId);
+            if (Session.Manager.CanConceal(request.EntityId)) {
+                success = Session.Manager.QueueConceal(request.EntityId);
             }
 
             ConcealResponse response = new ConcealResponse() {
@@ -107,13 +113,25 @@ namespace GP.Concealment.MessageHandlers {
 
         }
 
+        private void ReceiveLoginRequest(byte[] body, ulong senderId) {
+            Log.Trace("Receiving Login Request", "ReceiveLoginRequest");
+
+            Session.Manager.Revealed.PlayerLoggedIn(senderId);
+        }
+
+        private void ReceiveLogoutRequest(byte[] body, ulong senderId) {
+            Log.Trace("Receiving Logout Request", "ReceiveLogoutRequest");
+
+            Session.Manager.Revealed.PlayerLoggedOut(senderId);
+        }
+
         private void ReceiveRevealRequest(byte[] body, ulong senderId) {
             Log.Trace("Receiving Reveal Request", "ReceiveRevealRequest");
 
             RevealRequest request = RevealRequest.FromBytes(body);
             bool success = false;
 
-            if (Session.Server.QueueReveal(request.EntityId)) {
+            if (Session.Manager.QueueReveal(request.EntityId)) {
                 success = true;
                 Log.Trace("Successfully revealed", "ReceiveRevealRequest");
             }
@@ -127,7 +145,7 @@ namespace GP.Concealment.MessageHandlers {
 
             response.SendToPlayer(senderId);
         }
-         * */
+
         private void SendDisabledNotice(ulong senderId) {
             StatusResponse response = new StatusResponse() {
                 ServerRunning = false
