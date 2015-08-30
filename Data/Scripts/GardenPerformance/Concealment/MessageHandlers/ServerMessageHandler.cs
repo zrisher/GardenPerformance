@@ -60,6 +60,15 @@ namespace GP.Concealment.MessageHandlers {
                 case MessageType.RevealRequest:
                     ReceiveRevealRequest(body, senderSteamId);
                     break;
+                case MessageType.SettingsRequest:
+                    ReceiveSettingsRequest(body, senderSteamId);
+                    break;
+                case MessageType.ChangeSettingRequest:
+                    ReceiveChangeSettingRequest(body, senderSteamId);
+                    break;
+                case MessageType.ObservingEntitiesRequest:
+                    ReceiveObservingEntitiesRequest(body, senderSteamId);
+                    break;
             }
         }
 
@@ -154,6 +163,46 @@ namespace GP.Concealment.MessageHandlers {
             response.SendToPlayer(senderId);
         }
 
+        private void ReceiveObservingEntitiesRequest(byte[] body, ulong senderId) {
+            Log.Trace("Receiving Revealed Grids Request",
+                "ReceiveRevealedGridsRequest");
+
+            // nothing to read, but doing this anyway to test
+            ObservingEntitiesRequest request = ObservingEntitiesRequest.FromBytes(body);
+
+            ObservingEntitiesResponse response = new ObservingEntitiesResponse() {
+                ObservingEntities = Session.Manager.Revealed.ObservingEntitiesList()
+            };
+
+            response.SendToPlayer(senderId);
+        }
+
+        private void ReceiveChangeSettingRequest(byte[] body, ulong senderId) {
+            Log.Trace("Receiving Conceal Request", "ReceiveConcealRequest");
+
+            ChangeSettingRequest request = ChangeSettingRequest.FromBytes(body);
+
+            // TODO - implement
+
+            ChangeSettingResponse response = new ChangeSettingResponse() {
+                Success = false
+            };
+
+            response.SendToPlayer(senderId);
+        }
+
+        private void ReceiveSettingsRequest(byte[] body, ulong senderId) {
+            Log.Trace("Receiving Conceal Request", "ReceiveConcealRequest");
+
+            SettingsRequest request = SettingsRequest.FromBytes(body);
+
+            SettingsResponse response = new SettingsResponse() {
+                Settings = Settings.Instance
+            };
+
+            response.SendToPlayer(senderId);
+        }
 
     }
+
 }

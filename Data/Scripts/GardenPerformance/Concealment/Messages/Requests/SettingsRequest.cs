@@ -6,14 +6,14 @@ using System.Text;
 using SEGarden.Extensions;
 
 namespace GP.Concealment.Messages.Requests {
-    class RevealedGridsRequest : Request {
+    class SettingsRequest : Request {
 
-        public static RevealedGridsRequest FromBytes(byte[] bytes) {
-            return new RevealedGridsRequest();
+        public static SettingsRequest FromBytes(byte[] bytes) {
+            return new SettingsRequest();
         }
 
-        public RevealedGridsRequest() :
-            base((ushort)MessageType.RevealedGridsRequest) { }
+        public SettingsRequest() :
+            base((ushort)MessageType.SettingsRequest) { }
 
         protected override byte[] ToBytes() {
             return new byte[0];

@@ -36,8 +36,15 @@ namespace GP.Concealment.World.Sectors {
         // These cause us to reveal things
         private List<ulong> ActiveSteamIDs = new List<ulong>();
 
+        // Populate this with everyone online as well as all players in their faction,
+        // because spawn is shared
+        public List<long> ActivePlayersAndAllies = new List<long>();
+
         private Dictionary<long, ControllableEntity> ControlledEntities =
             new Dictionary<long, ControllableEntity>();
+
+        private Dictionary<long, ObservableEntity> ObservableEntities =
+            new Dictionary<long, ObservableEntity>();
 
         // These can be concealed or marked to remain revealed
         private Dictionary<long, RevealedGrid> Grids =
@@ -49,7 +56,15 @@ namespace GP.Concealment.World.Sectors {
         #region Public Field Access Helpers
 
         public List<RevealedGrid> RevealedGridsList() {
+            Log.Trace("Returning concealed grids list of count " + Grids.Values.Count, "RevealedGridsList");
             return Grids.Values.ToList();
+        }
+
+        public List<ObservingEntity> ObservingEntitiesList() {
+            // TODO - implement
+            //Log.Trace("Returning ObservingEntities list of count " + Grids.Values.Count, "RevealedGridsList");
+            //return Grids.Values.ToList();
+            return new List<ObservingEntity>();
         }
 
         #endregion
@@ -62,7 +77,7 @@ namespace GP.Concealment.World.Sectors {
                 return;
             }
 
-            Log.Error("Adding " + id, "RememberControlledEntity");
+            Log.Trace("Adding " + id, "RememberControlledEntity");
             ControlledEntities.Add(id, e);
         }
 
@@ -73,7 +88,7 @@ namespace GP.Concealment.World.Sectors {
                 return;
             }
 
-            Log.Error("Removing " + id, "ForgetControlledEntity");
+            Log.Trace("Removing " + id, "ForgetControlledEntity");
             ControlledEntities.Remove(id);
         }
 
@@ -84,7 +99,7 @@ namespace GP.Concealment.World.Sectors {
                 return;
             }
 
-            Log.Error("Adding " + id, "RememberGrid");
+            Log.Trace("Adding " + id, "RememberGrid");
             Grids.Add(id, e);
             GridTree.Add(e);
         }
@@ -96,7 +111,7 @@ namespace GP.Concealment.World.Sectors {
                 return;
             }
 
-            Log.Error("Removing " + id, "ForgetGrid");
+            Log.Trace("Removing " + id, "ForgetGrid");
             Grids.Remove(id);
             GridTree.Remove(e);
         }
@@ -107,7 +122,7 @@ namespace GP.Concealment.World.Sectors {
                 return;
             }
 
-            Log.Error("Adding steam id " + id, "RememberPlayerId");
+            Log.Trace("Adding steam id " + id, "RememberPlayerId");
             ActiveSteamIDs.Add(id);
         }
 
@@ -117,7 +132,7 @@ namespace GP.Concealment.World.Sectors {
                 return;
             }
 
-            Log.Error("Removing steam id " + id, "RememberPlayerId");
+            Log.Trace("Removing steam id " + id, "RememberPlayerId");
             ActiveSteamIDs.Remove(id);
         }
 
@@ -133,7 +148,7 @@ namespace GP.Concealment.World.Sectors {
         }
 
         public void ControllableEntityMoved(ControllableEntity e) {
-            Log.Trace("Controllable Entity Moved", "ControllableEntityAdded");
+            //Log.Trace("Controllable Entity Moved", "ControllableEntityAdded");
         }
 
         public void ControllableEntityRemoved(ControllableEntity e) {
@@ -164,6 +179,33 @@ namespace GP.Concealment.World.Sectors {
 
         #endregion
         #region Marking
+
+        public List<ObservableEntity> ObservableInSphere(BoundingSphereD bounds) {
+            var results = new List<ObservableEntity>();
+            GridTree.GetAllEntitiesInSphere<ObservableEntity>(ref bounds, results);
+            return results;
+        }
+
+        /*
+        public List<ObservableEntity> GridsInBox(BoundingBoxD bounds) {
+            var results = new List<ObservableEntity>();
+            GridTree.GetAllEntitiesInBox<RevealedGrid>(ref bounds, results);
+            return results;
+        }
+
+        public List<ObservableEntity> GridsInSphere(Vector3D center, double Radius) {
+            BoundingSphereD sphere2 = new BoundingSphereD()
+            var results = new List<ObservableEntity>();
+            GridTree.GetAllEntitiesInSphere<RevealedGrid>(ref sphere, results);
+            return results;
+        }
+
+        public List<ObservableEntity> GridsInSphere(BoundingSphereD sphere) {
+            var results = new List<ObservableEntity>();
+            GridTree.GetAllEntitiesInSphere<RevealedGrid>(ref sphere, results);
+            return results;
+        }
+         * */
 
         #endregion
         #region Session Updates

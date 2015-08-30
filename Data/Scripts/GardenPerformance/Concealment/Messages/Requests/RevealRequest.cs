@@ -8,7 +8,7 @@ using SEGarden.Extensions;
 namespace GP.Concealment.Messages.Requests {
     class RevealRequest : Request {
 
-        private const int SIZE = sizeof(long);
+        private static readonly int SIZE = Request.SIZE + sizeof(long);
 
         public static RevealRequest FromBytes(byte[] bytes) {
             VRage.ByteStream stream = new VRage.ByteStream(bytes, bytes.Length);

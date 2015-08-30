@@ -14,6 +14,7 @@ namespace GP.Concealment.World.Entities {
         Planet,
     }
 
+    /*
     public enum ConcealStatus : ushort {
         Unknown,
         Concealed,
@@ -27,6 +28,7 @@ namespace GP.Concealment.World.Entities {
         Revealable,
         Blocked,
     }
+    */
 
     [FlagsAttribute]
     public enum EntityConcealability : ushort {

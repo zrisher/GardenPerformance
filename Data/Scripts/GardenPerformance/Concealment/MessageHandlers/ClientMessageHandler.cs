@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+using SEGarden.Extensions.VRageMath;
 using SEGarden.Logging;
 using SEGarden.Logic;
 using SEGarden.Messaging;
@@ -52,6 +53,15 @@ namespace GP.Concealment.MessageHandlers {
                 case MessageType.StatusResponse:
                     ReceiveStatusResponse(body);
                     break;
+                case MessageType.SettingsResponse:
+                    ReceiveSettingsResponse(body);
+                    break;
+                case MessageType.ChangeSettingResponse:
+                    ReceiveChangeSettingResponse(body);
+                    break;
+                case MessageType.ObservingEntitiesResponse:
+                    ReceiveObservingEntitiesResponse(body);
+                    break;
             }
 
         }
@@ -63,13 +73,12 @@ namespace GP.Concealment.MessageHandlers {
             ConcealedGridsResponse response = ConcealedGridsResponse.FromBytes(body);
 
             Session.ConcealedGrids = response.ConcealedGrids;
-
-            String result = "Concealed Grids:\n\n";
+            String result = Session.ConcealedGrids.Count + " Concealed Grids:\n\n";
 
             int i = 1;
             foreach (World.Entities.ConcealedGrid grid in Session.ConcealedGrids) {
                 result += String.Format("{0}: \"{1}\" - Revealability: {2}\n", 
-                    i, grid.DisplayName, grid.Revealability);
+                    i, grid.DisplayName, grid.IsRevealable);
                 i++;
             }
 
@@ -95,8 +104,11 @@ namespace GP.Concealment.MessageHandlers {
 
             int i = 1;
             foreach (RevealedGrid grid in Session.RevealedGrids) {
-                result += String.Format("{0}: \"{1}\" - Concealability: {2}\n",
-                    i, grid.DisplayName, grid.Concealability);
+
+                // Ids
+                result += i + ": \"" + grid.ConcealDetails() +  "\n";
+
+
                 i++;
             }
 
@@ -118,7 +130,7 @@ namespace GP.Concealment.MessageHandlers {
                 "Successfully concealed" :
                 "Failed to conceal";
 
-            result += " grid " + response.EntityId;
+            result += " grid " + response.EntityId + " (not yet implemented)";
 
             Notification notice = new ChatNotification() {
                 Text = result,
@@ -137,7 +149,7 @@ namespace GP.Concealment.MessageHandlers {
                 "Successfully revealed" :
                 "Failed to reveal";
 
-            result += " grid " + response.EntityId;
+            result += " grid " + response.EntityId + " (not yet implemented)";
 
             Notification notice = new ChatNotification() {
                 Text = result,
@@ -154,6 +166,69 @@ namespace GP.Concealment.MessageHandlers {
 
             String result = "Server is ";
             result += response.ServerRunning ? "Running." : "Terminated.";
+
+            Notification notice = new ChatNotification() {
+                Text = result,
+                Sender = "GP"
+            };
+
+            notice.Raise();
+        }
+
+        private void ReceiveObservingEntitiesResponse(byte[] body) {
+            Log.Trace("Receiving Observing Entities Response",
+                "ReceiveObservingEntitiesResponse");
+
+            ObservingEntitiesResponse response = ObservingEntitiesResponse.FromBytes(body);
+
+            Session.ObservingEntities = response.ObservingEntities;
+
+            String result = Session.ObservingEntities.Count + " Observing Grids:\n\n";
+            result += "(not yet implemented.)\n";
+
+            int i = 1;
+            foreach (ObservingEntity e in Session.ObservingEntities) {
+
+                // Ids
+                result += i + ": \"" + e.ToString() + "\n";
+
+                i++;
+            }
+
+            Notification notice = new WindowNotification() {
+                Text = result,
+                BigLabel = "Garden Performance",
+                SmallLabel = "Observing Entities"
+            };
+
+            notice.Raise();
+        }
+
+        private void ReceiveSettingsResponse(byte[] body) {
+            Log.Trace("Receiving Observing Entities Response",
+                "ReceiveObservingEntitiesResponse");
+
+            SettingsResponse response = SettingsResponse.FromBytes(body);
+
+            Session.Settings = response.Settings;
+
+            Notification notice = new WindowNotification() {
+                Text = Session.Settings.ToString(),
+                BigLabel = "Garden Performance",
+                SmallLabel = "Settings"
+            };
+
+            notice.Raise();
+        }
+
+        private void ReceiveChangeSettingResponse(byte[] body) {
+            Log.Trace("Receiving Reveal Response", "ReceiveRevealResponse");
+
+            ChangeSettingResponse response = ChangeSettingResponse.FromBytes(body);
+
+            String result = response.Success ?
+                "Successfully changed setting" :
+                "Failed to change setting (not yet implemented)";
 
             Notification notice = new ChatNotification() {
                 Text = result,

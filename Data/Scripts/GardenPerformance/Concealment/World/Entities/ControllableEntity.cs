@@ -16,7 +16,15 @@ using GP.Concealment.Sessions;
 
 namespace GP.Concealment.World.Entities {
 
-    public abstract class ControllableEntity : ConcealableEntity {
+    /// <summary>
+    /// Controllable Entities can be moving and controlled
+    /// </summary>
+    /// <remarks>
+    /// Check moving every update because there are no events for movement
+    /// Physics has OnWorldPositionChanged, but it's just an action
+    /// We might remove all these events and just put it in the sector directly eventually
+    /// </remarks>
+    public abstract class ControllableEntity : RevealedEntity {
 
         #region Static ControllableEntities Events
 
@@ -37,7 +45,7 @@ namespace GP.Concealment.World.Entities {
             add { ControllableEntityRemoval += value; }
             remove { ControllableEntityRemoval -= value; }
         }
-
+        /*
         private static Action<ControllableEntity> ControlAcquisition;
         public static event Action<ControllableEntity> ControlAcquired {
             add { ControlAcquisition += value; }
@@ -49,132 +57,82 @@ namespace GP.Concealment.World.Entities {
             add { ControlRelease += value; }
             remove { ControlRelease -= value; }
         }
-
+        */
         #endregion
         #region Fields
-
-        // TODO: cache radar and comm blocks
-        public bool IsMoving = false;
-        public bool HasRadar = false;
-        public bool HasComms = false;
-
-        private bool RefreshRevealMarkersNextUpdate = true;
-
-        protected Logger Log;
-
-        private Vector3D LastNearbyRevealPosition;
-
-        private Dictionary<long, ConcealableEntity> EntitiesViewed =
-            new Dictionary<long, ConcealableEntity>();
-        private Dictionary<long, ConcealableEntity> EntitiesDetected =
-            new Dictionary<long, ConcealableEntity>();
-        private Dictionary<long, ConcealableEntity> EntitiesReceivingFrom =
-            new Dictionary<long, ConcealableEntity>();
-
         #endregion
         #region Properties
 
         public override Dictionary<uint, Action> UpdateActions {
             get {
-                return new Dictionary<uint, Action> {
-                    {60, Update} // TODO: Move to 300 when done testing
-                };
+                Dictionary<uint, Action> actions = base.UpdateActions;
+                actions.Add(60, Update); // TODO: Move to 300 when done testing
+                return actions;
             }
         }
 
-        public bool IsControlled { get; private set; }
-
-        public uint ViewDistance {
+        public override bool IsConcealable {
             get {
-                // TODO: actually use view distance from session
-                return Settings.Instance.RevealVisibilityMeters; 
+                return base.IsConcealable && !IsControlled;
             }
         }
 
-        public uint DetectDistance {
-            get {
-                // TODO: Actually use greatest set radar distance from blocks
-                if (HasRadar) return Settings.Instance.RevealVisibilityMeters;
-                else return 0;
-            }
-        }
-
-        public uint CommunicateDistance {
-            get {
-                // TODO: Actually use greatest set comm distance from blocks
-                if (HasComms) return Settings.Instance.RevealDetectabilityMeters;
-                else return 0;
-            }
-        }
-
-        public double DistanceSinceLastRevealMarking {
-            get {
-                if (LastNearbyRevealPosition == null) 
-                    return double.PositiveInfinity;
-                else 
-                    return (Position - LastNearbyRevealPosition).AbsMax();
-            }
-        }
+        public bool IsMoving { get; private set; }
+        public bool RecentlyMoved { get; private set; }
+        public DateTime RecentlyMovedEnds { get; private set; }
+        public virtual bool IsControlled { get { return IsMoving || RecentlyMoved;  } }
 
         #endregion
         #region Constructors
 
+        // Creation from ingame entity
         public ControllableEntity(IMyEntity entity) : base(entity) 
         {
-            Log = new Logger("GP.Concealment.World.Entities.ControllableEntity",
-                EntityId.ToString());
+            //Log.Trace("Running ControllableEntity ctr", "ctr");
+            Log.ClassName = "GP.Concealment.World.Entities.ControllableEntity";
             Log.Trace("New Controllable Entity " + EntityId + " " + DisplayName, "ctr");
+            //Log.Trace("Finished ControllableEntity ctr", "ctr");
         }
 
+        // Byte Deserialization
         public ControllableEntity(VRage.ByteStream stream) : base(stream) {
-            Log = new Logger("GP.Concealment.World.Entities.ControllableEntity",
-                EntityId.ToString());
+            Log.ClassName = "GP.Concealment.World.Entities.ControllableEntity";
+            IsMoving = stream.getBoolean();
+            RecentlyMoved = stream.getBoolean();
+            RecentlyMovedEnds = stream.getDateTime();
             Log.Trace("New Controllable Entity " + EntityId + " " + DisplayName, "ctr");
         }
 
         #endregion
         #region Serialization
 
+        // Byte Serialization
         public override void AddToByteStream(VRage.ByteStream stream) {
             base.AddToByteStream(stream);
+            stream.addBoolean(IsMoving);
+            stream.addBoolean(RecentlyMoved);
+            stream.addDateTime(RecentlyMovedEnds);
         }
 
         #endregion
         #region Updates
 
         public override void Initialize() {
-            NotifyAdded();
-            // Unfortunately movement is not actually implemented with actions yet
-            // Physics has OnWorldPositionChanged, but it's called directly instead
-            // of attached to an event.
-            //Entity.OnPhysicsChanged += PhysicsChanged;
             base.Initialize();
+            NotifyAdded();
         }
 
         protected virtual void Update() {
             //Log.Trace("ControllableEntity update " + DisplayName, "Update");
+            UpdateMoving();
 
             if (IsMoving) {
                 NotifyMoved();
-
-                if (IsControlled & DistanceSinceLastRevealMarking > 
-                    Settings.Instance.ControlledRevealCacheMeters) 
-                {
-                    RefreshRevealMarkersNextUpdate = true;
-                }
             }
 
-            // TODO: controlled = moving or has character pilots for grid, always for character
-            if (RefreshRevealMarkersNextUpdate) {
-                RefreshRevealMarkers();
-                RefreshRevealMarkersNextUpdate = false;
-            }
-
-            RefreshMoving();
         }
 
         public override void Terminate() {
-            RemoveCachedMarkers();
             NotifyRemoved();
             base.Terminate();
         }
@@ -188,7 +146,7 @@ namespace GP.Concealment.World.Entities {
         }
 
         private void NotifyMoved() {
-            Log.Trace("ControllableEntity " + DisplayName + " moved ", "NotifyMoved");
+            //Log.Trace("ControllableEntity " + DisplayName + " moved ", "NotifyMoved");
             if (ControllableEntityMovement != null) ControllableEntityMovement(this);
         }
 
@@ -196,7 +154,7 @@ namespace GP.Concealment.World.Entities {
             Log.Trace("ControllableEntity " + DisplayName + " removed.", "NotifyRemoved");
             if (ControllableEntityRemoval != null) ControllableEntityRemoval(this);
         }
-
+        /*
         private void NotifyControlAcquired() {
             Log.Trace("ControllableEntity " + DisplayName + " controlled.", "NotifyRemoved");
             if (ControlAcquisition != null) ControlAcquisition(this);
@@ -206,164 +164,64 @@ namespace GP.Concealment.World.Entities {
             Log.Trace("ControllableEntity " + DisplayName + " released.", "NotifyRemoved");
             if (ControlRelease != null) ControlRelease(this);
         }
-
+        */
         #endregion
         #region Movement
 
-        private void RefreshMoving() {
+        private void UpdateMoving() {
             //Log.Trace("Checking Physics of " + DisplayName, "CheckPhysics");
-            if (Entity.IsMoving())
-                IsMoving = true;
-            else
-                IsMoving = false;
+
+
+            if (Entity.IsMoving()) {
+                // Moving
+
+                // Mark moving if not marked
+                if (!IsMoving) {
+                    IsMoving = true;
+                    ControlAcquired();
+                }
+
+
+            }
+            else {
+                //Not moving
+
+                // Update recently moved
+                if (RecentlyMoved) {
+                    if (DateTime.UtcNow > RecentlyMovedEnds) {
+                        RecentlyMoved = false;
+                        ControlReleased();
+                    }
+                }
+
+                // Mark stopped if not marked
+                if (IsMoving) {
+                    IsMoving = false;
+                    RecentlyMoved = true;
+                    RecentlyMovedEnds = DateTime.UtcNow.AddSeconds(
+                        Settings.Instance.ControlledMovingGraceTimeSeconds);
+                }
+            }
         }
 
         #endregion
         #region Control 
 
-        protected void MarkControlled() {
+        protected virtual void ControlAcquired() { }
+
+        protected virtual void ControlReleased() { }
+
+        /*
+        protected virtual void MarkControlled() {
             IsControlled = true;
-            RefreshRevealMarkersNextUpdate = true;
-            NotifyControlAcquired();
+            //NotifyControlAcquired();
         }
 
-        protected void MarkNotControlled() {
+        protected virtual void MarkNotControlled() {
             IsControlled = false;
-            RefreshRevealMarkersNextUpdate = true;
-            NotifyControlControlReleased();
+            //NotifyControlControlReleased();
         }
-
-        #endregion
-        #region Reveal Marking
-
-        private void RefreshRevealMarkers() {
-            RemoveCachedMarkers();
-            MarkNearbyEntitiesForReveal();
-        }
-
-        private void RemoveCachedMarkers() {
-            UnmarkDetectingAll();
-            UnmarkViewingAll();
-            UnmarkReceivingAll();
-        }
-
-        // TODO: This
-        private void MarkNearbyEntitiesForReveal() {
-            if (!IsControlled) return;
-
-            // the inradius function should return nonthing if zero;
-
-            // foreach revealedgrid in revealedgridsinradius(viewrange)
-            //   grid.markviewedby(this);
-
-            // foreach revealedgrid in revealedgridsinradius(detectionrange)
-            //   grid.markviewedby(this);
-
-            // foreach revealedgrid in revealedgridsinradius(commsrange)
-            //   grid.markviewedby(this);
-
-            LastNearbyRevealPosition = Position;
-        }
-
-        #endregion
-        #region Reveal Marker Access Helpers
-
-        private void MarkViewing(ConcealableEntity e) {
-            long id = e.EntityId;
-            if (EntitiesViewed.ContainsKey(id)) {
-                Log.Error("Already added " + id, "MarkViewing");
-                return;
-            }
-
-            Log.Error("Adding " + id, "MarkViewing");
-            EntitiesViewed.Add(id, e);
-            e.MarkViewedBy(this);
-        }
-
-        private void UnmarkViewing(ConcealableEntity e) {
-            long id = e.EntityId;
-            if (!EntitiesViewed.ContainsKey(id)) {
-                Log.Error("Not stored " + id, "UnmarkViewing");
-                return;
-            }
-
-            Log.Error("Removing " + id, "UnmarkViewing");
-            EntitiesViewed.Remove(id);
-            e.UnmarkViewedBy(this);
-        }
-
-        private void UnmarkViewingAll() {
-            Log.Trace("Unmarking all viewed entities", "UnmarkViewingAll");
-            foreach(ConcealableEntity e in EntitiesViewed.Values) {
-                e.UnmarkViewedBy(this);
-            }
-            EntitiesViewed.Clear();
-        }
-
-        private void MarkDetecting(ConcealableEntity e) {
-            long id = e.EntityId;
-            if (EntitiesDetected.ContainsKey(id)) {
-                Log.Error("Already added " + id, "MarkDetecting");
-                return;
-            }
-
-            Log.Error("Adding " + id, "MarkDetecting");
-            EntitiesDetected.Add(id, e);
-            e.MarkDetectedBy(this);
-        }
-
-        private void UnmarkDetecting(ConcealableEntity e) {
-            long id = e.EntityId;
-            if (!EntitiesDetected.ContainsKey(id)) {
-                Log.Error("Not stored " + id, "UnmarkDetecting");
-                return;
-            }
-
-            Log.Error("Removing " + id, "UnmarkDetecting");
-            EntitiesDetected.Remove(id);
-            e.UnmarkDetectedBy(this);
-        }
-
-        private void UnmarkDetectingAll() {
-            Log.Trace("Unmarking all Detected entities", "UnmarkDetectingAll");
-            foreach (ConcealableEntity e in EntitiesDetected.Values) {
-                e.UnmarkDetectedBy(this);
-            }
-            EntitiesDetected.Clear();
-        }
-
-        private void MarkReceivingFrom(ConcealableEntity e) {
-            long id = e.EntityId;
-            if (EntitiesReceivingFrom.ContainsKey(id)) {
-                Log.Error("Already added " + id, "ReceivingFrom");
-                return;
-            }
-
-            Log.Error("Adding " + id, "ReceivingFrom");
-            EntitiesReceivingFrom.Add(id, e);
-            e.MarkBroadcastingTo(this);
-        }
-
-        private void UnmarkReceivingFrom(ConcealableEntity e) {
-            long id = e.EntityId;
-            if (!EntitiesReceivingFrom.ContainsKey(id)) {
-                Log.Error("Not stored " + id, "UnmarkReceivingFrom");
-                return;
-            }
-
-            Log.Error("Removing " + id, "UnmarkReceivingFrom");
-            EntitiesReceivingFrom.Remove(id);
-            e.UnmarkBroadcastingTo(this);
-        }
-
-        private void UnmarkReceivingAll() {
-            Log.Trace("Unmarking all comm receiving entities", "UnmarkReceivingAll");
-            foreach (ConcealableEntity e in EntitiesReceivingFrom.Values) {
-                e.UnmarkBroadcastingTo(this);
-            }
-            EntitiesReceivingFrom.Clear();
-        }
-
+        */
         #endregion
 
     }

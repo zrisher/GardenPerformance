@@ -13,12 +13,13 @@ using SEGarden.Math;
 
 namespace GP.Concealment.World.Entities {
 
-    public interface ConcealableEntity : ObservableEntity {
+    public interface ConcealableGrid : ConcealableEntity {
 
         #region Properties
 
-        bool IsRevealBlocked { get; }
-        bool IsInsideAsteroid { get; }
+        IMyCubeGrid Grid { get; }
+        List<long> SpawnOwners { get; }
+        List<long> BigOwners { get; }
 
         #endregion
 

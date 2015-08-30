@@ -84,8 +84,8 @@ namespace GP.Concealment {
             ControllableEntity.ControllableEntityAdded += Revealed.ControllableEntityAdded;
             ControllableEntity.ControllableEntityMoved += Revealed.ControllableEntityMoved;
             ControllableEntity.ControllableEntityRemoved += Revealed.ControllableEntityRemoved;
-            ControllableEntity.ControlAcquired += Revealed.ControllableEntityControlled;
-            ControllableEntity.ControlReleased += Revealed.ControllableEntityReleased;
+            //ControllableEntity.ControlAcquired += Revealed.ControllableEntityControlled;
+            //ControllableEntity.ControlReleased += Revealed.ControllableEntityReleased;
 
             if (Concealed != null) Loaded = true;
             Log.Trace("Done Initializing ConcealmentManager", "Initialize");
@@ -98,8 +98,8 @@ namespace GP.Concealment {
             ControllableEntity.ControllableEntityAdded -= Revealed.ControllableEntityAdded;
             ControllableEntity.ControllableEntityMoved -= Revealed.ControllableEntityMoved;
             ControllableEntity.ControllableEntityRemoved -= Revealed.ControllableEntityRemoved;
-            ControllableEntity.ControlAcquired -= Revealed.ControllableEntityControlled;
-            ControllableEntity.ControlReleased -= Revealed.ControllableEntityReleased;
+            //ControllableEntity.ControlAcquired -= Revealed.ControllableEntityControlled;
+            //ControllableEntity.ControlReleased -= Revealed.ControllableEntityReleased;
 
             Log.Trace("Done Terminating ConcealmentManager", "Terminate");
         }
@@ -121,8 +121,8 @@ namespace GP.Concealment {
             }
 
             ConcealedGrid concealable = new ConcealedGrid();
-            concealable.LoadFromCubeGrid(grid);
-            concealable.Concealability = EntityConcealability.Concealable;
+            //concealable.LoadFromCubeGrid(grid);
+            //concealable.Concealability = EntityConcealability.Concealable;
             RequestConcealGrid(concealable);
             return true;
         }
@@ -181,17 +181,27 @@ namespace GP.Concealment {
         #region Conceal/Reveal process
 
         public void ProcessConcealQueue() {
-
+            foreach (RevealedGrid grid in Revealed.RevealedGridsList()) {
+                if (grid.IsConcealable) {
+                    ConcealGrid(grid);
+                    return; // only one per update, serialization and saving is expensive
+                }
+            }
         }
 
         public void ProcessRevealQueue() {
-
+            foreach (ConcealedGrid grid in Concealed.ConcealedGridsList()) {
+                if (grid.NeedsReveal && grid.IsRevealable) {
+                    RevealGrid(grid);
+                    return; // only one per update, entity addition is expensive
+                }
+            }
         }
 
-        private bool ConcealGrid(IMyCubeGrid grid) {
+        private bool ConcealGrid(RevealedGrid revealed) {
+            Log.Trace("Concealing grid " + revealed.EntityId, "ConcealGrid");
             /*
-            Log.Trace("Concealing grid " + grid.EntityId, "ConcealGrid");
-
+            IMyCubeGrid grid = revealed.Grid;
             ConcealedGrid concealableGrid = new ConcealedGrid();
 
             if (grid == null) {
@@ -207,7 +217,7 @@ namespace GP.Concealment {
             // Refresh the info before saving
             concealableGrid.LoadFromCubeGrid(grid);
 
-            *//*
+            /*
             if (!concealableGrid.Saveable()) {
                 Log.Error("Won't be able to save this grid, aborting conceal.",
                     "ConcealEntity");
@@ -237,7 +247,7 @@ namespace GP.Concealment {
             return false;
         }
 
-        private bool RevealGrid(long entityId) {
+        private bool RevealGrid(ConcealedGrid grid) {
             /*
             Log.Error("Revealing entity", "RevealEntity");
 

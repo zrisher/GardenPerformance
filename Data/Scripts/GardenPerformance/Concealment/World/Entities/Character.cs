@@ -15,50 +15,47 @@ using GP.Concealment.Sessions;
 
 namespace GP.Concealment.World.Entities {
 
-    class Character : ControllableEntity {
+    public class Character : ObservingEntity {
 
-        /*
-        private static ServerConcealSession Session {
-            get { return ServerConcealSession.Instance; }
-        }
-        */
-
-        #region Instance Fields
+        #region Fields
 
         IMyCharacter CharacterEntity;
 
         #endregion
-        #region Instance Properties
+        #region Properties
 
-        public override Dictionary<uint, Action> UpdateActions {
-            get {
-                return base.UpdateActions;
-            }
+        private bool Alive;
+
+        public override String ComponentName { get { return "Character"; } }
+
+        public override bool IsControlled { get { return Alive; } }
+
+        public override EntityType TypeOfEntity {
+            get { return EntityType.Character; }
         }
-
-        #endregion
-        #region Instance Event Helpers
-
 
         #endregion
         #region Constructor
 
         public Character(IMyEntity entity) : base(entity) {
-            Log = new Logger("GP.Concealment.World.Entities.Character",
-                Entity.EntityId.ToString());
-
-            CharacterEntity = entity as IMyCharacter;
-
+            Log.ClassName = "GP.Concealment.World.Entities.Character";
             Log.Trace("New Character " + Entity.EntityId + " " + DisplayName, "ctr");
+            CharacterEntity = Entity as IMyCharacter;
         }
+
+        public Character(VRage.ByteStream stream) : base(stream) {
+            CharacterEntity = Entity as IMyCharacter;
+        }
+
 
         #endregion
         #region Updates
 
         public override void Initialize() {
             base.Initialize();
-            CharacterEntity.OnMovementStateChanged += MovementStateChanged;
-            MarkControlled();
+            if (CharacterEntity != null)
+                CharacterEntity.OnMovementStateChanged += MovementStateChanged;
+            Alive = true;
         }
 
         protected override void Update() {
@@ -67,9 +64,17 @@ namespace GP.Concealment.World.Entities {
         }
 
         public override void Terminate() {
-            CharacterEntity.OnMovementStateChanged -= MovementStateChanged;
-            MarkNotControlled();
+            if (CharacterEntity != null)
+                CharacterEntity.OnMovementStateChanged -= MovementStateChanged;
             base.Terminate();
+        }
+
+        #endregion
+        #region Serialization
+
+        // Byte Serialization
+        public override void AddToByteStream(VRage.ByteStream stream) {
+            base.AddToByteStream(stream);
         }
 
         #endregion
@@ -78,11 +83,18 @@ namespace GP.Concealment.World.Entities {
             MyCharacterMovementEnum newState) 
         {
             if (newState == MyCharacterMovementEnum.Died) {
-                MarkNotControlled();
+                Alive = false;
             }
         }
 
+        protected override void Conceal() {
+            //throw new NotImplementedException();
+        }
 
+        public String ToString() {
+            // TODO: implement
+            return "Character to String - to implement";
+        }
 
     }
 

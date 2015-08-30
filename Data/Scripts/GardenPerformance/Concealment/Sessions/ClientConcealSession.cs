@@ -33,8 +33,10 @@ namespace GP.Concealment.Sessions {
 
         public List<RevealedGrid> RevealedGrids;
         public List<ConcealedGrid> ConcealedGrids;
+        public Settings Settings;
+        public List<ObservingEntity> ObservingEntities;
 
-        public String Name { get { return "ClientConcealSession"; } }
+        public override string ComponentName { get { return "ClientConcealSession"; } }
 
         public override void Initialize() {
             Log.Trace("Initializing Client Conceal Session", "Initialize");

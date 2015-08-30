@@ -19,146 +19,87 @@ using VRageMath;
 
 namespace GP.Concealment.World.Entities {
 
-    public class ConcealedGrid : ConcealedEntity, AABBEntity {
-
-        /*
-        public class SpawnPoint {
-            public long OwnerId;
-        }
-        */
+    public class ConcealedGrid : ConcealedEntity, ConcealableGrid {
 
         #region Static
 
-        private static Logger Log =
-            new Logger("GP.Concealment.Records.Entities.ConcealableEntity");
+        #endregion
+        #region Fields
 
         #endregion
-        #region Instance
+        #region Properties
 
-        public List<long> SpawnOwners = new List<long>();
-        public String DisplayName = "";
-        //public List<long> BigOwners = new List<long>();
-
-        // AABBEntity details
-        // TODO: Update these details
-        public BoundingBoxD BoundingBox { get; set; }
-        public int TreeProxyID { get; set; }
-        public Vector3D WorldTranslation { get; set; }
-        public Vector3D LinearVelocity { get; set; }
-
-        // Giving this a default value of new MyObjectBuilder_CubeGrid() does NOT work
-        // The new object will have null fields, which makes it unsaveable.
-        //public MyObjectBuilder_CubeGrid Builder;
-        //public MyObjectBuilder_EntityBase Builder;
+        public List<long> SpawnOwners { get; set; }
+        public List<long> BigOwners { get; set; }
+        public bool IsInsideAsteroid { get; set; }
 
         [XmlIgnore]
-        public IMyCubeGrid IngameGrid;
-        
-        public ConcealedGrid() {
-            Type = EntityType.Grid;
+        public IMyCubeGrid Grid { get; private set; }
+        [XmlIgnore]
+        public override bool NeedsReveal {
+            get {
+                return base.NeedsReveal || NeedsRevealForSpawn;
+            }
+        }
+        [XmlIgnore]
+        public bool NeedsRevealForSpawn { get; private set; }
+
+        #endregion
+        #region Constructors
+
+        // XML Deserialization
+        public ConcealedGrid() : base() {
+            TypeOfEntity = EntityType.Grid;
+            Log.ClassName = "GP.Concealment.World.Entities.ConcealedGrid";
         }
 
-        /*
-        public bool Saveable() {
-
-            if (!base.Saveable()) {
-                Log.Error("Concealable Entity had a null, not saveable", "Saveable");
-                return false;
-            }
-
-            if (BigOwners == null || DisplayName == null || Position == null ||  
-                SpawnOwners == null) 
-            {
-                Log.Error("ConcealableGrid had a null, not saveable", "Saveable");
-                return false;
-            }
-
-            /*
-            if (Builder == null) {
-                Log.Trace("Null builder for entity " + EntityId + "trying reload", 
-                    "Saveable");
-
-                //AttemptReloadFromModAPI();
-
-                if (Builder == null) {
-                    Log.Error("Null builder for entity " + EntityId + ", cannot save.",
-                        "Saveable");
-                    return false;
-                }
-
-                //Builder.FillNullsWithDefaults();
-            }
-            *//*
-            return true;
-        }
-        */
-
-        /*
-        private void AttemptReloadFromModAPI() {
-            Log.Error("AttemptReloadFromModAPI", "AttemptReloadFromModAPI");
-
-            IMyEntity entity = null;
-            MyAPIGateway.Entities.TryGetEntityById(EntityId, out entity);
-
-            if (entity == null) {
-                Log.Error("Couldn't find entity via Gateway", "AttemptReloadFromModAPI");
-                return;
-            }
-
-            IMyCubeGrid grid = entity as IMyCubeGrid;
-
-            if (grid == null) {
-                Log.Error("Entity not grid", "AttemptReloadFromModAPI");
-                return;
-            }
-
-            LoadFromCubeGrid(grid);
-            Log.Error("Reloaded.", "AttemptReloadFromModAPI");
-        }
-        */
-
-        public void LoadFromCubeGrid(IMyCubeGrid grid) {
-            base.LoadFromEntity(grid as IMyEntity);
-
-            IngameGrid = grid;
-
-            //IngameGrid = grid;
-            DisplayName = grid.DisplayName;
-            // ToDo: get all owners instead of big (for targeting)
-            //BigOwners = grid.BigOwners;
-            // ToDo: get real spawn owners (for spawning)
-            SpawnOwners = grid.BigOwners;
-            //IMyEntity entity = grid as IMyEntity;
-            //Builder = grid.GetObjectBuilder() as MyObjectBuilder_CubeGrid;
-
-            /*
-            if (Builder == null) {
-                Log.Error("Got null builder for entity " + EntityId +
-                    ". We will be unable to save it now.", "LoadFromCubeGrid");
-            }
-            else {
-                //Log.Error("Filling builder nulls for " + EntityId, "LoadFromCubeGrid");
-                //Builder.FillNullsWithDefaults();
-            }
-            */
-
+        // Byte Deserialization
+        public ConcealedGrid(VRage.ByteStream stream) : base(stream) {
+            SpawnOwners = stream.getLongList();
+            BigOwners = stream.getLongList();
         }
 
+        // Creation from ingame entity before it's removed
+        public ConcealedGrid(ConcealableGrid grid) : base(grid.Grid as IMyEntity) {
+            Grid = grid.Grid;
+            BigOwners = grid.BigOwners;
+            SpawnOwners = grid.SpawnOwners;
+        }
+
+        #endregion
+        #region Serialization
+
+        // Byte Serialization
         public void AddToByteStream(VRage.ByteStream stream) {
             base.AddToByteStream(stream);
             stream.addLongList(SpawnOwners);
-            stream.addString(DisplayName);
-            //stream.addLongList(BigOwners);
+            stream.addLongList(BigOwners);
         }
 
-        public void RemoveFromByteStream(VRage.ByteStream stream) {
-            base.RemoveFromByteStream(stream);
-            SpawnOwners = stream.getLongList();
-            DisplayName = stream.getString();
-            //BigOwners = stream.getLongList();
+        #endregion
+        #region Update Attributes from Ingame data
+
+        /// <summary>
+        /// Should be called when the session player list changes
+        /// </summary>
+        private void UpdateNeedsRevealForSpawn() {
+            List<long> toRevealFor = Sessions.ServerConcealSession.Instance.
+                Manager.Revealed.ActivePlayersAndAllies;
+
+            foreach (long owner in SpawnOwners) {
+                if (toRevealFor.Contains(owner)) {
+                    NeedsRevealForSpawn = true;
+                    return;
+                }
+            }
+
+            NeedsRevealForSpawn = false;
         }
 
         #endregion
 
+        protected override void Reveal() {
+            //throw new NotImplementedException();
+        }
     }
 }

@@ -8,16 +8,22 @@ namespace GP.Concealment.Messages {
     public enum MessageType : ushort {
         RequestBase,
         ResponseBase,
+        ChangeSettingRequest,
+        ChangeSettingResponse,
         ConcealRequest,
         ConcealResponse,
         ConcealedGridsRequest,
         ConcealedGridsResponse,
         LoginRequest,
         LogoutRequest,
+        ObservingEntitiesRequest,
+        ObservingEntitiesResponse,
         RevealRequest,
         RevealResponse,
         RevealedGridsRequest,
         RevealedGridsResponse,
+        SettingsRequest,
+        SettingsResponse,
         StatusResponse,
     }
 

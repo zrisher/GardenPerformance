@@ -42,7 +42,7 @@ namespace GP.Concealment.Sessions {
         public ConcealmentManager Manager;
         private ServerMessageHandler Messenger;
         
-        public String ComponentName { get { return "ServerConcealSession"; } }
+        public override String ComponentName { get { return "ServerConcealSession"; } }
 
         // TODO: increase delay on these after done testing
         public override Dictionary<uint, Action> UpdateActions {

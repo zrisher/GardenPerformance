@@ -187,11 +187,61 @@ namespace GP.Concealment.World.Sectors {
         #region Field Access Helpers
 
         public List<ConcealedGrid> ConcealedGridsList() {
-            return Grids.Select((x) => x.Value).ToList();
+            return Grids.Values.ToList();
         }
 
         private List<MyObjectBuilder_CubeGrid> ConcealedGridBuildersList() {
             return GridBuilders.Select((x) => x.Value).ToList();
+        }
+
+        public bool AddGrid(IMyCubeGrid grid) {
+            return false;
+            /*
+            Log.Trace("Concealing grid " + grid.EntityId, "ConcealGrid");
+
+            if (grid == null) {
+                Log.Error("Stored cubegrid reference is null, aborting", "ConcealGrid");
+                return false;
+            }
+
+            // Need the syncobject to be around or removing it will fail on clients
+            if (grid.SyncObject == null) {
+                Log.Error("SyncObject missing, aborting", "ConcealGrid");
+                return false;
+            }
+
+            ConcealedGrid concealed = new ConcealedGrid();
+            concealed.LoadFromCubeGrid(grid);
+
+            /*
+            if (!concealableGrid.Saveable()) {
+                Log.Error("Won't be able to save this grid, aborting conceal.",
+                    "ConcealEntity");
+                return false;
+            }
+            *//*
+
+            // Track it
+            if (Grids.ContainsKey(grid.EntityId)) {
+                Log.Error("Attempting to store already-stored entity id " +
+                    grid.EntityId, "ConcealGrid");
+                return false;
+            }
+
+            Grids.Add(concealed.EntityId, concealed);
+
+            GridBuilders.Add(concealed.EntityId, 
+                grid.GetObjectBuilder() as MyObjectBuilder_CubeGrid);
+
+            GridTree.Add(concealed);
+
+            // Remove it from the world
+            grid.SyncObject.SendCloseRequest();
+
+            NeedsSave = true;
+            return true;
+            */
+            return false;
         }
 
         #endregion
@@ -244,7 +294,7 @@ namespace GP.Concealment.World.Sectors {
 
         public void MarkAllConcealable() {
             foreach (var kvp in Grids) {
-                kvp.Value.Concealability = EntityConcealability.Concealable;
+                //kvp.Value.Concealability = EntityConcealability.Concealable;
             }
         }
 

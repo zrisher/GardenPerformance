@@ -78,8 +78,19 @@
   <ItemGroup>
     <Compile Include="Concealment\Messages\Requests\LogoutRequest.cs" />
     <Compile Include="Concealment\Messages\Requests\LoginRequest.cs" />
+    <Compile Include="Concealment\Messages\Requests\ChangeSettingRequest.cs" />
+    <Compile Include="Concealment\Messages\Requests\SettingsRequest.cs" />
+    <Compile Include="Concealment\Messages\Requests\ObservingEntitiesRequest.cs" />
+    <Compile Include="Concealment\Messages\Responses\ChangeSettingResponse.cs" />
+    <Compile Include="Concealment\Messages\Responses\SettingsResponse.cs" />
+    <Compile Include="Concealment\Messages\Responses\ObservingEntitiesResponse.cs" />
     <Compile Include="Concealment\Settings.cs" />
     <Compile Include="Concealment\World\Entities\ConcealableEntity.cs" />
+    <Compile Include="Concealment\World\Entities\ConcealableGrid.cs" />
+    <Compile Include="Concealment\World\Entities\ObservingEntity.cs" />
+    <Compile Include="Concealment\World\Entities\ObservableEntity.cs" />
+    <Compile Include="Concealment\World\Entities\ConcealedEntity.cs" />
+    <Compile Include="Concealment\World\Entities\RevealedEntity.cs" />
     <Compile Include="Concealment\World\Entities\RevealedGrid.cs" />
     <Compile Include="Concealment\World\Entities\ControllableEntity.cs" />
     <Compile Include="Concealment\World\Entities\Character.cs" />
@@ -103,7 +114,6 @@
     <Compile Include="Concealment\Messages\Requests\RevealRequest.cs" />
     <Compile Include="Concealment\Messages\Responses\ConcealResponse.cs" />
     <Compile Include="Concealment\Messages\Requests\ConcealRequest.cs" />
-    <Compile Include="Concealment\World\Entities\ConcealedEntity.cs" />
     <Compile Include="Concealment\World\Entities\ConcealedGrid.cs" />
     <Compile Include="Concealment\ConcealmentManager.cs" />
     <Compile Include="Concealment\World\Sectors\RevealedSector.cs" />
@@ -153,6 +163,7 @@
     <Compile Include="SEGarden\GardenGateway.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="README.md" />
     <None Include="SEGarden\.git" />
     <None Include="SEGarden\README.md" />
   </ItemGroup>

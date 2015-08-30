@@ -19,8 +19,7 @@ namespace GP.Concealment.Messages.Responses {
             ConcealedGrid grid;
             ushort count = stream.getUShort();
             for (int i = 0; i < count; i++) {
-                grid = new ConcealedGrid();
-                grid.RemoveFromByteStream(stream);
+                grid = new ConcealedGrid(stream);
                 response.ConcealedGrids.Add(grid);
             }
 

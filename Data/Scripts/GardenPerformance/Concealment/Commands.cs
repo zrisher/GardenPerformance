@@ -25,6 +25,71 @@ namespace GP.Concealment {
             get { return ClientConcealSession.Instance; } 
         }
 
+        static Command ObserversCommand = new Command(
+            "observers",
+            "list all observing entities",
+            "Observing entities are....",
+            (List<String> args) => {
+                Log.Trace("Requesting Observing Entities", "ObserversCommand");
+
+                ObservingEntitiesRequest request = new ObservingEntitiesRequest();
+                request.SendToServer();
+
+                return new EmptyNotification();
+            }
+        );
+
+        static Command SettingsCommand = new Command(
+            "settings",
+            "list settings",
+            "Settings are....",
+            (List<String> args) => {
+                Log.Trace("Requesting Observing Entities", "ObserversCommand");
+
+                SettingsRequest request = new SettingsRequest();
+                request.SendToServer();
+
+                return new EmptyNotification();
+            }
+        );
+
+        static Command SetSettingCommand = new Command(
+            "setsetting",
+            "set setting N to X",
+            "Details....",
+            (List<String> args) => {
+                byte n = Byte.Parse(args[0]);
+                ushort x = UInt16.Parse(args[1]);
+
+                Settings settings = Session.Settings;
+
+                if (settings == null) return new ChatNotification() {
+                    Text = "No list of settings available.",
+                    Sender = "GP"
+                };
+
+
+                if (n < 1 || n > settings.Count) return new ChatNotification() {
+                    Text = "Incorrect index for list",
+                    Sender = "GP"
+                };
+
+                // TODO - have a setting identifier enum
+                Log.Trace("Requesting change setting " + n + " to " + x, "ConcealCommand");
+
+                ChangeSettingRequest request = new ChangeSettingRequest {
+                    Index = n,
+                    Value = x
+                };
+                request.SendToServer();
+
+                return null;
+
+            },
+            new List<String> { "N", "X" },
+            0
+        );
+
         static Command ConcealedCommand = new Command(
             "concealed",
             "list all concealed grids",
@@ -120,7 +185,7 @@ namespace GP.Concealment {
         );
 
         static Tree ConcealmentTree = new Tree(
-            "concealment",
+            "c",
             "manage entity concealment",
             "Grids are automatically concealed if they are: \n" +
             "  * Not controlled by a person or autopilot\n" +
@@ -128,15 +193,19 @@ namespace GP.Concealment {
             "  * Not moving\n" +
             "  * Not in an asteroid\n" +
             "  * Not refining or manufacturing\n" +
-            "  * Not providing spawn points for players",
+            "  * Not providing spawn points for players\n" +
+            "TODO - update this list with settings, request settings on client load",
             0,
             new List<Node> {
                 ConcealedCommand,
                 RevealCommand,
                 RevealedCommand,
                 ConcealCommand,
+                ObserversCommand,
+                SettingsCommand,
+                SetSettingCommand,
             },
-            "c"
+            "concealment"
         );
 
         public static Tree FullTree = new Tree(

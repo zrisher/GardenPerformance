@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Xml.Serialization;
 
 using Sandbox.ModAPI;
 using VRage.ModAPI;
@@ -13,109 +12,105 @@ using SEGarden.Logging;
 using SEGarden.Logic;
 using SEGarden.Math;
 
+using GP.Concealment.World.Sectors;
+using GP.Concealment.Sessions;
+
 namespace GP.Concealment.World.Entities {
 
-    public abstract class ConcealedEntity : ConcealableEntity, AABBEntity {
+    public abstract class RevealedEntity : EntityComponent, ObservableEntity, AABBEntity {
 
         #region Static
+
+        protected static RevealedSector Sector {
+            get { return ServerConcealSession.Instance.Manager.Revealed; }
+        }
 
         #endregion
         #region Fields
 
-        protected Logger Log;           
-
         // ObserveableEntity
-        private Dictionary<long, RevealedEntity> EntitiesViewedBy =
+        protected Dictionary<long, RevealedEntity> EntitiesViewedBy =
             new Dictionary<long, RevealedEntity>();
+
         /*
         private Dictionary<long, RevealedEntity> EntitiesDetectedBy =
             new Dictionary<long, RevealedEntity>();
         private Dictionary<long, RevealedEntity> EntitiesBroadcastingTo =
             new Dictionary<long, RevealedEntity>();
-        */ 
+        */
 
         #endregion
         #region Properties
 
-        // All the XML-saved properties need to be manually set
-        // The properties that we send to client are set instead of dynamically calculated too.
+        // The properties that we send to client are set instead of dynamically calculated
         // We could calculate these on the fly, but storing and updating them instead
         // allows us to let the client know exactly what the server sees when they're
         // sent in messages. It also allows us to delay updating them until needed.
 
         // ObserveableEntity
-        public EntityType TypeOfEntity { get; set; }
-        public long EntityId { get; set; }
-        public String DisplayName { get; set;  }
-        public Vector3D Position { get; set; }
-        [XmlIgnore]
+        public Vector3D Position { 
+            get { return Entity.PositionComp.GetPosition(); } 
+        }
         public bool IsObserved { get; private set; }
+        public abstract EntityType TypeOfEntity { get; }
 
         // AABBEntity
-        public BoundingBoxD BoundingBox { get; set; }
-        public int TreeProxyID { get; set; }
-        public Vector3D WorldTranslation { get; set; }
-        public Vector3D LinearVelocity { get; set; }
+        public BoundingBoxD BoundingBox {
+            get { return Entity.PositionComp.WorldAABB; } 
+        }
+        public int TreeProxyID { 
+            get; set; 
+        }
+        public Vector3D WorldTranslation {
+            get { return Entity.PositionComp.WorldMatrix.Translation; }
+        }
+        public Vector3D LinearVelocity { 
+            get { return Entity.Physics.LinearVelocity; } 
+        }
 
         // ConcealableEntity
-        [XmlIgnore]
         public bool IsRevealBlocked { get; set; }
-        public bool IsInsideAsteroid { get; set; }
 
-        // ConcealedEntity
-        [XmlIgnore]
-        public bool IsRevealable { get { return !IsRevealBlocked; } }
-        [XmlIgnore]
-        public virtual bool NeedsReveal { get { return IsObserved; } }
+        // RevealedEntity
+        public virtual bool IsConcealable { 
+            get { return !IsRevealBlocked && !IsObserved; } 
+        }
+
 
         #endregion
         #region Constructors
 
-        // XML Deserialization
-        public ConcealedEntity() {
-            // EntityId is populated after instantiated from XML, so use an action
-            Log = new Logger("GP.Concealment.World.Entities.ConcealedEntity", 
-                (() => { return EntityId.ToString(); }));
-        }
-
         // Byte Deserialization
-        public ConcealedEntity(VRage.ByteStream stream) : this() {
-            TypeOfEntity = (EntityType)stream.getUShort();
-            EntityId = stream.getLong();
-            Position = stream.getVector3D();
-            // Clients don't need AABB details
-            IsRevealBlocked = stream.getBoolean();
+        public RevealedEntity(VRage.ByteStream stream) : base(stream) {
+            // Nearly everything is available from the ingame Entity
             IsObserved = stream.getBoolean();
-            Log = new Logger("GP.Concealment.World.Entities.ConcealedEntity", 
-                EntityId.ToString());
+            IsRevealBlocked = stream.getBoolean();
+            
+            List<long> entitiesViewedByList = stream.getLongList();
+            foreach (long id in entitiesViewedByList) {
+                EntitiesViewedBy.Add(id, null);
+            }
+
+            Log.ClassName = "GP.Concealment.World.Entities.RevealedEntity";
+            Log.Trace("Finished RevealedEntity deserialize constructor", "ctr");
         }
 
-        // Creation from ingame entity before it's removed
-        public ConcealedEntity(IMyEntity entity) : this() {
-            EntityId = entity.EntityId;
-            DisplayName = entity.DisplayName;
-            Position = entity.GetPosition();
-            BoundingBox = entity.WorldAABB;
-            WorldTranslation = entity.WorldMatrix.Translation;
-            //TODO: stop entity if moving, we never update the below
-            // and really we should never conceal a grid that's moving
-            LinearVelocity = entity.Physics.LinearVelocity;
-            Log = new Logger("GP.Concealment.World.Entities.ConcealedEntity",
-                EntityId.ToString());
+        // Creation from ingame entity
+        public RevealedEntity(IMyEntity entity) : base(entity) {
+            Log.ClassName = "GP.Concealment.World.Entities.RevealedEntity";
+            Log.Trace("Finished RevealedEntity constructor", "ctr");
         }
 
         #endregion
         #region Serialization
 
         // Byte Serialization
-        public void AddToByteStream(VRage.ByteStream stream) {
-            UpdateRevealability();
-            stream.addUShort((ushort)TypeOfEntity);
-            stream.addLong(EntityId);
-            stream.addVector3D(Position);
-            // Clients don't need AABB details
-            stream.addBoolean(IsRevealBlocked);
+        public override void AddToByteStream(VRage.ByteStream stream) {
+            base.AddToByteStream(stream);
+            UpdateConcealability();
             stream.addBoolean(IsObserved);
+            stream.addBoolean(IsRevealBlocked);
+            stream.addLongList(EntitiesViewedBy.Keys.ToList());
         }
 
         #endregion
@@ -146,7 +141,7 @@ namespace GP.Concealment.World.Entities {
         }
 
         /*
-        public void MarkDetectedBy(ObservingEntity e) {
+        public void MarkDetectedBy(RevealedEntity e) {
             long id = e.EntityId;
             if (EntitiesDetectedBy.ContainsKey(id)) {
                 Log.Error("Already added " + id, "MarkDetectedBy");
@@ -158,7 +153,7 @@ namespace GP.Concealment.World.Entities {
             UpdateObserveability();
         }
 
-        public void UnmarkDetectedBy(ObservingEntity e) {
+        public void UnmarkDetectedBy(RevealedEntity e) {
             long id = e.EntityId;
             if (!EntitiesDetectedBy.ContainsKey(id)) {
                 Log.Error("Not stored " + id, "UnmarkDetectedBy");
@@ -170,7 +165,7 @@ namespace GP.Concealment.World.Entities {
             UpdateObserveability();
         }
 
-        public void MarkBroadcastingTo(ObservingEntity e) {
+        public void MarkBroadcastingTo(RevealedEntity e) {
             long id = e.EntityId;
             if (EntitiesBroadcastingTo.ContainsKey(id)) {
                 Log.Error("Already added " + id, "MarkBroadcastingTo");
@@ -182,7 +177,7 @@ namespace GP.Concealment.World.Entities {
             UpdateObserveability();
         }
 
-        public void UnmarkBroadcastingTo(ObservingEntity e) {
+        public void UnmarkBroadcastingTo(RevealedEntity e) {
             long id = e.EntityId;
             if (!EntitiesBroadcastingTo.ContainsKey(id)) {
                 Log.Error("Not stored " + id, "UnmarkBroadcastingTo");
@@ -198,41 +193,56 @@ namespace GP.Concealment.World.Entities {
         #endregion
         #region Update Attributes from Ingame data
 
-
         /// <summary>
-        /// Should be called before revealing and before sending to clients
+        /// Should be called before concealing and before sending to clients
         /// </summary>
-        private void UpdateRevealability(){
+        protected virtual void UpdateConcealability() {
             UpdateRevealBlocked();
         }
 
+
         private void UpdateRevealBlocked() {
+            IsRevealBlocked = false;
+
+            Log.Trace("Begin UpdateRevealBlocked", "UpdateRevealBlocked");
             BoundingBoxD boxCopy = BoundingBox;
-            IsRevealBlocked = MyAPIGateway.Entities.
-                GetElementsInBox(ref boxCopy).Count > 0;
+            List<IMyEntity> boundedEntities = MyAPIGateway.Entities.
+                GetElementsInBox(ref boxCopy);
+
+            Log.Trace("boundedEntities count " + boundedEntities.Count, "UpdateRevealBlocked");
+
+            foreach (IMyEntity e in boundedEntities) {
+                if (e.GetTopMostParent() != Entity) {
+                    Log.Trace("Found an entity that's not a child", "UpdateRevealBlocked");
+                    IsRevealBlocked = true;
+                    return;
+                }
+            }
+
+            Log.Trace("All entities in bounds are children.", "UpdateRevealBlocked");
         }
 
         private void UpdateObserveability() {
-            IsObserved = ( 
+            IsObserved = (
                 EntitiesViewedBy.Count > 0 //||
                 //EntitiesDetectedBy.Count > 0 ||
                 //EntitiesBroadcastingTo.Count > 0
-                ); 
+                );
         }
 
         #endregion
         #region Reveal
 
-        public bool TryReveal() {
-            UpdateRevealability();
+        public virtual bool TryConceal() {
+            UpdateConcealability();
 
-            if (!IsRevealable) return false;
-            
-            Reveal();
+            if (!IsConcealable) return false;
+
+            Conceal();
             return true;
         }
 
-        protected abstract void Reveal();
+        protected abstract void Conceal();
 
         #endregion
 
