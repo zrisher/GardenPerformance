@@ -194,6 +194,12 @@ namespace GP.Concealment.World.Sectors {
             return GridBuilders.Select((x) => x.Value).ToList();
         }
 
+        public ConcealedGrid GetGrid(long entityId) {
+            ConcealedGrid grid;
+            Grids.TryGetValue(entityId, out grid);
+            return grid;
+        }
+
         public bool AddGrid(IMyCubeGrid grid) {
             return false;
             /*
@@ -303,6 +309,19 @@ namespace GP.Concealment.World.Sectors {
         }
 
         #endregion
+
+        public List<ConcealedEntity> EntitiesInBox(BoundingBoxD bounds) {
+            var results = new List<ConcealedEntity>();
+            GridTree.GetAllEntitiesInBox<ConcealedEntity>(ref bounds, results);
+            return results;
+        }
+
+        public List<ConcealedEntity> EntitiesInSphere(BoundingSphereD bounds) {
+            var results = new List<ConcealedEntity>();
+            GridTree.GetAllEntitiesInSphere<ConcealedEntity>(ref bounds, results);
+            return results;
+        }
+
 
 
     }

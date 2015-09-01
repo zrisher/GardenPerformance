@@ -6,6 +6,8 @@ using System.Text;
 using VRage.ModAPI;
 using VRageMath;
 
+using SEGarden.Extensions;
+using SEGarden.Extensions.VRageMath;
 using SEGarden.Logging;
 using SEGarden.Logic;
 using SEGarden.Math;
@@ -30,16 +32,16 @@ namespace GP.Concealment.World.Entities {
         //private BoundingSphere DetectingSphere;
         //private BoundingSphere CommunicatingSphere;
 
+        private bool PreviouslyObserving;
         private bool RefreshObservingNextUpdate = true;
         private Vector3D LastObservingPosition;
+        private DateTime LastObservingTime;
 
 
         #endregion
         #region Properties
 
-        protected double ViewDistance {
-            get { return Settings.Instance.RevealVisibilityMeters;  }
-        }
+        protected double ViewDistance { get; private set; }
 
         private BoundingSphereD ViewingSphere { get; set; }
 
@@ -49,7 +51,7 @@ namespace GP.Concealment.World.Entities {
 
         private double DistanceSinceLastObservingCheck {
             get {
-                if (LastObservingPosition == null)
+                if (!PreviouslyObserving)
                     return double.PositiveInfinity;
                 else
                     return (Position - LastObservingPosition).AbsMax();
@@ -71,11 +73,23 @@ namespace GP.Concealment.World.Entities {
 
         // Byte Deserialization
         public ObservingEntity(VRage.ByteStream stream) : base(stream) {
+
+            List<long> entitiesViewing = stream.getLongList();
+            foreach (long id in entitiesViewing) {
+                EntitiesViewing.Add(id, null);
+            }
+
+            LastObservingTime = stream.getDateTime();
+            LastObservingPosition = stream.getVector3D();
+            ViewDistance = stream.getDouble();
+            Log.Trace("Deserialized distance of " + ViewDistance, "stream ctr");
         }
 
         // Creation from ingame entity
         public ObservingEntity(IMyEntity entity) : base(entity) {
+            ViewDistance = Settings.Instance.RevealVisibilityMeters;
             UpdateSpheres();
+            Log.Trace("Set view distance to " + ViewDistance, "ctr");
         }
 
         #endregion
@@ -114,6 +128,13 @@ namespace GP.Concealment.World.Entities {
         // Byte Serialization
         public override void AddToByteStream(VRage.ByteStream stream) {
             base.AddToByteStream(stream);
+
+            stream.addLongList(EntitiesViewing.Keys.ToList());
+            stream.addDateTime(LastObservingTime);
+            stream.addVector3D(LastObservingPosition);
+            stream.addDouble(ViewDistance);
+
+            Log.Trace("Serialized distance of " + ViewDistance, "stream ctr");
         }
 
         #endregion
@@ -121,7 +142,7 @@ namespace GP.Concealment.World.Entities {
 
         protected void RefreshObserving() {
             ClearObserving();
-            MarkObserving();
+            Observe();
         }
 
         protected void ClearObserving() {
@@ -130,9 +151,17 @@ namespace GP.Concealment.World.Entities {
             //UnmarkReceivingAll();
         }
 
-        // TODO: This
-        protected void MarkObserving() {
+
+        protected void Observe() {
             if (!IsControlled) return;
+
+            Log.Trace("Marking observed", "MarkObserving");
+            Log.Trace("Viewing shpere Center: " + ViewingSphere.Center, "MarkObserving");
+            Log.Trace("Viewing shpere Radius: " + ViewingSphere.Radius, "MarkObserving");
+
+            List<ObservableEntity> viewableEntities = Sector.ObservableInSphere(ViewingSphere);
+
+            Log.Trace("Viewable entity count: " + viewableEntities, "MarkObserving");
 
             foreach (ObservableEntity e in Sector.ObservableInSphere(ViewingSphere)) {
                 MarkViewing(e);
@@ -141,8 +170,9 @@ namespace GP.Concealment.World.Entities {
             // do other ranges, can use largest between detection and view,
             // but communication depends on broadcast radius of others so would have to check that too
 
-
+            LastObservingTime = DateTime.UtcNow;
             LastObservingPosition = Position;
+            PreviouslyObserving = true;
         }
 
         #endregion
@@ -155,7 +185,7 @@ namespace GP.Concealment.World.Entities {
                 return;
             }
 
-            Log.Error("Adding " + id, "MarkViewing");
+            Log.Error("Marking " + id + " as viewed by me", "MarkViewing");
             EntitiesViewing.Add(id, e);
             e.MarkViewedBy(this);
         }
@@ -167,7 +197,7 @@ namespace GP.Concealment.World.Entities {
                 return;
             }
 
-            Log.Error("Removing " + id, "UnmarkViewing");
+            Log.Error("Removing view mark on " + id + " from me", "UnmarkViewing");
             EntitiesViewing.Remove(id);
             e.UnmarkViewedBy(this);
         }
@@ -264,9 +294,65 @@ namespace GP.Concealment.World.Entities {
         }
 
 
-        public String ToString() {
-            // TODO: implement
-            return "Observing Entity to String - to implement";
+        public String Details() {
+            String result = "";
+
+            // Ids
+            result += DisplayName + "\" - " + EntityId + "\n";
+
+            // Owners
+            // TODO: show owner names instead of playerIds
+            result += "  Owners: TODO\n";
+            /*
+            if (BigOwners != null) {
+                result += "  Owners: " + String.Join(", ", BigOwners) + "\n";
+            }
+            else {
+                Log.Error("Grid had null BigOwners", "ReceiveRevealedGridsResponse");
+            }
+             * */
+
+            // Position
+            result += "  Position: " + Position.ToRoundedString() + "\n";
+
+            // Control
+            if (IsControlled) {
+                result += "  Controlled:\n";
+
+                if (IsMoving) {
+                    result += "    Moving at " + 
+                        System.Math.Truncate(LinearVelocity.Length()) + " m/s";
+                }
+                else if (RecentlyMoved) {
+                    result += "    Recently moved until " + RecentlyMovedEnds;
+                }
+
+                result += "\n";
+            }
+            else {
+                result += "  Not Controlled. (Shouldn't be viewing anything.)\n";
+            }
+
+            // Last check details
+            if (!PreviouslyObserving) {
+                result += "  Hasn't yet had an observe check.\n";
+            }
+            //else {
+                result += "  Last View Check at pos: " + LastObservingPosition.ToRoundedString() + "\n";
+                result += "  Distance from last view check: " + DistanceSinceLastObservingCheck + "\n";
+                result += "  Last View Check at time: " + LastObservingTime.ToLocalTime() + "\n";
+                result += "  View radius: " + ViewDistance + "\n";
+                result += "  Viewed entities: \n";
+            //}
+
+
+
+            // TODO: fetch the entities ingame on client side so we can have their details
+            foreach (long id in EntitiesViewing.Keys) {
+                result += "    " + id + "\n";
+            }
+
+            return result;
         }
 
     }

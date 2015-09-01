@@ -107,11 +107,7 @@ namespace GP.Concealment.MessageHandlers {
             Log.Trace("Receiving Conceal Request", "ReceiveConcealRequest");
 
             ConcealRequest request = ConcealRequest.FromBytes(body);
-            bool success = false;
-
-            if (Session.Manager.CanConceal(request.EntityId)) {
-                success = Session.Manager.QueueConceal(request.EntityId);
-            }
+            bool success = Session.Manager.QueueConceal(request.EntityId);
 
             ConcealResponse response = new ConcealResponse() {
                 EntityId = request.EntityId,
@@ -138,12 +134,7 @@ namespace GP.Concealment.MessageHandlers {
             Log.Trace("Receiving Reveal Request", "ReceiveRevealRequest");
 
             RevealRequest request = RevealRequest.FromBytes(body);
-            bool success = false;
-
-            if (Session.Manager.QueueReveal(request.EntityId)) {
-                success = true;
-                Log.Trace("Successfully revealed", "ReceiveRevealRequest");
-            }
+            bool success = Session.Manager.QueueReveal(request.EntityId);
 
             RevealResponse response = new RevealResponse() {
                 EntityId = request.EntityId,

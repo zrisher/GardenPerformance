@@ -76,6 +76,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="SEGarden\Commons\Conceal\ConcealMessageHandler.cs" />
+    <Compile Include="SEGarden\Commons\Conceal\ConcealCancelledMessage.cs" />
+    <Compile Include="SEGarden\Commons\Conceal\ConcealQueuedMessage.cs" />
+    <Compile Include="SEGarden\Commons\Conceal\ConcealMessageBase.cs" />
     <Compile Include="Concealment\Messages\Requests\LogoutRequest.cs" />
     <Compile Include="Concealment\Messages\Requests\LoginRequest.cs" />
     <Compile Include="Concealment\Messages\Requests\ChangeSettingRequest.cs" />
@@ -96,6 +100,8 @@
     <Compile Include="Concealment\World\Entities\Character.cs" />
     <Compile Include="Concealment\World\Entities\Common.cs" />
     <Compile Include="Concealment\World\Sectors\ConcealedSector.cs" />
+    <Compile Include="SEGarden\Commons\MessageDomain.cs" />
+    <Compile Include="SEGarden\Commons\Conceal\MessageType.cs" />
     <Compile Include="SEGarden\Math\AABBEntity.cs" />
     <Compile Include="SEGarden\Math\AABBTree.cs" />
     <Compile Include="Concealment\Messages\Responses\StatusResponse.cs" />
@@ -134,7 +140,7 @@
     <Compile Include="SEGarden\Messaging\MessageBase.cs" />
     <Compile Include="SEGarden\Messaging\MessageManager.cs" />
     <Compile Include="SEGarden\Messaging\MessageHandlerBase.cs" />
-    <Compile Include="SEGarden\Messaging\Messaging.cs" />
+    <Compile Include="SEGarden\Messaging\MessageDestinationType.cs" />
     <Compile Include="SEGarden\Records\RecordManager.cs" />
     <Compile Include="SEGarden\Extensions\String.cs" />
     <Compile Include="SEGarden\Threading\LockedQueue.cs" />
@@ -157,7 +163,6 @@
     <Compile Include="SEGarden\Logging\Logger.cs" />
     <Compile Include="SEGarden\Logging\Severity.cs" />
     <Compile Include="SEGarden\Messaging\MessageContainer.cs" />
-    <Compile Include="SEGarden\Messaging\Archive\BaseResponse.cs" />
     <Compile Include="SEGarden\Notifications\Notification.cs" />
     <Compile Include="SEGarden\Extensions\TextFormatting.cs" />
     <Compile Include="SEGarden\GardenGateway.cs" />

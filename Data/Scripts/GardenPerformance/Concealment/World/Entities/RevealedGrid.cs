@@ -397,8 +397,52 @@ namespace GP.Concealment.World.Entities {
             */ 
         }
 
-        protected override void Conceal() {
-            //throw new NotImplementedException();
+        protected override void Conceal()  {
+            Log.Trace("Concealing grid {NOT IMPLEMENTED!} " + EntityId, "ConcealGrid");
+            /*
+            IMyCubeGrid grid = revealed.Grid;
+            ConcealedGrid concealableGrid = new ConcealedGrid();
+
+            if (grid == null) {
+                Log.Error("Stored cubegrid reference is null, aborting", "ConcealGrid");
+                return false;
+            }
+
+            if (grid.SyncObject == null) {
+                Log.Error("SyncObject missing, aborting", "ConcealGrid");
+                return false;
+            }
+
+            // Refresh the info before saving
+            concealableGrid.LoadFromCubeGrid(grid);
+
+            /*
+            if (!concealableGrid.Saveable()) {
+                Log.Error("Won't be able to save this grid, aborting conceal.",
+                    "ConcealEntity");
+                return false;
+            }
+            *//*
+
+            // Track it
+            if (Grids.ContainsKey(grid.EntityId)) {
+                Log.Error("Attempting to store already-stored entity id " +
+                    grid.EntityId, "ConcealGrid");
+                return false;
+            }
+
+            Grids.Add(concealableGrid.EntityId, concealableGrid);
+            GridBuilders.Add(concealableGrid.EntityId, 
+                grid.GetObjectBuilder() as MyObjectBuilder_CubeGrid);
+            // TODO: Add to AABB Tree
+            // TODO: Combine this into a function to share with load
+
+            // Remove it from the world
+            grid.SyncObject.SendCloseRequest();
+
+            NeedsSave = true;
+            return true;
+            */
         }
 
         public String ConcealDetails() {
@@ -450,8 +494,6 @@ namespace GP.Concealment.World.Entities {
             }
 
             // Observed
-            result += "    TODO: Observed? \n";
-            /*
             if (IsObserved) {
                 result += "    Observed by:\n";
                 foreach (long id in EntitiesViewedBy.Keys) {
@@ -461,7 +503,6 @@ namespace GP.Concealment.World.Entities {
             else {
                 result += "    Not Observed. (OK to conceal.)\n";
             }
-            */
 
             // Spawn
             // TODO: show owner names instead of playerIds
@@ -484,6 +525,7 @@ namespace GP.Concealment.World.Entities {
             // TODO: show block types instead of entity Ids
             // TODO: actually implement updates to these details
             result += "    TODO: Producing? \n";
+            result += "      TODO: Assembling? \n";
             /*
             if (IsProducing) {
                 result += "    Some blocks are currently producing: by:\n";
@@ -495,6 +537,11 @@ namespace GP.Concealment.World.Entities {
                 result += "    No blocks producing. (OK to conceal.)\n";
             }
             */
+
+            result += "      TODO: Refining? \n";
+            result += "      TODO: Charging? \n";
+
+            result += "      TODO: Producing Oxygen? \n";
 
             // NearAsteroid
             // TODO

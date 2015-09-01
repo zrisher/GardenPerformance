@@ -220,6 +220,20 @@ namespace GP.Concealment.World.Entities {
             }
 
             Log.Trace("All entities in bounds are children.", "UpdateRevealBlocked");
+
+            List<ConcealedEntity> concealedEntities = ServerConcealSession.Instance.
+                Manager.Concealed.EntitiesInBox(boxCopy);
+
+            Log.Trace("concealed boundedEntities count " + concealedEntities.Count, "UpdateRevealBlocked");
+
+            if (concealedEntities.Count > 0) {
+                Log.Trace("Found a concealed entity in the way", "UpdateRevealBlocked");
+                IsRevealBlocked = true;
+                return;
+            }
+
+            Log.Trace("All entities in concealed bounds are children.", "UpdateRevealBlocked");
+
         }
 
         private void UpdateObserveability() {

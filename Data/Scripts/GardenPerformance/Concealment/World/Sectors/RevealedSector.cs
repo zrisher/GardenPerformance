@@ -40,11 +40,11 @@ namespace GP.Concealment.World.Sectors {
         // because spawn is shared
         public List<long> ActivePlayersAndAllies = new List<long>();
 
-        private Dictionary<long, ControllableEntity> ControlledEntities =
-            new Dictionary<long, ControllableEntity>();
+        //private Dictionary<long, ControllableEntity> ControlledEntities =
+        //    new Dictionary<long, ControllableEntity>();
 
-        private Dictionary<long, ObservableEntity> ObservableEntities =
-            new Dictionary<long, ObservableEntity>();
+        private Dictionary<long, ObservingEntity> ObservingEntities =
+            new Dictionary<long, ObservingEntity>();
 
         // These can be concealed or marked to remain revealed
         private Dictionary<long, RevealedGrid> Grids =
@@ -56,20 +56,35 @@ namespace GP.Concealment.World.Sectors {
         #region Public Field Access Helpers
 
         public List<RevealedGrid> RevealedGridsList() {
-            Log.Trace("Returning concealed grids list of count " + Grids.Values.Count, "RevealedGridsList");
-            return Grids.Values.ToList();
+            List<RevealedGrid> revealedGridsList = Grids.Values.ToList();
+
+            Log.Trace("Returning concealed grids list of count " + 
+                revealedGridsList.Count, "RevealedGridsList");
+
+            return revealedGridsList;
         }
 
         public List<ObservingEntity> ObservingEntitiesList() {
-            // TODO - implement
-            //Log.Trace("Returning ObservingEntities list of count " + Grids.Values.Count, "RevealedGridsList");
-            //return Grids.Values.ToList();
-            return new List<ObservingEntity>();
+            List<ObservingEntity> observingEntitiesList = 
+                ObservingEntities.Values.ToList();
+
+            Log.Trace("Returning Observing Entities list of count " +
+                observingEntitiesList.Count, "RevealedGridsList");
+
+            return observingEntitiesList;
         }
+
+        public RevealedGrid GetGrid(long entityId) {
+            RevealedGrid grid;
+            Grids.TryGetValue(entityId, out grid);
+            return grid;
+        }
+
 
         #endregion
         #region Private Field Access Helpers
 
+        /*
         private void RememberControlledEntity(ControllableEntity e) {
             long id = e.EntityId;
             if (ControlledEntities.ContainsKey(id)) {
@@ -90,6 +105,29 @@ namespace GP.Concealment.World.Sectors {
 
             Log.Trace("Removing " + id, "ForgetControlledEntity");
             ControlledEntities.Remove(id);
+        }
+        */
+
+        private void RememberObservingEntity(ObservingEntity e) {
+            long id = e.EntityId;
+            if (ObservingEntities.ContainsKey(id)) {
+                Log.Error("Already added " + id, "RememberObservingEntity");
+                return;
+            }
+
+            Log.Trace("Adding " + id, "RememberObservingEntity");
+            ObservingEntities.Add(id, e);
+        }
+
+        private void ForgetObservingEntity(ObservingEntity e) {
+            long id = e.EntityId;
+            if (!ObservingEntities.ContainsKey(id)) {
+                Log.Error("Not stored " + id, "ForgetObservingEntity");
+                return;
+            }
+
+            Log.Trace("Removing " + id, "ForgetObservingEntity");
+            ObservingEntities.Remove(id);
         }
 
         private void RememberGrid(RevealedGrid e) {
@@ -115,6 +153,15 @@ namespace GP.Concealment.World.Sectors {
             Grids.Remove(id);
             GridTree.Remove(e);
         }
+
+        private void RememberCharacter(Character e) {
+            //TODO?
+        }
+
+        private void ForgetCharacter(Character e) {
+            //TODO?
+        }
+
 
         private void RememberPlayerId(ulong id) {
             if (ActiveSteamIDs.Contains(id)) {
@@ -142,9 +189,16 @@ namespace GP.Concealment.World.Sectors {
         public void ControllableEntityAdded(ControllableEntity e) {
             Log.Trace("Controllable Entity Added", "ControllableEntityAdded");
 
-            if (e.IsControlled) RememberControlledEntity(e);
+            //if (e.IsControlled) RememberControlledEntity(e);
+
+            ObservingEntity observer = e as ObservingEntity;
+            if (observer != null) RememberObservingEntity(observer);
+
             RevealedGrid grid = e as RevealedGrid;
             if (grid != null) RememberGrid(grid);
+
+            Character character = e as Character;
+            if (character != null) RememberCharacter(character);
         }
 
         public void ControllableEntityMoved(ControllableEntity e) {
@@ -154,11 +208,19 @@ namespace GP.Concealment.World.Sectors {
         public void ControllableEntityRemoved(ControllableEntity e) {
             Log.Trace("Controllable Entity Added", "ControllableEntityAdded");
 
-            if (e.IsControlled) ForgetControlledEntity(e);
+            //if (e.IsControlled) ForgetControlledEntity(e);
+
+            ObservingEntity observer = e as ObservingEntity;
+            if (observer != null) ForgetObservingEntity(observer);
+
             RevealedGrid grid = e as RevealedGrid;
             if (grid != null) ForgetGrid(grid);
+
+            Character character = e as Character;
+            if (character != null) ForgetCharacter(character);
         }
 
+        /*
         public void ControllableEntityControlled(ControllableEntity e) {
             Log.Trace("Controllable Entity Added", "ControllableEntityAdded");
             RememberControlledEntity(e);
@@ -168,6 +230,7 @@ namespace GP.Concealment.World.Sectors {
             Log.Trace("Controllable Entity Added", "ControllableEntityAdded");
             ForgetControlledEntity(e);
         }
+        */
 
         public void PlayerLoggedIn(ulong steamId) {
             RememberPlayerId(steamId);
@@ -206,22 +269,6 @@ namespace GP.Concealment.World.Sectors {
             return results;
         }
          * */
-
-        #endregion
-        #region Session Updates
-
-        public void Conceal() {
-            // look through all grids for those that are revealable
-            // send their entity Ids to concealed sector for conceal
-            // or maybe actually do the hard part here? A few at a time?
-            // it's really working with revealed entities until they are concealed,
-            // so maybe it makes sense to manage that queue here and let the
-            // concealed work handle the reveal queue and concealed grids that need
-            // to be revealed
-
-            // Grid should handle concealability based on marked near controlled
-            // + asteroid, working, internal controlled (moving/has pilots)
-        }
 
         #endregion
 

@@ -20,6 +20,7 @@ using VRageMath;
 
 using SEGarden;
 using SEGarden.Chat;
+using SEGarden.Commons.Conceal;
 using SEGarden.Logging;
 using Commands = SEGarden.Chat.Commands;
 using SEGarden.Notifications;
@@ -60,6 +61,8 @@ namespace GP.Concealment {
 
         private Queue<ConcealedGrid> GridRevealQueue = new Queue<ConcealedGrid>();
         private Queue<RevealedGrid> GridConcealQueue = new Queue<RevealedGrid>();
+
+        private bool SaveNextUpdate;
 
         #endregion
         #region Instance Properties
@@ -111,10 +114,11 @@ namespace GP.Concealment {
         public bool RequestConcealGrid(long entityId) {
             Log.Trace("Concealing entity " + entityId, "ConcealEntity");
 
+            /*
             IMyEntity entity = null;
-            IMyCubeGrid grid = null;
             MyAPIGateway.Entities.TryGetEntityById(entityId, out entity);
-            grid = entity as IMyCubeGrid;
+
+            IMyCubeGrid grid = entity as IMyCubeGrid;
             if (grid == null) {
                 // log
                 return false;
@@ -124,180 +128,90 @@ namespace GP.Concealment {
             //concealable.LoadFromCubeGrid(grid);
             //concealable.Concealability = EntityConcealability.Concealable;
             RequestConcealGrid(concealable);
+             * */
             return true;
         }
 
-        public void RequestConcealGrid(ConcealedGrid grid) {
-            /*
-            if (grid.Concealability != EntityConcealability.Concealable) {
-                Log.Warning("Requested conceal on non-concealable grid",
-                    "RequestConcealGrid");
-                return;
-            }
-
-            //GridConcealQueue.Enqueue(grid);
-            Grids.Remove(grid.EntityId);
-            */ 
-        }
-
-        public bool RequestRevealGrid(long entityId) {
-            return false;
-        }
-
-        public bool QueueConceal(long entityId) {
-            // TODO: wait to conceal after notifying other mods for a few frames
-            //ConcealEntity(entity);
-            return false; //ConcealedSector0.RequestConcealGrid(entityId);
-        }
 
         // can occur from messaging and entity hooks so safed
-        // provide instruction queue for managed resources and do their updates from here
-        // keeps them a lot simpler and makes more sense to do that stuff in the session
+        // provide instruction queue for managed resource updates 
 
-        /// <summary>
-        /// TODO: Actually queue, just like conceal
-        /// </summary>
-        /// <param name="entity"></param>
+        // wait to conceal after notifying other mods for a few frames
+
+        public bool QueueConceal(long entityId) {
+            RevealedGrid grid = Revealed.GetGrid(entityId);
+            if (grid == null) {
+                // log
+                return false;
+            }
+
+            return QueueConceal(grid);
+        }
+
+
+        public bool QueueConceal(RevealedGrid grid) {
+            return false;
+            if (!grid.IsConcealable) return false;
+
+            GridConcealQueue.Enqueue(grid);
+            ConcealQueuedMessage msg = new ConcealQueuedMessage(grid.EntityId);
+            msg.SendToAll();
+
+            return true;
+        }
+
         public bool QueueReveal(long entityId) {
-            //revealEntity(entity);
-            return false; //ConcealedSector0.RequestRevealGrid(entityId);
+            ConcealedGrid grid = Concealed.GetGrid(entityId);
+            if (grid == null) {
+                // log
+                return false;
+            }
+
+            return QueueReveal(grid);
         }
 
-        public bool CanConceal(long entityId) {
+        public bool QueueReveal(ConcealedGrid grid) {
+            return false;
+            if (!grid.IsRevealable) return false;
+            GridRevealQueue.Enqueue(grid);
             return true;
         }
 
-        public bool CanReveal(long entityId) {
-            return true;
-        }
-
-        private static void QueueSave() {
-            // TODO: Set a flag to do this during update instead to multiple
-            // Want to wait a while too, this flag gets hit every conceal
-            //Save();
+        private void QueueSave() {
+            SaveNextUpdate = true;
         }
 
         #endregion
-        #region Conceal/Reveal process
+        #region Conceal/Reveal Queue Processing
 
         public void ProcessConcealQueue() {
-            foreach (RevealedGrid grid in Revealed.RevealedGridsList()) {
-                if (grid.IsConcealable) {
-                    ConcealGrid(grid);
-                    return; // only one per update, serialization and saving is expensive
+            RevealedGrid grid;
+
+            for (ushort i = 0; i < GridConcealQueue.Count; ++i) {
+                grid = GridConcealQueue.Dequeue();
+
+                if (grid.TryConceal()) {
+                    return; // only one per update, entity addition is expensive
+                }
+                else {
+                    GridConcealQueue.Enqueue(grid);
                 }
             }
         }
 
         public void ProcessRevealQueue() {
-            foreach (ConcealedGrid grid in Concealed.ConcealedGridsList()) {
-                if (grid.NeedsReveal && grid.IsRevealable) {
-                    RevealGrid(grid);
-                    return; // only one per update, entity addition is expensive
+            ConcealedGrid grid; 
+
+            for (ushort i = 0; i < GridRevealQueue.Count; ++i) {
+                grid = GridRevealQueue.Dequeue();
+
+                if (grid.TryReveal()) {
+                    return; // only one per update, entity serialization is expensive
+                }
+                else {
+                    GridRevealQueue.Enqueue(grid);
                 }
             }
-        }
-
-        private bool ConcealGrid(RevealedGrid revealed) {
-            Log.Trace("Concealing grid " + revealed.EntityId, "ConcealGrid");
-            /*
-            IMyCubeGrid grid = revealed.Grid;
-            ConcealedGrid concealableGrid = new ConcealedGrid();
-
-            if (grid == null) {
-                Log.Error("Stored cubegrid reference is null, aborting", "ConcealGrid");
-                return false;
-            }
-
-            if (grid.SyncObject == null) {
-                Log.Error("SyncObject missing, aborting", "ConcealGrid");
-                return false;
-            }
-
-            // Refresh the info before saving
-            concealableGrid.LoadFromCubeGrid(grid);
-
-            /*
-            if (!concealableGrid.Saveable()) {
-                Log.Error("Won't be able to save this grid, aborting conceal.",
-                    "ConcealEntity");
-                return false;
-            }
-            *//*
-
-            // Track it
-            if (Grids.ContainsKey(grid.EntityId)) {
-                Log.Error("Attempting to store already-stored entity id " +
-                    grid.EntityId, "ConcealGrid");
-                return false;
-            }
-
-            Grids.Add(concealableGrid.EntityId, concealableGrid);
-            GridBuilders.Add(concealableGrid.EntityId, 
-                grid.GetObjectBuilder() as MyObjectBuilder_CubeGrid);
-            // TODO: Add to AABB Tree
-            // TODO: Combine this into a function to share with load
-
-            // Remove it from the world
-            grid.SyncObject.SendCloseRequest();
-
-            NeedsSave = true;
-            return true;
-            */
-            return false;
-        }
-
-        private bool RevealGrid(ConcealedGrid grid) {
-            /*
-            Log.Error("Revealing entity", "RevealEntity");
-
-            ConcealedGrid concealableGrid;
-
-            // === Get stored concealed grid
-
-            if (Grids.ContainsKey(entityId)) {
-                concealableGrid = Grids[entityId];
-            }
-
-            if (concealableGrid == null) {
-                Log.Error("Failed to find grid, aborting", "ConcealEntity");
-                return false;
-            }
-
-            // === Get stored builder
-
-            MyObjectBuilder_CubeGrid builder = null;
-
-            if (GridBuilders.ContainsKey(entityId)) {
-                builder = GridBuilders[entityId];
-            }
-
-            if (builder == null) {
-                Log.Error("Unable to retrieve builder for " + concealableGrid.EntityId +
-                    ", aborting", "RevealEntity");
-                return false;
-            }
-
-            // Reallocate ID if necessary
-            if (MyAPIGateway.Entities.EntityExists(concealableGrid.EntityId)) {
-                concealableGrid.EntityId = 0;
-                Log.Trace("Reallocating entityId", "revealEntity");
-            }
-
-            // === Add it back to game world
-            Log.Trace("Adding entity back into game from builder. " +
-                concealableGrid.EntityId, "revealEntity");
-            MyAPIGateway.Entities.CreateFromObjectBuilderAndAdd(builder);
-            Log.Trace("Created object", "revealEntity");
-
-            // === Update lists
-            Grids.Remove(concealableGrid.EntityId);
-            GridBuilders.Remove(concealableGrid.EntityId);
-
-            Log.Trace("End reveal " + concealableGrid.EntityId, "revealEntity");
-            return true;
-            */
-            return false;
         }
 
         #endregion

@@ -24,7 +24,7 @@ namespace GP.Concealment.World.Entities {
         #endregion
         #region Properties
 
-        private bool Alive;
+        private bool Alive = true;
 
         public override String ComponentName { get { return "Character"; } }
 

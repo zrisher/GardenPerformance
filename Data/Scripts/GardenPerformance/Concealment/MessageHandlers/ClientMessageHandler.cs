@@ -130,7 +130,7 @@ namespace GP.Concealment.MessageHandlers {
                 "Successfully concealed" :
                 "Failed to conceal";
 
-            result += " grid " + response.EntityId + " (not yet implemented)";
+            result += " grid " + response.EntityId;
 
             Notification notice = new ChatNotification() {
                 Text = result,
@@ -149,7 +149,7 @@ namespace GP.Concealment.MessageHandlers {
                 "Successfully revealed" :
                 "Failed to reveal";
 
-            result += " grid " + response.EntityId + " (not yet implemented)";
+            result += " grid " + response.EntityId;
 
             Notification notice = new ChatNotification() {
                 Text = result,
@@ -183,14 +183,13 @@ namespace GP.Concealment.MessageHandlers {
 
             Session.ObservingEntities = response.ObservingEntities;
 
-            String result = Session.ObservingEntities.Count + " Observing Grids:\n\n";
-            result += "(not yet implemented.)\n";
+            String result = Session.ObservingEntities.Count + " Observing Entities:\n\n";
 
             int i = 1;
             foreach (ObservingEntity e in Session.ObservingEntities) {
 
                 // Ids
-                result += i + ": \"" + e.ToString() + "\n";
+                result += i + ": \"" + e.Details() + "\n";
 
                 i++;
             }

@@ -212,6 +212,9 @@ namespace GP.Concealment.World.Entities {
                 GetElementsInBox(ref boxCopy).Count > 0;
         }
 
+
+
+
         private void UpdateObserveability() {
             IsObserved = ( 
                 EntitiesViewedBy.Count > 0 //||

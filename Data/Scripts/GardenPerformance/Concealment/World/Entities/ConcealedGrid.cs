@@ -99,7 +99,55 @@ namespace GP.Concealment.World.Entities {
         #endregion
 
         protected override void Reveal() {
-            //throw new NotImplementedException();
+            /*
+            Log.Error("Revealing entity", "RevealEntity");
+
+            ConcealedGrid concealableGrid;
+
+            // === Get stored concealed grid
+
+            if (Grids.ContainsKey(entityId)) {
+                concealableGrid = Grids[entityId];
+            }
+
+            if (concealableGrid == null) {
+                Log.Error("Failed to find grid, aborting", "ConcealEntity");
+                return false;
+            }
+
+            // === Get stored builder
+
+            MyObjectBuilder_CubeGrid builder = null;
+
+            if (GridBuilders.ContainsKey(entityId)) {
+                builder = GridBuilders[entityId];
+            }
+
+            if (builder == null) {
+                Log.Error("Unable to retrieve builder for " + concealableGrid.EntityId +
+                    ", aborting", "RevealEntity");
+                return false;
+            }
+
+            // Reallocate ID if necessary
+            if (MyAPIGateway.Entities.EntityExists(concealableGrid.EntityId)) {
+                concealableGrid.EntityId = 0;
+                Log.Trace("Reallocating entityId", "revealEntity");
+            }
+
+            // === Add it back to game world
+            Log.Trace("Adding entity back into game from builder. " +
+                concealableGrid.EntityId, "revealEntity");
+            MyAPIGateway.Entities.CreateFromObjectBuilderAndAdd(builder);
+            Log.Trace("Created object", "revealEntity");
+
+            // === Update lists
+            Grids.Remove(concealableGrid.EntityId);
+            GridBuilders.Remove(concealableGrid.EntityId);
+
+            Log.Trace("End reveal " + concealableGrid.EntityId, "revealEntity");
+            return true;
+            */
         }
     }
 }
