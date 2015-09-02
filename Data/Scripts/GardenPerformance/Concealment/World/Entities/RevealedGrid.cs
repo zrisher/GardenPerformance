@@ -43,15 +43,11 @@ namespace GP.Concealment.World.Entities {
 
         #region Fields
 
-        public IMyCubeGrid Grid { get; private set; }
-        public List<long> SpawnOwners { get; private set; }
-        public List<long> BigOwners { get; private set; }
-
-        // Working
-        private bool IsProducing;
-        private bool UpdateProducingNextUpdate;
         private Dictionary<long, Ingame.IMyProductionBlock> ProductionBlocks =
             new Dictionary<long, Ingame.IMyProductionBlock>();
+
+        private Dictionary<long, Ingame.IMyBatteryBlock> BatteryBlocks =
+            new Dictionary<long, Ingame.IMyBatteryBlock>();
 
         // Control
         // We can't get the pilots from the grid, we have to go from the character
@@ -66,8 +62,6 @@ namespace GP.Concealment.World.Entities {
         */
 
         // Spawn
-        private bool NeededForSpawn;
-        private List<long> SpawnablePlayers = new List<long>();
         private Dictionary<long, Ingame.IMyMedicalRoom> MedBays =
             new Dictionary<long, Ingame.IMyMedicalRoom>();
         private Dictionary<long, Ingame.IMyCockpit> Cyrochambers =
@@ -90,8 +84,6 @@ namespace GP.Concealment.World.Entities {
             new Dictionary<long, Ingame.IMyBeacon>();
         */
 
-        //public EntityConcealability Concealability { get; private set; }
-
         #endregion
         #region Properties
 
@@ -100,18 +92,28 @@ namespace GP.Concealment.World.Entities {
             get { return EntityType.Grid; }
         }
 
+        // ObservingEntity
         public override Dictionary<uint, Action> UpdateActions {
             get { return base.UpdateActions; }
         }
-
         public override String ComponentName { get { return "RevealedGrid"; } }
+
+        // ConcealableGrid
+        public IMyCubeGrid Grid { get; private set; }
+        public List<long> SpawnOwners { get; private set; }
+        public List<long> BigOwners { get; private set; }
+
+        // RevealedGrid
+        public bool NeededForSpawn { get; private set; }
+        public bool IsProducing { get; private set; }
+        public bool IsChargingBatteries { get; private set; }
 
         public override bool IsConcealable {
             get {
-                return base.IsConcealable && !IsProducing && !NeededForSpawn;
+                return base.IsConcealable && !IsProducing && !NeededForSpawn &&
+                    !IsProducing && !IsChargingBatteries;
             }
         }
-
 
         /*
         // ObservingEntity
@@ -192,11 +194,12 @@ namespace GP.Concealment.World.Entities {
             Grid.OnBlockRemoved -= BlockRemoved;
         }
 
+        #endregion
+        #region Block Events
+
         private void BlockAdded(IMySlimBlock block) {
             IMyCubeBlock fatblock = block.FatBlock;
-            if (fatblock == null) return;
-
-            
+            if (fatblock == null) return;  
 
             var producer = fatblock as Ingame.IMyProductionBlock;
             if (producer != null) {
@@ -210,19 +213,13 @@ namespace GP.Concealment.World.Entities {
                 return;
             }
 
-            /*
-            var cockpit = fatblock as Ingame.IMyCockpit;
-            if (cockpit != null) {
-                // for some reason I think this is throwing the error, typeid null?
-                if (fatblock.BlockDefinition.TypeId == typeof(MyObjectBuilder_CryoChamber)) {
-                    Cyrochambers.Add(cockpit.EntityId, cockpit);
-                    return;
-                }
-                Cockpits.Add(cockpit.EntityId, cockpit);
+            var battery = fatblock as Ingame.IMyBatteryBlock;
+            if (battery != null) {
+                BatteryBlocks.Add(battery.EntityId, battery);
                 return;
             }
-            */
 
+        
             /*
             var radioAntenna = fatblock as Ingame.IMyRadioAntenna;
             if (radioAntenna != null) {
@@ -267,18 +264,11 @@ namespace GP.Concealment.World.Entities {
                 return;
             }
 
-            /*
-            var cockpit = fatblock as Ingame.IMyCockpit;
-            if (cockpit != null) {
-                if (fatblock.BlockDefinition.TypeId == typeof(MyObjectBuilder_CryoChamber)) {
-                    Cyrochambers.Remove(cockpit.EntityId);
-                    return;
-                }
-
-                Cockpits.Remove(cockpit.EntityId);
+            var battery = fatblock as Ingame.IMyBatteryBlock;
+            if (battery != null) {
+                BatteryBlocks.Remove(battery.EntityId);
                 return;
             }
-            */
 
             /*
             var radioAntenna = fatblock as Ingame.IMyRadioAntenna;
@@ -331,8 +321,31 @@ namespace GP.Concealment.World.Entities {
         }
 
         #endregion
+        #region Update from Ingame state
+
+        protected override void UpdateConcealability() {
+            base.UpdateConcealability();
+            UpdateIsProducing();
+            UpdateIsChargingBatteries();
+        }
 
 
+        private void UpdateIsProducing() {
+            // TODO: implement this
+            IsProducing = false;
+
+
+            // loop through production blocks and return with true if producing one
+        }
+
+        private void UpdateIsChargingBatteries() {
+            // TODO: implement this
+            IsChargingBatteries = false;
+
+            // loop through battery blocks and return with true if charging one
+        }
+
+        #endregion
 
 
         private void RefreshProducing() {
@@ -482,16 +495,13 @@ namespace GP.Concealment.World.Entities {
             result += "      TODO: Producing Oxygen? \n";
 
             // NearAsteroid
-            // TODO
-            result += "    TODO: Inside asteroid? \n";
-            /*
-            if (IsInsidesteroid) {
-                result += "    Entities within bounding box, couldn't reveal.\n";
+            result += "    Inside asteroid? \n";
+            if (IsInsideAsteroid) {
+                result += "    Yes, might affect asteroid respawn.\n";
             }
             else {
-                result += "    Not Blocked. (OK to conceal.)\n";
+                result += "    Not in Asteroid. (OK to conceal.)\n";
             }
-             * */
 
 
             // Blocked

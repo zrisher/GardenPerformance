@@ -34,11 +34,11 @@ namespace GP.Concealment.World.Sectors {
         #region Instance Fields
 
         // These cause us to reveal things
-        private List<ulong> ActiveSteamIDs = new List<ulong>();
 
-        // Populate this with everyone online as well as all players in their faction,
-        // because spawn is shared
-        public List<long> ActivePlayersAndAllies = new List<long>();
+        // Populate this with everyone online
+        // If someone isn't in a faction, store their factionId as 0
+        public Dictionary<long, List<long>> ActiveFactions = 
+            new Dictionary<long, List<long>>();
 
         //private Dictionary<long, ControllableEntity> ControlledEntities =
         //    new Dictionary<long, ControllableEntity>();
@@ -108,6 +108,40 @@ namespace GP.Concealment.World.Sectors {
         }
         */
 
+        private void RememberPlayerInFaction(long factionId, long playerId) {
+            List<long> players;
+            ActiveFactions.TryGetValue(factionId, out players);
+            if (players == null) {
+                Log.Trace("Adding factionId " + factionId, "RememberPlayerInFaction");
+                ActiveFactions[factionId] = new List<long>();
+            }
+            else {
+                if (players.Contains(playerId)) {
+                    Log.Error("Already added playerId: " + playerId, "RememberPlayer");
+                    return;
+                }
+            }
+
+            ActiveFactions[factionId].Add(playerId);
+        }
+
+        private void ForgetPlayerInFaction(long factionId, long playerId) {
+            List<long> players;
+            ActiveFactions.TryGetValue(factionId, out players);
+            if (players == null) {
+                Log.Error("Faction wasn't stored.", "ForgetPlayerInFaction");
+                ActiveFactions[factionId] = new List<long>();
+            }
+            else {
+                if (!players.Contains(playerId)) {
+                    Log.Error("Player wasn't stored!" + playerId, "ForgetPlayerInFaction");
+                    return;
+                }
+            }
+
+            ActiveFactions[factionId].Remove(playerId);
+        }
+
         private void RememberObservingEntity(ObservingEntity e) {
             long id = e.EntityId;
             if (ObservingEntities.ContainsKey(id)) {
@@ -163,24 +197,30 @@ namespace GP.Concealment.World.Sectors {
         }
 
 
-        private void RememberPlayerId(ulong id) {
-            if (ActiveSteamIDs.Contains(id)) {
-                Log.Error("Already added steam id: " + id, "RememberPlayerId");
-                return;
-            }
+        private void RememberPlayer(long playerId) {
+            Log.Trace("Adding playerId " + playerId, "RememberPlayer");
 
-            Log.Trace("Adding steam id " + id, "RememberPlayerId");
-            ActiveSteamIDs.Add(id);
+            IMyFaction faction = MyAPIGateway.Session.Factions.
+                TryGetPlayerFaction(playerId);
+
+            // Is the player solo?
+            long factionId;
+            if (faction != null) factionId = faction.FactionId;
+            else factionId = 0;
+
+            RememberPlayerInFaction(factionId, playerId);
         }
 
-        private void ForgetPlayerId(ulong id) {
-            if (!ActiveSteamIDs.Contains(id)) {
-                Log.Error("Steam id not stored: " + id, "RememberPlayerId");
-                return;
-            }
+        private void ForgetPlayer(long playerId) {
+            IMyFaction faction = MyAPIGateway.Session.Factions.
+                TryGetPlayerFaction(playerId);
 
-            Log.Trace("Removing steam id " + id, "RememberPlayerId");
-            ActiveSteamIDs.Remove(id);
+            // Is the player solo?
+            long factionId;
+            if (faction != null) factionId = faction.FactionId;
+            else factionId = 0;
+
+            ForgetPlayerInFaction(factionId, playerId);
         }
 
         #endregion
@@ -232,12 +272,12 @@ namespace GP.Concealment.World.Sectors {
         }
         */
 
-        public void PlayerLoggedIn(ulong steamId) {
-            RememberPlayerId(steamId);
+        public void PlayerLoggedIn(long playerId) {
+            RememberPlayer(playerId);
         }
 
-        public void PlayerLoggedOut(ulong steamId) {
-            ForgetPlayerId(steamId);
+        public void PlayerLoggedOut(long playerId) {
+            ForgetPlayer(playerId);
         }
 
         #endregion

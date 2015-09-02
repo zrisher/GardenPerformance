@@ -224,6 +224,9 @@ namespace GP.Concealment.World.Entities {
         */
         #endregion
 
+        protected override void UpdateConcealability() {
+            base.UpdateConcealability();
+        }
     }
 
 }

@@ -121,13 +121,14 @@ namespace GP.Concealment.MessageHandlers {
         private void ReceiveLoginRequest(byte[] body, ulong senderId) {
             Log.Trace("Receiving Login Request", "ReceiveLoginRequest");
 
-            Session.Manager.Revealed.PlayerLoggedIn(senderId);
+            LoginRequest request = new LoginRequest(body);
+            Session.Manager.Revealed.PlayerLoggedIn(request.PlayerId);
         }
 
         private void ReceiveLogoutRequest(byte[] body, ulong senderId) {
             Log.Trace("Receiving Logout Request", "ReceiveLogoutRequest");
-
-            Session.Manager.Revealed.PlayerLoggedOut(senderId);
+            LogoutRequest request = new LogoutRequest(body);
+            Session.Manager.Revealed.PlayerLoggedOut(request.PlayerId);
         }
 
         private void ReceiveRevealRequest(byte[] body, ulong senderId) {

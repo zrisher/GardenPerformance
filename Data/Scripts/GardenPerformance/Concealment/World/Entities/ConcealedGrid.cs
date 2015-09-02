@@ -100,9 +100,15 @@ namespace GP.Concealment.World.Entities {
         #region Update Attributes from Ingame data
 
         /// <summary>
-        /// Should be called when the session player list changes
+        /// Should be called when the session player list changes and
+        /// every so often (because there are no hooks for faction changes)
         /// </summary>
         private void UpdateNeedsRevealForSpawn() {
+            // TODO - we need to find the right way to store all the player/faction
+            // info and update it occasionally for faction changes
+            // It might make the most sense to do the updates on ClientSession,
+            // since that's the singular point of origin for IMyPlayer
+            /*
             List<long> toRevealFor = Sessions.ServerConcealSession.Instance.
                 Manager.Revealed.ActivePlayersAndAllies;
 
@@ -112,6 +118,7 @@ namespace GP.Concealment.World.Entities {
                     return;
                 }
             }
+             * */
 
             NeedsRevealForSpawn = false;
         }

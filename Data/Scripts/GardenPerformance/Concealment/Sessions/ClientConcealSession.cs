@@ -36,6 +36,8 @@ namespace GP.Concealment.Sessions {
         public List<ConcealedGrid> ConcealedGrids;
         public Settings Settings;
         public List<ObservingEntity> ObservingEntities;
+        public ulong LocalSteamId;
+        public long LocalPlayerId;
 
         public override string ComponentName { get { return "ClientConcealSession"; } }
 
@@ -45,10 +47,26 @@ namespace GP.Concealment.Sessions {
             Messenger = new ClientMessageHandler();
             ModMessenger = new ModMessageHandler();
 
-            // Tell server we're here so it can reveal our spawn points
-            // I couldn't find any existing events for playerLoggedIn
-            LoginRequest request = new LoginRequest();
-            request.SendToServer();
+            LocalSteamId = MyAPIGateway.Multiplayer.MyId;
+
+            List<IMyPlayer> players = new List<IMyPlayer>();
+            MyAPIGateway.Multiplayer.Players.GetPlayers(players, (x) =>
+                x.SteamUserId == LocalSteamId
+            );
+
+            if (players.Count == 0) {
+                Log.Error("Failed to find player for my steamId" + LocalSteamId, "Initialize");
+            }
+            else if (players.Count > 1) {
+                Log.Error("Found more than one player for steamId " + LocalSteamId, "Initialize");
+            }
+            else {
+                LocalPlayerId = players[0].PlayerID;
+                // Tell server we're here so it can reveal our spawn points
+                // I couldn't find any existing events for playerLoggedIn
+                LoginRequest request = new LoginRequest(LocalPlayerId);
+                request.SendToServer();
+            }
 
             Instance = this;
             Log.Trace("Finished Initializing Client Conceal Session", "Initialize");
@@ -60,10 +78,12 @@ namespace GP.Concealment.Sessions {
         public override void Terminate() {
             Log.Trace("Terminating Client Conceal Session", "Terminate");
 
-            // Tell server we're leaving so it can conceal our spawn points
-            // I couldn't find any existing events for playerLoggedOut
-            LogoutRequest request = new LogoutRequest();
-            request.SendToServer();
+            if (LocalPlayerId != 0) {
+                // Tell server we're leaving so it can conceal our spawn points
+                // I couldn't find any existing events for playerLoggedOut
+                LogoutRequest request = new LogoutRequest(LocalPlayerId);
+                request.SendToServer();
+            }
 
             Instance = null;
             Log.Trace("Finished Terminate Client Conceal Session", "Terminate");
