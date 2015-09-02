@@ -105,6 +105,10 @@ namespace GP.Concealment.World.Sectors {
             //loaded.WorldName = worldName;
             //loaded.SectorPosition = sectorPos;
 
+            // Load grid dictionary from serialized list
+            loaded.Grids = loaded.ConcealedGrids.
+                ToDictionary(x => x.EntityId, x => x);
+
             // Load concealed grid builders
             Log.Trace("Loading concealed grid builders", "Load");
             loaded.ConcealedGridBuilders = GardenGateway.Files.
@@ -115,14 +119,23 @@ namespace GP.Concealment.World.Sectors {
                 return null;
             }
 
-            // Load dictionaries from serialized lists
-            loaded.Grids = loaded.ConcealedGrids.
-                ToDictionary(x => x.EntityId, x => x);
+            // load builders into grids
+            foreach (MyObjectBuilder_CubeGrid builder in loaded.ConcealedGridBuilders) {
+                if (!loaded.Grids.ContainsKey(builder.EntityId)) {
+                    Log.Error("Found builder with missing conceal grid " + builder.EntityId, "Load");
+                    return null;
+                }
 
-            loaded.GridBuilders = loaded.ConcealedGridBuilders.
-                ToDictionary(x => x.EntityId, x => x);
+                loaded.Grids[builder.EntityId].Builder = builder;
+            }
 
-            // TODO: validate concealed grids vs concealed builders
+            // ensure every grid has a builder
+            foreach (ConcealedGrid grid in loaded.Grids.Values) {
+                if (grid.Builder == null) {
+                    Log.Error("Found grid with missing builder " + grid.EntityId, "Load");
+                    return null;
+                }
+            }
 
             Log.Trace("Loading AABB Tree", "LoadState");
             foreach (ConcealedGrid grid in loaded.ConcealedGrids) {
@@ -175,8 +188,8 @@ namespace GP.Concealment.World.Sectors {
         private Dictionary<long, ConcealedGrid> Grids =
             new Dictionary<long, ConcealedGrid>();
 
-        private Dictionary<long, MyObjectBuilder_CubeGrid> GridBuilders =
-            new Dictionary<long, MyObjectBuilder_CubeGrid>();
+        //private Dictionary<long, MyObjectBuilder_CubeGrid> GridBuilders =
+        //    new Dictionary<long, MyObjectBuilder_CubeGrid>();
 
         private AABBTree GridTree = new AABBTree();
 
@@ -191,7 +204,7 @@ namespace GP.Concealment.World.Sectors {
         }
 
         private List<MyObjectBuilder_CubeGrid> ConcealedGridBuildersList() {
-            return GridBuilders.Select((x) => x.Value).ToList();
+            return Grids.Values.Select((x) => x.Builder).ToList();
         }
 
         public ConcealedGrid GetGrid(long entityId) {
@@ -200,54 +213,36 @@ namespace GP.Concealment.World.Sectors {
             return grid;
         }
 
-        public bool AddGrid(IMyCubeGrid grid) {
-            return false;
-            /*
-            Log.Trace("Concealing grid " + grid.EntityId, "ConcealGrid");
-
-            if (grid == null) {
-                Log.Error("Stored cubegrid reference is null, aborting", "ConcealGrid");
-                return false;
-            }
-
-            // Need the syncobject to be around or removing it will fail on clients
-            if (grid.SyncObject == null) {
-                Log.Error("SyncObject missing, aborting", "ConcealGrid");
-                return false;
-            }
-
-            ConcealedGrid concealed = new ConcealedGrid();
-            concealed.LoadFromCubeGrid(grid);
-
-            /*
-            if (!concealableGrid.Saveable()) {
-                Log.Error("Won't be able to save this grid, aborting conceal.",
-                    "ConcealEntity");
-                return false;
-            }
-            *//*
-
+        public bool AddGrid(ConcealedGrid concealed) {
             // Track it
-            if (Grids.ContainsKey(grid.EntityId)) {
+            if (Grids.ContainsKey(concealed.EntityId)) {
                 Log.Error("Attempting to store already-stored entity id " +
-                    grid.EntityId, "ConcealGrid");
+                    concealed.EntityId, "ConcealGrid");
                 return false;
             }
 
             Grids.Add(concealed.EntityId, concealed);
-
-            GridBuilders.Add(concealed.EntityId, 
-                grid.GetObjectBuilder() as MyObjectBuilder_CubeGrid);
-
+            //GridBuilders.Add(concealed.EntityId, concealed.Builder);
             GridTree.Add(concealed);
-
-            // Remove it from the world
-            grid.SyncObject.SendCloseRequest();
 
             NeedsSave = true;
             return true;
-            */
-            return false;
+        }
+
+        public bool CanRemoveGrid(ConcealedGrid concealed) {
+            if (!Grids.ContainsKey(concealed.EntityId)) {
+                Log.Error("Failed to find in list " + concealed.EntityId,
+                    "RemoveGrid");
+                return false;
+            }
+
+            return true;
+        }
+
+        public void RemoveGrid(ConcealedGrid concealed) {
+            Grids.Remove(concealed.EntityId);
+            GridTree.Remove(concealed);
+            NeedsSave = true;
         }
 
         #endregion

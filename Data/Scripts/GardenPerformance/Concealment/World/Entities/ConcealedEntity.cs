@@ -51,22 +51,41 @@ namespace GP.Concealment.World.Entities {
         [XmlIgnore]
         public bool IsObserved { get; private set; }
 
+        private bool ObservableEntityXMLSerializable {
+            get { return TypeOfEntity != null && EntityId != null && 
+                DisplayName != null & Position != null; }
+        }
+
         // AABBEntity
         public BoundingBoxD BoundingBox { get; set; }
         public int TreeProxyID { get; set; }
         public Vector3D WorldTranslation { get; set; }
         public Vector3D LinearVelocity { get; set; }
 
+        private bool AABBEntityyXMLSerializable {
+            get {
+                return BoundingBox != null && TreeProxyID != null &&
+                WorldTranslation != null && LinearVelocity != null;
+            }
+        }
+
         // ConcealableEntity
         [XmlIgnore]
         public bool IsRevealBlocked { get; set; }
-        public bool IsInsideAsteroid { get; set; }
+
 
         // ConcealedEntity
         [XmlIgnore]
         public bool IsRevealable { get { return !IsRevealBlocked; } }
         [XmlIgnore]
         public virtual bool NeedsReveal { get { return IsObserved; } }
+
+        [XmlIgnore]
+        public bool IsXMLSerializable {
+            get {
+                return ObservableEntityXMLSerializable && AABBEntityyXMLSerializable;
+            }
+        }
 
         #endregion
         #region Constructors
@@ -229,15 +248,18 @@ namespace GP.Concealment.World.Entities {
         public bool TryReveal() {
             UpdateRevealability();
 
-            if (!IsRevealable) return false;
-            
-            Reveal();
-            return true;
+            if (!IsRevealable) {
+                Log.Trace("Grid is not revealable", "TryReveal");
+                return false;
+            }
+
+            return Reveal();
         }
 
-        protected abstract void Reveal();
+        protected abstract bool Reveal();
 
         #endregion
+
 
     }
 

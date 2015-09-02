@@ -76,6 +76,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Concealment\MessageHandlers\ModMessageHandler.cs" />
     <Compile Include="SEGarden\Commons\Conceal\ConcealMessageHandler.cs" />
     <Compile Include="SEGarden\Commons\Conceal\ConcealCancelledMessage.cs" />
     <Compile Include="SEGarden\Commons\Conceal\ConcealQueuedMessage.cs" />

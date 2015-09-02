@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Xml.Serialization;
 
 using Sandbox.ModAPI;
 using VRage.ModAPI;
 using VRageMath;
+using Sandbox.Common.ObjectBuilders;
 
 using SEGarden.Logging;
 using SEGarden.Logic;
@@ -18,7 +20,6 @@ namespace GP.Concealment.World.Entities {
         #region Properties
 
         bool IsRevealBlocked { get; }
-        bool IsInsideAsteroid { get; }
 
         #endregion
 

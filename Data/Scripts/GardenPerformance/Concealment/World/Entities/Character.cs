@@ -87,8 +87,9 @@ namespace GP.Concealment.World.Entities {
             }
         }
 
-        protected override void Conceal() {
-            //throw new NotImplementedException();
+        protected override bool Conceal() {
+            Log.Error("Characters cannot be concealed!", "Conceal");
+            return false;
         }
 
         public String ToString() {

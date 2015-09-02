@@ -17,9 +17,9 @@ namespace GP.Concealment.World.Entities {
 
         #region Properties
 
-        IMyCubeGrid Grid { get; }
         List<long> SpawnOwners { get; }
         List<long> BigOwners { get; }
+        IMyCubeGrid Grid { get; }
 
         #endregion
 

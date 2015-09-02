@@ -141,7 +141,7 @@ namespace GP.Concealment {
         public bool QueueConceal(long entityId) {
             RevealedGrid grid = Revealed.GetGrid(entityId);
             if (grid == null) {
-                // log
+                Log.Error("Couldn't find grid to conceal " + entityId, "QueueConceal");
                 return false;
             }
 
@@ -150,9 +150,12 @@ namespace GP.Concealment {
 
 
         public bool QueueConceal(RevealedGrid grid) {
-            return false;
-            if (!grid.IsConcealable) return false;
+            if (!grid.IsConcealable) {
+                Log.Warning("Is not concealable: " + grid.EntityId, "QueueConceal");
+                return false;
+            }
 
+            Log.Trace("Equeuing grid for conceal " + grid.EntityId, "QueueConceal");
             GridConcealQueue.Enqueue(grid);
             ConcealQueuedMessage msg = new ConcealQueuedMessage(grid.EntityId);
             msg.SendToAll();
@@ -163,7 +166,7 @@ namespace GP.Concealment {
         public bool QueueReveal(long entityId) {
             ConcealedGrid grid = Concealed.GetGrid(entityId);
             if (grid == null) {
-                // log
+                Log.Error("Couldn't find grid to reveal " + entityId, "QueueReveal");
                 return false;
             }
 
@@ -171,8 +174,12 @@ namespace GP.Concealment {
         }
 
         public bool QueueReveal(ConcealedGrid grid) {
-            return false;
-            if (!grid.IsRevealable) return false;
+            if (!grid.IsRevealable) {
+                Log.Warning("Is not revealable: " + grid.EntityId, "QueueReveal");
+                return false;
+            }
+
+            Log.Trace("Equeuing grid for reveal " + grid.EntityId, "QueueReveal");
             GridRevealQueue.Enqueue(grid);
             return true;
         }
@@ -185,6 +192,7 @@ namespace GP.Concealment {
         #region Conceal/Reveal Queue Processing
 
         public void ProcessConcealQueue() {
+            Log.Trace("Processing Conceal Queue", "ProcessConcealQueue");
             RevealedGrid grid;
 
             for (ushort i = 0; i < GridConcealQueue.Count; ++i) {
@@ -200,6 +208,7 @@ namespace GP.Concealment {
         }
 
         public void ProcessRevealQueue() {
+            Log.Trace("Processing Reveal Queue", "ProcessRevealQueue");
             ConcealedGrid grid; 
 
             for (ushort i = 0; i < GridRevealQueue.Count; ++i) {

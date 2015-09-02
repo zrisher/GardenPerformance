@@ -46,7 +46,6 @@ namespace GP.Concealment.World.Entities {
         public IMyCubeGrid Grid { get; private set; }
         public List<long> SpawnOwners { get; private set; }
         public List<long> BigOwners { get; private set; }
-        public bool IsInsideAsteroid { get; set; }
 
         // Working
         private bool IsProducing;
@@ -334,46 +333,7 @@ namespace GP.Concealment.World.Entities {
         #endregion
 
 
-        private bool UpdateInsideAsteroid() {
-            bool InsideAsteroid = false; 
 
-            // Change number to variable later - half max asteroid size?
-            BoundingSphereD bounds = new BoundingSphereD(Entity.GetPosition(), 1250);
-            Log.Trace("Getting entities given a bound", "RefreshNearbyAsteroids");
-            List<IMyEntity> nearbyEntities = MyAPIGateway.Entities.GetEntitiesInSphere(ref bounds);
-            Log.Trace("Got entities given a bound", "RefreshNearbyAsteroids");
-
-            List<IMyVoxelMap> nearbyRoids = nearbyEntities.
-                Select((e) => e as IMyVoxelMap).Where((e) => e != null).ToList();
-
-            foreach (IMyVoxelMap roid in nearbyRoids) {
-                Log.Trace("Entity is near asteroid " + roid.EntityId, "RefreshNearbyAsteroids");
-                BoundingSphere AsteroidHr = roid.WorldVolumeHr;
-                BoundingSphere Asteroid = roid.WorldVolume;
-                BoundingSphere AsteroidLocal = roid.LocalVolume;
-                Log.Trace("Center of Asteroid using WorldVolHr BoundingSphere: " + AsteroidHr.Center, "CanConceal");
-                Log.Trace("Radius of Asteroid using WorldVolHr BoundingSphere: " + AsteroidHr.Radius, "CanConceal");
-
-                Log.Trace("Center of Asteroid using WorldVol BoundingSphere: " + Asteroid.Center, "CanConceal");
-                Log.Trace("Radius of Asteroid using WorldVol BoundingSphere: " + Asteroid.Radius, "CanConceal");
-
-                Log.Trace("Center of Asteroid using Local BoundingSphere: " + AsteroidLocal.Center, "CanConceal");
-                Log.Trace("Radius of Asteroid using Local BoundingSphere: " + AsteroidLocal.Radius, "CanConceal");
-
-                Log.Trace("Center of Asteroid using IMyEntity: " + roid.GetPosition(), "CanConceal");
-
-                bounds = new BoundingSphereD(Asteroid.Center, Asteroid.Radius);
-                nearbyEntities = MyAPIGateway.Entities.GetEntitiesInSphere(ref bounds);
-
-                if (nearbyEntities.Contains(Entity)) {
-                    InsideAsteroid = true;
-                    return InsideAsteroid;
-                }
-
-                //concealability |= ConcealableEntity.EntityConcealability.NearAsteroid;
-            }
-            return InsideAsteroid;
-        }
 
         private void RefreshProducing() {
             IsProducing = false;
@@ -397,52 +357,30 @@ namespace GP.Concealment.World.Entities {
             */ 
         }
 
-        protected override void Conceal()  {
-            Log.Trace("Concealing grid {NOT IMPLEMENTED!} " + EntityId, "ConcealGrid");
-            /*
-            IMyCubeGrid grid = revealed.Grid;
-            ConcealedGrid concealableGrid = new ConcealedGrid();
+        protected override bool Conceal()  {
+            Log.Trace("Concealing grid " + EntityId, "Conceal");
 
-            if (grid == null) {
-                Log.Error("Stored cubegrid reference is null, aborting", "ConcealGrid");
+            if (Grid.SyncObject == null) {
+                Log.Error("SyncObject missing, aborting", "Conceal");
                 return false;
             }
 
-            if (grid.SyncObject == null) {
-                Log.Error("SyncObject missing, aborting", "ConcealGrid");
-                return false;
-            }
+            ConcealedGrid concealed = new ConcealedGrid(this);
 
-            // Refresh the info before saving
-            concealableGrid.LoadFromCubeGrid(grid);
-
-            /*
-            if (!concealableGrid.Saveable()) {
+            if (!concealed.IsXMLSerializable) {
                 Log.Error("Won't be able to save this grid, aborting conceal.",
-                    "ConcealEntity");
-                return false;
-            }
-            *//*
-
-            // Track it
-            if (Grids.ContainsKey(grid.EntityId)) {
-                Log.Error("Attempting to store already-stored entity id " +
-                    grid.EntityId, "ConcealGrid");
+                    "Conceal");
                 return false;
             }
 
-            Grids.Add(concealableGrid.EntityId, concealableGrid);
-            GridBuilders.Add(concealableGrid.EntityId, 
-                grid.GetObjectBuilder() as MyObjectBuilder_CubeGrid);
-            // TODO: Add to AABB Tree
-            // TODO: Combine this into a function to share with load
+            if (!ServerConcealSession.Instance.Manager.Concealed.AddGrid(concealed)) {
+                Log.Error("Unable to add to concealed sector, aborting", "Conceal");
+                return false;
+            }
 
             // Remove it from the world
-            grid.SyncObject.SendCloseRequest();
-
-            NeedsSave = true;
+            Grid.SyncObject.SendCloseRequest();
             return true;
-            */
         }
 
         public String ConcealDetails() {

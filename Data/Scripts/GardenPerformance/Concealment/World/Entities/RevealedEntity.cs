@@ -72,8 +72,10 @@ namespace GP.Concealment.World.Entities {
         public bool IsRevealBlocked { get; set; }
 
         // RevealedEntity
-        public virtual bool IsConcealable { 
-            get { return !IsRevealBlocked && !IsObserved; } 
+        public bool IsInsideAsteroid { get; set; }
+
+        public virtual bool IsConcealable {
+            get { return !IsRevealBlocked && !IsObserved && !IsInsideAsteroid; } 
         }
 
 
@@ -198,6 +200,7 @@ namespace GP.Concealment.World.Entities {
         /// </summary>
         protected virtual void UpdateConcealability() {
             UpdateRevealBlocked();
+            UpdateInsideAsteroid();
         }
 
 
@@ -245,20 +248,64 @@ namespace GP.Concealment.World.Entities {
         }
 
         #endregion
-        #region Reveal
+        #region Conceal
 
         public virtual bool TryConceal() {
             UpdateConcealability();
 
-            if (!IsConcealable) return false;
+            if (!IsConcealable) {
+                Log.Trace("Grid is not concealable", "TryConceal");
+                return false;
+            }
 
-            Conceal();
-            return true;
+            return Conceal();
         }
 
-        protected abstract void Conceal();
+        protected abstract bool Conceal();
 
         #endregion
+
+
+        private bool UpdateInsideAsteroid() {
+            bool InsideAsteroid = false;
+
+            // Change number to variable later - half max asteroid size?
+            BoundingSphereD bounds = new BoundingSphereD(Entity.GetPosition(), 1250);
+            Log.Trace("Getting entities given a bound", "RefreshNearbyAsteroids");
+            List<IMyEntity> nearbyEntities = MyAPIGateway.Entities.GetEntitiesInSphere(ref bounds);
+            Log.Trace("Got entities given a bound", "RefreshNearbyAsteroids");
+
+            List<IMyVoxelMap> nearbyRoids = nearbyEntities.
+                Select((e) => e as IMyVoxelMap).Where((e) => e != null).ToList();
+
+            foreach (IMyVoxelMap roid in nearbyRoids) {
+                Log.Trace("Entity is near asteroid " + roid.EntityId, "RefreshNearbyAsteroids");
+                BoundingSphere AsteroidHr = roid.WorldVolumeHr;
+                BoundingSphere Asteroid = roid.WorldVolume;
+                BoundingSphere AsteroidLocal = roid.LocalVolume;
+                Log.Trace("Center of Asteroid using WorldVolHr BoundingSphere: " + AsteroidHr.Center, "CanConceal");
+                Log.Trace("Radius of Asteroid using WorldVolHr BoundingSphere: " + AsteroidHr.Radius, "CanConceal");
+
+                Log.Trace("Center of Asteroid using WorldVol BoundingSphere: " + Asteroid.Center, "CanConceal");
+                Log.Trace("Radius of Asteroid using WorldVol BoundingSphere: " + Asteroid.Radius, "CanConceal");
+
+                Log.Trace("Center of Asteroid using Local BoundingSphere: " + AsteroidLocal.Center, "CanConceal");
+                Log.Trace("Radius of Asteroid using Local BoundingSphere: " + AsteroidLocal.Radius, "CanConceal");
+
+                Log.Trace("Center of Asteroid using IMyEntity: " + roid.GetPosition(), "CanConceal");
+
+                bounds = new BoundingSphereD(Asteroid.Center, Asteroid.Radius);
+                nearbyEntities = MyAPIGateway.Entities.GetEntitiesInSphere(ref bounds);
+
+                if (nearbyEntities.Contains(Entity)) {
+                    InsideAsteroid = true;
+                    return InsideAsteroid;
+                }
+
+                //concealability |= ConcealableEntity.EntityConcealability.NearAsteroid;
+            }
+            return InsideAsteroid;
+        }
 
     }
 

@@ -17,6 +17,8 @@ using SEGarden.Math;
 
 using VRageMath;
 
+using GP.Concealment.Sessions;
+
 namespace GP.Concealment.World.Entities {
 
     public class ConcealedGrid : ConcealedEntity, ConcealableGrid {
@@ -29,20 +31,32 @@ namespace GP.Concealment.World.Entities {
         #endregion
         #region Properties
 
-        public List<long> SpawnOwners { get; set; }
-        public List<long> BigOwners { get; set; }
-        public bool IsInsideAsteroid { get; set; }
-
+        // ConcealableGrid
         [XmlIgnore]
         public IMyCubeGrid Grid { get; private set; }
+        public List<long> SpawnOwners { get; set; }
+        public List<long> BigOwners { get; set; }
+        private bool ConcealableGridXMLSerializable {
+            get { return SpawnOwners != null && BigOwners != null; }
+        }
+
         [XmlIgnore]
         public override bool NeedsReveal {
-            get {
-                return base.NeedsReveal || NeedsRevealForSpawn;
-            }
+            get { return base.NeedsReveal || NeedsRevealForSpawn; }
         }
+
         [XmlIgnore]
         public bool NeedsRevealForSpawn { get; private set; }
+
+        // wish we could save these with it directly, but we can't
+        [XmlIgnore]
+        public MyObjectBuilder_CubeGrid Builder { get; set;}
+
+        [XmlIgnore]
+        public bool IsXMLSerializable {
+            get {return base.IsXMLSerializable && ConcealableGridXMLSerializable &&
+                Builder != null;}
+        }
 
         #endregion
         #region Constructors
@@ -64,6 +78,12 @@ namespace GP.Concealment.World.Entities {
             Grid = grid.Grid;
             BigOwners = grid.BigOwners;
             SpawnOwners = grid.SpawnOwners;
+
+            if (Grid == null) {
+                Log.Error("Stored cubegrid reference is null", "ctr");
+            } else {
+                Builder = Grid.GetObjectBuilder() as MyObjectBuilder_CubeGrid;
+            }
         }
 
         #endregion
@@ -98,56 +118,38 @@ namespace GP.Concealment.World.Entities {
 
         #endregion
 
-        protected override void Reveal() {
-            /*
-            Log.Error("Revealing entity", "RevealEntity");
+        protected override bool Reveal() {
+            Log.Trace("Revealing grid " + EntityId, "Reveal");
 
-            ConcealedGrid concealableGrid;
-
-            // === Get stored concealed grid
-
-            if (Grids.ContainsKey(entityId)) {
-                concealableGrid = Grids[entityId];
-            }
-
-            if (concealableGrid == null) {
-                Log.Error("Failed to find grid, aborting", "ConcealEntity");
+            if (Builder == null) {
+                Log.Error("No stored builder, aborting.", "Reveal");
                 return false;
             }
 
-            // === Get stored builder
-
-            MyObjectBuilder_CubeGrid builder = null;
-
-            if (GridBuilders.ContainsKey(entityId)) {
-                builder = GridBuilders[entityId];
-            }
-
-            if (builder == null) {
-                Log.Error("Unable to retrieve builder for " + concealableGrid.EntityId +
-                    ", aborting", "RevealEntity");
+            if (!ServerConcealSession.Instance.Manager.Concealed.CanRemoveGrid(this)) {
+                Log.Error("Couldn't find in Conceal session to remove, aborting.", 
+                    "Reveal");
                 return false;
             }
 
             // Reallocate ID if necessary
-            if (MyAPIGateway.Entities.EntityExists(concealableGrid.EntityId)) {
-                concealableGrid.EntityId = 0;
-                Log.Trace("Reallocating entityId", "revealEntity");
+            if (MyAPIGateway.Entities.EntityExists(EntityId)) {
+                EntityId = 0;
+                Builder.EntityId = 0;
+                Log.Trace("Reallocating entityId", "Reveal");
             }
 
             // === Add it back to game world
-            Log.Trace("Adding entity back into game from builder. " +
-                concealableGrid.EntityId, "revealEntity");
-            MyAPIGateway.Entities.CreateFromObjectBuilderAndAdd(builder);
-            Log.Trace("Created object", "revealEntity");
+            MyAPIGateway.Entities.CreateFromObjectBuilderAndAdd(Builder);
+            Log.Trace("Added entity into game from builder. " + EntityId, "Reveal");
 
             // === Update lists
-            Grids.Remove(concealableGrid.EntityId);
-            GridBuilders.Remove(concealableGrid.EntityId);
+            ServerConcealSession.Instance.Manager.Concealed.RemoveGrid(this);
 
-            Log.Trace("End reveal " + concealableGrid.EntityId, "revealEntity");
+            Log.Trace("End reveal " + EntityId, "revealEntity");
             return true;
-            */
         }
+
     }
+
 }

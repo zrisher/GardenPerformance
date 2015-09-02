@@ -29,6 +29,7 @@ namespace GP.Concealment.Sessions {
             new Logger("GardenPerformance.Concealment.Sessions.ClientConcealSession");
 
         public static ClientMessageHandler Messenger;
+        public static ModMessageHandler ModMessenger;
         public static ClientConcealSession Instance;
 
         public List<RevealedGrid> RevealedGrids;
@@ -42,6 +43,7 @@ namespace GP.Concealment.Sessions {
             Log.Trace("Initializing Client Conceal Session", "Initialize");
             GardenGateway.Commands.addCommands(Commands.FullTree);
             Messenger = new ClientMessageHandler();
+            ModMessenger = new ModMessageHandler();
 
             // Tell server we're here so it can reveal our spawn points
             // I couldn't find any existing events for playerLoggedIn
