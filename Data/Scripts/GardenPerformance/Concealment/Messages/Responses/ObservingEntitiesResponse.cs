@@ -15,12 +15,17 @@ namespace GP.Concealment.Messages.Responses {
             new Logger("GP.Concealment.Messaging.Messages.Responses.ObservingEntitiesResponse");
 
         public static ObservingEntitiesResponse FromBytes(byte[] bytes) {
+            long responseLength = bytes.Length;
+            Log.Info("Creating new stream of length " + responseLength, "FromBytes");
             VRage.ByteStream stream = new VRage.ByteStream(bytes, bytes.Length);
             ObservingEntitiesResponse response = new ObservingEntitiesResponse();
             response.LoadFromByteStream(stream);
 
+            Log.Info("Base pos " + stream.Position, "FromBytes");
             ushort count = stream.getUShort();
+            Log.Info("With count pos " + stream.Position, "FromBytes");
             for (int i = 0; i < count; i++) {
+                Log.Info("Beginning get entity at pos " + stream.Position + " / " + stream.Length, "FromBytes");
                 EntityType entityType = (EntityType)stream.getUShort();
 
                 switch (entityType) {
@@ -31,8 +36,10 @@ namespace GP.Concealment.Messages.Responses {
                         response.ObservingEntities.Add(new RevealedGrid(stream));
                         break;
                 }
+
             }
 
+            Log.Info("Finished getting entity at final pos " + stream.Position, "FromBytes");
             return response;
         }
 
@@ -45,12 +52,37 @@ namespace GP.Concealment.Messages.Responses {
             VRage.ByteStream stream = new VRage.ByteStream(32, true);
             base.AddToByteStream(stream);
 
+            Character character;
+            RevealedGrid grid;
+
+            Log.Info("Beginning serializing message at position " + stream.Position, "ToBytes");
+
             stream.addUShort((ushort)ObservingEntities.Count);
+            Log.Info("With count pos " + stream.Position, "ToBytes");
+
             foreach (ObservingEntity e in ObservingEntities) {
-                stream.addUShort((ushort)e.TypeOfEntity);
-                e.AddToByteStream(stream);
+
+                EntityType entityType = e.TypeOfEntity;
+
+                Log.Info("Beginning add entity of type " + entityType + " at pos " + stream.Position + " / " + stream.Length, "ToBytes");
+
+                stream.addUShort((ushort)entityType);
+
+                switch (entityType) {
+                    case EntityType.Character:
+                        character = e as Character;
+                        character.AddToByteStream(stream);
+                        break;
+                    case EntityType.Grid:
+                        grid = e as RevealedGrid;
+                        grid.AddToByteStream(stream);
+                        break;
+                }
+
+                Log.Info("Finished adding entity at final pos " + stream.Position, "ToBytes");
             }
 
+            Log.Info("Finished serializing message at position " + stream.Position, "ToBytes");
             return stream.Data;
         }
 

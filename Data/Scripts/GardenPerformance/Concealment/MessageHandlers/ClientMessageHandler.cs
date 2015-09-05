@@ -106,8 +106,9 @@ namespace GP.Concealment.MessageHandlers {
             foreach (RevealedGrid grid in Session.RevealedGrids) {
 
                 // Ids
-                result += i + ": \"" + grid.ConcealDetails() +  "\n";
-
+                result += i + ": \"" + grid.DisplayName + " - ";
+                result += (grid.IsConcealable) ? "Concealable" : "Not concealable";
+                result += "\n";
 
                 i++;
             }
@@ -179,6 +180,7 @@ namespace GP.Concealment.MessageHandlers {
             Log.Trace("Receiving Observing Entities Response",
                 "ReceiveObservingEntitiesResponse");
 
+            Log.Trace("body size is " + body.Count(),  "ReceiveObservingEntitiesResponse");
             ObservingEntitiesResponse response = ObservingEntitiesResponse.FromBytes(body);
 
             Session.ObservingEntities = response.ObservingEntities;
@@ -189,7 +191,7 @@ namespace GP.Concealment.MessageHandlers {
             foreach (ObservingEntity e in Session.ObservingEntities) {
 
                 // Ids
-                result += i + ": \"" + e.Details() + "\n";
+                result += i + ": \"" + e.ObservationDetails() + "\n";
 
                 i++;
             }
@@ -208,16 +210,7 @@ namespace GP.Concealment.MessageHandlers {
                 "ReceiveObservingEntitiesResponse");
 
             SettingsResponse response = SettingsResponse.FromBytes(body);
-
             Session.Settings = response.Settings;
-
-            Notification notice = new WindowNotification() {
-                Text = Session.Settings.ToString(),
-                BigLabel = "Garden Performance",
-                SmallLabel = "Settings"
-            };
-
-            notice.Raise();
         }
 
         private void ReceiveChangeSettingResponse(byte[] body) {

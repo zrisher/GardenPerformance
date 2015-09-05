@@ -39,22 +39,25 @@ namespace GP.Concealment {
             }
         );
 
-        static Command SettingsCommand = new Command(
-            "settings",
+        static Command SettingsListCommand = new Command(
+            "list",
             "list settings",
             "Settings are....",
             (List<String> args) => {
                 Log.Trace("Requesting Observing Entities", "ObserversCommand");
 
-                SettingsRequest request = new SettingsRequest();
-                request.SendToServer();
+                Notification notice = new WindowNotification() {
+                    Text = Session.Settings.Describe(),
+                    BigLabel = "Garden Performance",
+                    SmallLabel = "Settings"
+                };
 
-                return new EmptyNotification();
+                return notice;
             }
         );
 
-        static Command SetSettingCommand = new Command(
-            "setsetting",
+        static Command SettingsSetCommand = new Command(
+            "set",
             "set setting N to X",
             "Details....",
             (List<String> args) => {
@@ -90,8 +93,17 @@ namespace GP.Concealment {
             0
         );
 
-        static Command ConcealedCommand = new Command(
-            "concealed",
+
+        static Tree SettingsTree = new Tree(
+            "settings",
+            "setting management",
+            "setting management...",
+            0,
+            new List<Node> { SettingsListCommand, SettingsSetCommand }
+        );
+
+        static Command ConcealedListCommand = new Command(
+            "list",
             "list all concealed grids",
             "list all concealed grids....",
             (List<String> args) => {
@@ -104,8 +116,83 @@ namespace GP.Concealment {
             }
         );
 
-        static Command RevealedCommand = new Command(
-            "revealed",
+        static Command ConcealedDetailCommand = new Command(
+            "detail",
+            "show detail for grid N",
+            "show detail for grid N....",
+            (List<String> args) => {
+                ushort n = UInt16.Parse(args[0]);
+
+                List<ConcealedGrid> concealedGrids = Session.ConcealedGrids;
+
+                if (concealedGrids == null) return new ChatNotification() {
+                    Text = "No list of revealed grids available.",
+                    Sender = "GP"
+                };
+
+                if (n < 1 || n > concealedGrids.Count) return new ChatNotification() {
+                    Text = "Incorrect index for list",
+                    Sender = "GP"
+                };
+
+                ConcealedGrid grid = concealedGrids[n - 1];
+
+                return new WindowNotification() {
+                    Text = grid.ConcealmentDetails(),
+                    BigLabel = "Garden Performance",
+                    SmallLabel = "Revealed Grid Detail"
+                };
+            },
+            new List<String> { "N"},
+            0
+        );
+
+        static Command ConcealedRevealCommand = new Command(
+            "reveal",
+            "reveal the Nth grid on the list",
+            "Reveal a grid....",
+            (List<String> args) => {
+                int n = Int32.Parse(args[0]);
+
+                List<ConcealedGrid> grids = Session.ConcealedGrids;
+
+                if (grids == null) return new ChatNotification() {
+                    Text = "No list of concealed grids available.",
+                    Sender = "GP"
+                };
+
+                if (n < 1 || n > grids.Count) return new ChatNotification() {
+                    Text = "Incorrect index for list",
+                    Sender = "GP"
+                };
+
+                ConcealedGrid grid = grids[n - 1];
+                long entityId = grid.EntityId;
+
+                Log.Trace("Requesting Reveal Grid " + entityId, "RevealCommand");
+                RevealRequest request = new RevealRequest { EntityId = entityId };
+                request.SendToServer();
+
+                return null;
+            },
+            new List<String> { "N" },
+            0
+        );
+
+        static Tree ConcealedTree = new Tree(
+            "concealed",
+            "concealed grid management",
+            "concealed grid management...",
+            0,
+            new List<Node> { 
+                ConcealedListCommand, 
+                ConcealedDetailCommand, 
+                ConcealedRevealCommand 
+            }
+        );
+
+        static Command RevealedListCommand = new Command(
+            "list",
             "list all revealed grids",
             "list all revealed grids....",
             (List<String> args) => {
@@ -118,7 +205,38 @@ namespace GP.Concealment {
             }
         );
 
-        static Command ConcealCommand = new Command(
+        static Command RevealedDetailCommand = new Command(
+            "detail",
+            "show detail for grid N",
+            "show detail for grid N....",
+            (List<String> args) => {
+                ushort n = UInt16.Parse(args[0]);
+
+                List<RevealedGrid> revealedGrids = Session.RevealedGrids;
+
+                if (revealedGrids == null) return new ChatNotification() {
+                    Text = "No list of revealed grids available.",
+                    Sender = "GP"
+                };
+
+                if (n < 1 || n > revealedGrids.Count) return new ChatNotification() {
+                    Text = "Incorrect index for list",
+                    Sender = "GP"
+                };
+
+                RevealedGrid grid = revealedGrids[n - 1];
+
+                return new WindowNotification() {
+                    Text = grid.ConcealDetails(),
+                    BigLabel = "Garden Performance",
+                    SmallLabel = "Revealed Grid Detail"
+                };
+            },
+            new List<String> { "N" },
+            0
+        );
+
+        static Command RevealedConcealCommand = new Command(
             "conceal",
             "conceal the Nth grid on the list",
             "Conceal the Nth grid on the list. This will store it locally and " + 
@@ -152,36 +270,16 @@ namespace GP.Concealment {
             0
         );
 
-        static Command RevealCommand = new Command(
-            "reveal",
-            "reveal the Nth grid on the list",
-            "Reveal a grid....",
-            (List<String> args) => {
-                int n = Int32.Parse(args[0]);
-
-                List<ConcealedGrid> grids = Session.ConcealedGrids;
-
-                if (grids == null) return new ChatNotification() {
-                    Text = "No list of concealed grids available.",
-                    Sender = "GP"
-                };
-
-                if (n < 1 || n > grids.Count) return new ChatNotification() {
-                    Text = "Incorrect index for list",
-                    Sender = "GP"
-                };
-
-                ConcealedGrid grid = grids[n - 1];
-                long entityId = grid.EntityId;
-
-                Log.Trace("Requesting Reveal Grid " + entityId, "RevealCommand");
-                RevealRequest request = new RevealRequest { EntityId = entityId };
-                request.SendToServer();
-
-                return null;
-            },
-            new List<String> { "N" },
-            0
+        static Tree RevealedTree = new Tree(
+            "revealed",
+            "revealed grid management",
+            "revealed grid management...",
+            0,
+            new List<Node> { 
+                RevealedListCommand, 
+                RevealedDetailCommand, 
+                RevealedConcealCommand 
+            }
         );
 
         static Tree ConcealmentTree = new Tree(
@@ -197,13 +295,10 @@ namespace GP.Concealment {
             "TODO - update this list with settings, request settings on client load",
             0,
             new List<Node> {
-                ConcealedCommand,
-                RevealCommand,
-                RevealedCommand,
-                ConcealCommand,
+                ConcealedTree,
+                RevealedTree,
                 ObserversCommand,
-                SettingsCommand,
-                SetSettingCommand,
+                SettingsTree,
             },
             "concealment"
         );

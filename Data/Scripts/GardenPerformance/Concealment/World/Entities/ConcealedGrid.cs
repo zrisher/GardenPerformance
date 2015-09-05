@@ -11,6 +11,7 @@ using VRage.ModAPI;
 using VRage.ObjectBuilders;
 
 using SEGarden.Extensions;
+using SEGarden.Extensions.VRageMath;
 using SEGarden.Extensions.Objectbuilders;
 using SEGarden.Logging;
 using SEGarden.Math;
@@ -155,6 +156,32 @@ namespace GP.Concealment.World.Entities {
 
             Log.Trace("End reveal " + EntityId, "revealEntity");
             return true;
+        }
+
+        public String ConcealmentDetails() {
+            String result = "";
+
+            // Ids
+            result += "\"" + DisplayName + "\" - " + EntityId + "\n";
+
+            // Owners
+            // TODO: show owner names instead of playerIds
+            result += "  Owners: TODO\n";
+            /*
+            if (BigOwners != null) {
+                result += "  Owners: " + String.Join(", ", BigOwners) + "\n";
+            }
+            else {
+                Log.Error("Grid had null BigOwners", "ReceiveRevealedGridsResponse");
+            }
+             * */
+
+            // Position
+            result += "  Position: " + Position.ToRoundedString() + "\n";
+
+            result += "  Revealable? " + IsRevealable;
+            result += "  Reveal Blocked? " + IsRevealBlocked;
+            return result;
         }
 
     }

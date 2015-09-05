@@ -28,6 +28,7 @@ namespace GP.Concealment.World.Sectors {
     /// </remarks>
     public class RevealedSector {
 
+
         private static Logger Log = 
             new Logger("GP.Concealment.World.Sectors.RevealedSector");
 
@@ -37,8 +38,15 @@ namespace GP.Concealment.World.Sectors {
 
         // Populate this with everyone online
         // If someone isn't in a faction, store their factionId as 0
-        public Dictionary<long, List<long>> ActiveFactions = 
-            new Dictionary<long, List<long>>();
+        //public Dictionary<long, List<long>> ActiveFactions = 
+        //    new Dictionary<long, List<long>>();
+
+        //public Dictionary<long, IMyFaction> ActiveFactions = 
+        //    new Dictionary<long, List<long>>();
+
+        private List<long> ActivePlayers = new List<long>();
+        private List<long> SpawnOwnersNeeded = new List<long>();
+        private bool UpdateSpawnOwnersNextUpdate;
 
         //private Dictionary<long, ControllableEntity> ControlledEntities =
         //    new Dictionary<long, ControllableEntity>();
@@ -80,6 +88,13 @@ namespace GP.Concealment.World.Sectors {
             return grid;
         }
 
+        /// <summary>
+        /// Tests whether the SpawnOwner (owner of a spawnable block) is amoung
+        /// active players or their factions
+        /// </summary>
+        public bool SpawnOwnerNeeded(long ownerId) {
+            return SpawnOwnersNeeded.Contains(ownerId);
+        }
 
         #endregion
         #region Private Field Access Helpers
@@ -106,9 +121,17 @@ namespace GP.Concealment.World.Sectors {
             Log.Trace("Removing " + id, "ForgetControlledEntity");
             ControlledEntities.Remove(id);
         }
-        */
 
-        private void RememberPlayerInFaction(long factionId, long playerId) {
+        
+        private void RememberCharacter(Character e) {
+            //TODO?
+        }
+
+        private void ForgetCharacter(Character e) {
+            //TODO?
+        }
+        
+        private void RememberPlayerInFaction(long playerId, long factionId) {
             List<long> players;
             ActiveFactions.TryGetValue(factionId, out players);
             if (players == null) {
@@ -125,7 +148,7 @@ namespace GP.Concealment.World.Sectors {
             ActiveFactions[factionId].Add(playerId);
         }
 
-        private void ForgetPlayerInFaction(long factionId, long playerId) {
+        private void ForgetPlayerInFaction(long playerId, long factionId) {
             List<long> players;
             ActiveFactions.TryGetValue(factionId, out players);
             if (players == null) {
@@ -140,6 +163,58 @@ namespace GP.Concealment.World.Sectors {
             }
 
             ActiveFactions[factionId].Remove(playerId);
+        }
+        
+        private void ChangeRememberedPlayerFaction(long playerId, long oldFactionId, long newFactionId) {
+
+        }
+        */
+
+        private void RememberPlayer(long playerId) {
+            Log.Trace("Adding playerId " + playerId, "RememberPlayer");
+
+            /*
+            IMyFaction faction = MyAPIGateway.Session.Factions.
+                TryGetPlayerFaction(playerId);
+
+            // Is the player solo?
+            long factionId;
+            if (faction != null) factionId = faction.FactionId;
+            else factionId = 0;
+
+            RememberPlayerInFaction(factionId, playerId);
+             * */
+
+            if (ActivePlayers.Contains(playerId)) {
+                Log.Error("Adding already tracked player", "RememberPlayer");
+                return;
+            }
+
+            ActivePlayers.Add(playerId);
+            UpdateSpawnOwnersNextUpdate = true;
+        }
+
+        private void ForgetPlayer(long playerId) {
+            /*
+            IMyFaction faction = MyAPIGateway.Session.Factions.
+                TryGetPlayerFaction(playerId);
+
+            // Is the player solo?
+            long factionId;
+            if (faction != null) factionId = faction.FactionId;
+            else factionId = 0;
+
+            ForgetPlayerInFaction(factionId, playerId);
+             * */
+
+
+            if (!ActivePlayers.Contains(playerId)) {
+                Log.Error("Player not tracked", "ForgetPlayer");
+                return;
+            }
+
+            ActivePlayers.Remove(playerId);
+            UpdateSpawnOwnersNextUpdate = true;
         }
 
         private void RememberObservingEntity(ObservingEntity e) {
@@ -188,43 +263,9 @@ namespace GP.Concealment.World.Sectors {
             GridTree.Remove(e);
         }
 
-        private void RememberCharacter(Character e) {
-            //TODO?
-        }
-
-        private void ForgetCharacter(Character e) {
-            //TODO?
-        }
-
-
-        private void RememberPlayer(long playerId) {
-            Log.Trace("Adding playerId " + playerId, "RememberPlayer");
-
-            IMyFaction faction = MyAPIGateway.Session.Factions.
-                TryGetPlayerFaction(playerId);
-
-            // Is the player solo?
-            long factionId;
-            if (faction != null) factionId = faction.FactionId;
-            else factionId = 0;
-
-            RememberPlayerInFaction(factionId, playerId);
-        }
-
-        private void ForgetPlayer(long playerId) {
-            IMyFaction faction = MyAPIGateway.Session.Factions.
-                TryGetPlayerFaction(playerId);
-
-            // Is the player solo?
-            long factionId;
-            if (faction != null) factionId = faction.FactionId;
-            else factionId = 0;
-
-            ForgetPlayerInFaction(factionId, playerId);
-        }
 
         #endregion
-        #region Entity Updates
+        #region Public Hooks
 
         public void ControllableEntityAdded(ControllableEntity e) {
             Log.Trace("Controllable Entity Added", "ControllableEntityAdded");
@@ -237,8 +278,8 @@ namespace GP.Concealment.World.Sectors {
             RevealedGrid grid = e as RevealedGrid;
             if (grid != null) RememberGrid(grid);
 
-            Character character = e as Character;
-            if (character != null) RememberCharacter(character);
+            //Character character = e as Character;
+            //if (character != null) RememberCharacter(character);
         }
 
         public void ControllableEntityMoved(ControllableEntity e) {
@@ -256,8 +297,8 @@ namespace GP.Concealment.World.Sectors {
             RevealedGrid grid = e as RevealedGrid;
             if (grid != null) ForgetGrid(grid);
 
-            Character character = e as Character;
-            if (character != null) ForgetCharacter(character);
+            //Character character = e as Character;
+            //if (character != null) ForgetCharacter(character);
         }
 
         /*
@@ -272,12 +313,50 @@ namespace GP.Concealment.World.Sectors {
         }
         */
 
-        public void PlayerLoggedIn(long playerId) {
+        public void PlayerLoggedIn(long playerId, long factionId) {
             RememberPlayer(playerId);
+            UpdateSpawnOwnersNextUpdate = true;
         }
 
-        public void PlayerLoggedOut(long playerId) {
+        public void PlayerChangedFactions(long playerId, long oldFactionId, long newFactionId) {
+            UpdateSpawnOwnersNextUpdate = true;
+        }
+
+        public void PlayerLoggedOut(long playerId, long factionId) {
             ForgetPlayer(playerId);
+            UpdateSpawnOwnersNextUpdate = true;
+        }
+
+        #endregion
+        #region Updates
+
+        public void Update() {
+            if (UpdateSpawnOwnersNextUpdate) {
+                UpdateSpawnOwners();
+                UpdateSpawnOwnersNextUpdate = false;
+            }
+        }
+
+        private void UpdateSpawnOwners() {
+            SpawnOwnersNeeded.Clear();
+
+            foreach (long playerId in ActivePlayers) {
+                IMyFaction faction = MyAPIGateway.Session.Factions.
+                    TryGetPlayerFaction(playerId);
+
+                if (faction != null) {
+                    foreach (var kvp in faction.Members) {
+                        SpawnOwnersNeeded.Add(kvp.Key);
+                    }
+                }
+            }
+
+            SpawnOwnersNeeded = SpawnOwnersNeeded.Distinct().ToList();
+
+            // it would be nice to just mark grids for update that this might affect
+            foreach (RevealedGrid grid in Grids.Values) {
+                grid.MarkSpawnUpdateNeeded();
+            }
         }
 
         #endregion

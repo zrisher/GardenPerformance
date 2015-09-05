@@ -3,38 +3,44 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+using Sandbox.ModAPI;
+
 using SEGarden.Extensions;
 
 namespace GP.Concealment.Messages.Requests {
-    class LogoutRequest : Request {
+
+    class FactionChangeRequest : Request {
 
         public static readonly int SIZE = sizeof(long) + Request.SIZE;
 
-        public LogoutRequest(byte[] bytes) :
-            base((ushort)MessageType.LogoutRequest) 
+        public FactionChangeRequest(byte[] bytes) :
+            base((ushort)MessageType.FactionChangeRequest) 
         {
             VRage.ByteStream stream = new VRage.ByteStream(bytes, bytes.Length);
             PlayerId = stream.getLong();
-            FactionId = stream.getLong();
+            OldFactionId = stream.getLong();
+            NewFactionId = stream.getLong();
         }
 
-        public LogoutRequest(long playerId, long factionId)
-            : base((ushort)MessageType.LogoutRequest) 
+        public FactionChangeRequest(long playerId, long oldFactionId, long newFactionId)
+            : base((ushort)MessageType.FactionChangeRequest) 
         {
             PlayerId = playerId;
-            FactionId = factionId;
+            OldFactionId = oldFactionId;
+            NewFactionId = newFactionId;
         }
 
         public long PlayerId;
-        public long FactionId;
+        public long OldFactionId;
+        public long NewFactionId;
 
         protected override byte[] ToBytes() {
             VRage.ByteStream stream = new VRage.ByteStream(SIZE);
             stream.addLong(PlayerId);
-            stream.addLong(FactionId);
+            stream.addLong(OldFactionId);
+            stream.addLong(NewFactionId);
             return stream.Data;
         }
-
 
     }
 }

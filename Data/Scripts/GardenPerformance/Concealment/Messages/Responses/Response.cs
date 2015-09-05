@@ -20,6 +20,11 @@ namespace GP.Concealment.Messages.Responses {
         public Response(ushort typeId = (ushort)MessageType.RequestBase) : 
             base((ushort)MessageDomain.ConcealClient, typeId) { }
 
+        /*
+        public Response(VRage.ByteStream stream, ushort typeId = (ushort)MessageType.RequestBase) :
+            base((ushort)MessageDomain.ConcealClient, typeId) { }
+        */
+
         protected void AddToByteStream(VRage.ByteStream stream) {
             stream.addBoolean(ServerRunning);
         }

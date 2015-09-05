@@ -29,6 +29,7 @@ namespace GP.Concealment.World.Entities {
         #region Fields
 
         // ObserveableEntity
+        private bool UpdateIsObservedNextUpdate = true;
         protected Dictionary<long, RevealedEntity> EntitiesViewedBy =
             new Dictionary<long, RevealedEntity>();
 
@@ -49,7 +50,9 @@ namespace GP.Concealment.World.Entities {
 
         // ObserveableEntity
         public Vector3D Position { 
-            get { return Entity.PositionComp.GetPosition(); } 
+            get {
+                return Entity.GetPosition(); 
+            } 
         }
         public bool IsObserved { get; private set; }
         public abstract EntityType TypeOfEntity { get; }
@@ -71,13 +74,29 @@ namespace GP.Concealment.World.Entities {
         // ConcealableEntity
         public bool IsRevealBlocked { get; set; }
 
+        // EntityComponent
+        public override Dictionary<uint, Action> UpdateActions {
+            get {
+                var actions = base.UpdateActions;
+                actions.Add(65, UpdateConcealabilityAuto); // TODO tweak resolution
+                return actions;
+            }
+        }
+
         // RevealedEntity
         public bool IsInsideAsteroid { get; set; }
 
-        public virtual bool IsConcealable {
-            get { return !IsRevealBlocked && !IsObserved && !IsInsideAsteroid; } 
+        public bool IsConcealable {
+            get { return IsConcealableAuto && IsConcealableManual; } 
         }
 
+        public virtual bool IsConcealableAuto {
+            get { return !IsObserved; }
+        }
+
+        public virtual bool IsConcealableManual {
+            get { return !IsRevealBlocked && !IsInsideAsteroid; }
+        }
 
         #endregion
         #region Constructors
@@ -109,14 +128,14 @@ namespace GP.Concealment.World.Entities {
         // Byte Serialization
         public override void AddToByteStream(VRage.ByteStream stream) {
             base.AddToByteStream(stream);
-            UpdateConcealability();
+            UpdateConcealabilityManual();
             stream.addBoolean(IsObserved);
             stream.addBoolean(IsRevealBlocked);
             stream.addLongList(EntitiesViewedBy.Keys.ToList());
         }
 
         #endregion
-        #region Observed Marking
+        #region Public Marking
 
         public void MarkViewedBy(ObservingEntity e) {
             long id = e.EntityId;
@@ -125,9 +144,9 @@ namespace GP.Concealment.World.Entities {
                 return;
             }
 
-            Log.Error("Adding " + id, "MarkViewedBy");
+            Log.Trace("Adding " + id, "MarkViewedBy");
             EntitiesViewedBy.Add(id, e);
-            UpdateObserveability();
+            UpdateIsObservedNextUpdate = true;
         }
 
         public void UnmarkViewedBy(ObservingEntity e) {
@@ -137,9 +156,9 @@ namespace GP.Concealment.World.Entities {
                 return;
             }
 
-            Log.Error("Removing " + id, "UnmarkViewedBy");
+            Log.Trace("Removing " + id, "UnmarkViewedBy");
             EntitiesViewedBy.Remove(id);
-            UpdateObserveability();
+            UpdateIsObservedNextUpdate = true;
         }
 
         /*
@@ -193,16 +212,31 @@ namespace GP.Concealment.World.Entities {
         */
 
         #endregion
-        #region Update Attributes from Ingame data
+        #region Concealability Updates
 
         /// <summary>
         /// Should be called before concealing and before sending to clients
+        /// Call this to update things that aren't automatically kept up to date
         /// </summary>
-        protected virtual void UpdateConcealability() {
+        protected virtual void UpdateConcealabilityManual() {
             UpdateRevealBlocked();
             UpdateInsideAsteroid();
         }
 
+        protected virtual void UpdateConcealabilityAuto() {
+            if (UpdateIsObservedNextUpdate) {
+                UpdateObserveability();
+                UpdateIsObservedNextUpdate = false;
+            }
+        }
+
+        private void UpdateObserveability() {
+            IsObserved = (
+                EntitiesViewedBy.Count > 0 //||
+                //EntitiesDetectedBy.Count > 0 ||
+                //EntitiesBroadcastingTo.Count > 0
+                );
+        }
 
         private void UpdateRevealBlocked() {
             IsRevealBlocked = false;
@@ -212,7 +246,7 @@ namespace GP.Concealment.World.Entities {
             List<IMyEntity> boundedEntities = MyAPIGateway.Entities.
                 GetElementsInBox(ref boxCopy);
 
-            Log.Trace("boundedEntities count " + boundedEntities.Count, "UpdateRevealBlocked");
+            //Log.Trace("boundedEntities count " + boundedEntities.Count, "UpdateRevealBlocked");
 
             foreach (IMyEntity e in boundedEntities) {
                 if (e.GetTopMostParent() != Entity) {
@@ -222,12 +256,12 @@ namespace GP.Concealment.World.Entities {
                 }
             }
 
-            Log.Trace("All entities in bounds are children.", "UpdateRevealBlocked");
+            //Log.Trace("All entities in bounds are children.", "UpdateRevealBlocked");
 
             List<ConcealedEntity> concealedEntities = ServerConcealSession.Instance.
                 Manager.Concealed.EntitiesInBox(boxCopy);
 
-            Log.Trace("concealed boundedEntities count " + concealedEntities.Count, "UpdateRevealBlocked");
+            //Log.Trace("concealed boundedEntities count " + concealedEntities.Count, "UpdateRevealBlocked");
 
             if (concealedEntities.Count > 0) {
                 Log.Trace("Found a concealed entity in the way", "UpdateRevealBlocked");
@@ -239,60 +273,34 @@ namespace GP.Concealment.World.Entities {
 
         }
 
-        private void UpdateObserveability() {
-            IsObserved = (
-                EntitiesViewedBy.Count > 0 //||
-                //EntitiesDetectedBy.Count > 0 ||
-                //EntitiesBroadcastingTo.Count > 0
-                );
-        }
-
-        #endregion
-        #region Conceal
-
-        public virtual bool TryConceal() {
-            UpdateConcealability();
-
-            if (!IsConcealable) {
-                Log.Trace("Grid is not concealable", "TryConceal");
-                return false;
-            }
-
-            return Conceal();
-        }
-
-        protected abstract bool Conceal();
-
-        #endregion
-
-
         private bool UpdateInsideAsteroid() {
+            Log.Trace("Begin UpdateInsideAsteroid", "UpdateInsideAsteroid");
             bool InsideAsteroid = false;
 
             // Change number to variable later - half max asteroid size?
             BoundingSphereD bounds = new BoundingSphereD(Entity.GetPosition(), 1250);
-            Log.Trace("Getting entities given a bound", "RefreshNearbyAsteroids");
+            //Log.Trace("Getting entities given a bound", "RefreshNearbyAsteroids");
             List<IMyEntity> nearbyEntities = MyAPIGateway.Entities.GetEntitiesInSphere(ref bounds);
-            Log.Trace("Got entities given a bound", "RefreshNearbyAsteroids");
+            //Log.Trace("Got entities given a bound", "RefreshNearbyAsteroids");
 
             List<IMyVoxelMap> nearbyRoids = nearbyEntities.
                 Select((e) => e as IMyVoxelMap).Where((e) => e != null).ToList();
 
             foreach (IMyVoxelMap roid in nearbyRoids) {
-                Log.Trace("Entity is near asteroid " + roid.EntityId, "RefreshNearbyAsteroids");
+                Log.Trace("Entity is near asteroid " + roid.EntityId, "UpdateInsideAsteroid");
                 BoundingSphere AsteroidHr = roid.WorldVolumeHr;
                 BoundingSphere Asteroid = roid.WorldVolume;
                 BoundingSphere AsteroidLocal = roid.LocalVolume;
-                Log.Trace("Center of Asteroid using WorldVolHr BoundingSphere: " + AsteroidHr.Center, "CanConceal");
-                Log.Trace("Radius of Asteroid using WorldVolHr BoundingSphere: " + AsteroidHr.Radius, "CanConceal");
+                Log.Trace("Center of Asteroid using WorldVolHr BoundingSphere: " + AsteroidHr.Center, "UpdateInsideAsteroid");
+                Log.Trace("Radius of Asteroid using WorldVolHr BoundingSphere: " + AsteroidHr.Radius, "UpdateInsideAsteroid");
 
-                Log.Trace("Center of Asteroid using WorldVol BoundingSphere: " + Asteroid.Center, "CanConceal");
-                Log.Trace("Radius of Asteroid using WorldVol BoundingSphere: " + Asteroid.Radius, "CanConceal");
+                Log.Trace("Center of Asteroid using WorldVol BoundingSphere: " + Asteroid.Center, "UpdateInsideAsteroid");
+                Log.Trace("Radius of Asteroid using WorldVol BoundingSphere: " + Asteroid.Radius, "UpdateInsideAsteroid");
 
-                Log.Trace("Center of Asteroid using Local BoundingSphere: " + AsteroidLocal.Center, "CanConceal");
-                Log.Trace("Radius of Asteroid using Local BoundingSphere: " + AsteroidLocal.Radius, "CanConceal");
+                Log.Trace("Center of Asteroid using Local BoundingSphere: " + AsteroidLocal.Center, "UpdateInsideAsteroid");
+                Log.Trace("Radius of Asteroid using Local BoundingSphere: " + AsteroidLocal.Radius, "UpdateInsideAsteroid");
 
-                Log.Trace("Center of Asteroid using IMyEntity: " + roid.GetPosition(), "CanConceal");
+                Log.Trace("Center of Asteroid using IMyEntity: " + roid.GetPosition(), "UpdateInsideAsteroid");
 
                 bounds = new BoundingSphereD(Asteroid.Center, Asteroid.Radius);
                 nearbyEntities = MyAPIGateway.Entities.GetEntitiesInSphere(ref bounds);
@@ -306,6 +314,24 @@ namespace GP.Concealment.World.Entities {
             }
             return InsideAsteroid;
         }
+
+        #endregion
+        #region Conceal
+
+        public virtual bool TryConceal() {
+            UpdateConcealabilityManual();
+
+            if (!IsConcealable) {
+                Log.Trace("Grid is not concealable", "TryConceal");
+                return false;
+            }
+
+            return Conceal();
+        }
+
+        protected abstract bool Conceal();
+
+        #endregion
 
     }
 

@@ -35,14 +35,10 @@ using GP.Concealment.World.Sectors;
 namespace GP.Concealment {
 
     ///<summary>
-    /// Holds all info about the currently concealed sector
-    /// Handles revealing requested grids and offers public methods to mark and
-    /// inspect the concealed ones
+    /// Runs as part of the server session
+    /// Manages the updating, saving, and processing on conceal and reveal
+    /// Holds the info on each respective part in its Concealed and Revealed sectors
     ///</summary>
-    ///<remarks>
-    /// This relies on the ConcealedSectorState object to do most of the heavy lifting
-    /// wrt saving and loading.
-    ///</remarks>
     public class ConcealmentManager {
 
         #region Static
@@ -111,33 +107,9 @@ namespace GP.Concealment {
         #region Conceal/Reveal requests
 
 
-        public bool RequestConcealGrid(long entityId) {
-            Log.Trace("Concealing entity " + entityId, "ConcealEntity");
-
-            /*
-            IMyEntity entity = null;
-            MyAPIGateway.Entities.TryGetEntityById(entityId, out entity);
-
-            IMyCubeGrid grid = entity as IMyCubeGrid;
-            if (grid == null) {
-                // log
-                return false;
-            }
-
-            ConcealedGrid concealable = new ConcealedGrid();
-            //concealable.LoadFromCubeGrid(grid);
-            //concealable.Concealability = EntityConcealability.Concealable;
-            RequestConcealGrid(concealable);
-             * */
-            return true;
-        }
-
-
         // can occur from messaging and entity hooks so safed
         // provide instruction queue for managed resource updates 
-
         // wait to conceal after notifying other mods for a few frames
-
         public bool QueueConceal(long entityId) {
             RevealedGrid grid = Revealed.GetGrid(entityId);
             if (grid == null) {
@@ -192,6 +164,8 @@ namespace GP.Concealment {
         #region Conceal/Reveal Queue Processing
 
         public void ProcessConcealQueue() {
+            if (GridConcealQueue.Count == 0) return; 
+
             Log.Trace("Processing Conceal Queue", "ProcessConcealQueue");
             RevealedGrid grid;
 
@@ -208,6 +182,8 @@ namespace GP.Concealment {
         }
 
         public void ProcessRevealQueue() {
+            if (GridRevealQueue.Count == 0) return; 
+
             Log.Trace("Processing Reveal Queue", "ProcessRevealQueue");
             ConcealedGrid grid; 
 

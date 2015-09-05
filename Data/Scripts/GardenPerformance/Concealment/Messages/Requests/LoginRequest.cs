@@ -18,17 +18,23 @@ namespace GP.Concealment.Messages.Requests {
         {
             VRage.ByteStream stream = new VRage.ByteStream(bytes, bytes.Length);
             PlayerId = stream.getLong();
+            FactionId = stream.getLong();
         }
 
-        public LoginRequest(long playerId) : base((ushort)MessageType.LoginRequest) {
+        public LoginRequest(long playerId, long factionId) : 
+            base((ushort)MessageType.LoginRequest) 
+        {
             PlayerId = playerId;
+            FactionId = factionId;
         }
 
         public long PlayerId;
+        public long FactionId;
 
         protected override byte[] ToBytes() {
             VRage.ByteStream stream = new VRage.ByteStream(SIZE);
             stream.addLong(PlayerId);
+            stream.addLong(FactionId);
             return stream.Data;
         }
 

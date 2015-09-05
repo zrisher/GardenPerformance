@@ -37,57 +37,73 @@ namespace GP.Concealment.Sessions {
         public Settings Settings;
         public List<ObservingEntity> ObservingEntities;
         public ulong LocalSteamId;
-        public long LocalPlayerId;
+        public List<Player> LocalPlayers = new List<Player>();
 
         public override string ComponentName { get { return "ClientConcealSession"; } }
+
+        public override Dictionary<uint, Action> UpdateActions {
+            get {
+                var actions = base.UpdateActions;
+                actions.Add(3600, UpdatePlayers);
+                return actions;
+            }
+        }
 
         public override void Initialize() {
             Log.Trace("Initializing Client Conceal Session", "Initialize");
             GardenGateway.Commands.addCommands(Commands.FullTree);
             Messenger = new ClientMessageHandler();
             ModMessenger = new ModMessageHandler();
-
-            LocalSteamId = MyAPIGateway.Multiplayer.MyId;
-
-            List<IMyPlayer> players = new List<IMyPlayer>();
-            MyAPIGateway.Multiplayer.Players.GetPlayers(players, (x) =>
-                x.SteamUserId == LocalSteamId
-            );
-
-            if (players.Count == 0) {
-                Log.Error("Failed to find player for my steamId" + LocalSteamId, "Initialize");
-            }
-            else if (players.Count > 1) {
-                Log.Error("Found more than one player for steamId " + LocalSteamId, "Initialize");
-            }
-            else {
-                LocalPlayerId = players[0].PlayerID;
-                // Tell server we're here so it can reveal our spawn points
-                // I couldn't find any existing events for playerLoggedIn
-                LoginRequest request = new LoginRequest(LocalPlayerId);
-                request.SendToServer();
-            }
-
+            BuildPlayerList();
+            new SettingsRequest().SendToServer();
             Instance = this;
             Log.Trace("Finished Initializing Client Conceal Session", "Initialize");
+        }
 
-            // Send message to server letting them know we joined, so they
-            // know to hold our spawnpoints for us
+        private void UpdatePlayers() {
+            foreach (Player player in LocalPlayers) {
+                player.Update();
+            }
         }
 
         public override void Terminate() {
             Log.Trace("Terminating Client Conceal Session", "Terminate");
-
-            if (LocalPlayerId != 0) {
-                // Tell server we're leaving so it can conceal our spawn points
-                // I couldn't find any existing events for playerLoggedOut
-                LogoutRequest request = new LogoutRequest(LocalPlayerId);
-                request.SendToServer();
-            }
-
+            TerminatePlayerList();
             Instance = null;
             Log.Trace("Finished Terminate Client Conceal Session", "Terminate");
         }
+
+        private void BuildPlayerList() {
+            LocalSteamId = MyAPIGateway.Multiplayer.MyId;
+
+            Log.Trace("Start building local player list for local steam id " + 
+                LocalSteamId, "BuildPlayerList");
+
+            var localIngamePlayers = new List<IMyPlayer>();
+            MyAPIGateway.Multiplayer.Players.GetPlayers(localIngamePlayers, (x) =>
+                x.SteamUserId == LocalSteamId
+            );
+
+            if (localIngamePlayers.Count == 0) {
+                Log.Error("Failed to find player for my steamId" + LocalSteamId, "Initialize");
+            }
+
+            Log.Trace("Building " + localIngamePlayers.Count + " players.", "BuildPlayerList");
+
+            foreach (IMyPlayer ingamePlayer in localIngamePlayers) {
+                Player player = new Player(ingamePlayer);
+                LocalPlayers.Add(player);
+                player.Initialize();
+            }
+        }
+
+        private void TerminatePlayerList() {
+            Log.Trace("Terminating " + LocalPlayers.Count + " players.", "BuildPlayerList");
+            foreach (Player player in LocalPlayers) {
+                player.Terminate();
+            }
+        }
+
 
     }
 

@@ -16,6 +16,7 @@ namespace GP.Concealment.Messages {
         ConcealedGridsResponse,
         LoginRequest,
         LogoutRequest,
+        FactionChangeRequest,
         ObservingEntitiesRequest,
         ObservingEntitiesResponse,
         RevealRequest,

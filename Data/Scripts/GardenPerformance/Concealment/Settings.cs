@@ -13,11 +13,18 @@ namespace GP.Concealment {
 
     public class Settings {
 
+        public enum Setting : byte {
+            ControlledMovingGraceTime,
+            ControlledMovementGraceDistance,
+            RevealVisibility,
+            ConcealNearAsteroids,
+        }
+
         #region Static
 
         private static readonly uint DefaultControlledMovingGraceTimeSeconds = 30; //500
-        private static readonly uint DefaultControlledMovementGraceDistanceMeters = 1; //500
-        private static readonly uint DefaultRevealVisibilityMeters = 10; //35
+        private static readonly uint DefaultControlledMovementGraceDistanceMeters = 50; //500
+        private static readonly uint DefaultRevealVisibilityMeters = 100; //35
         //private static readonly  uint DefaultRevealDetectabilityMeters = 10; //50;
         //private static readonly  uint DefaultRevealCommunicationMeters = 10; //50;
         //private static readonly  uint DefaultRevealCollisionMeters = 10; //10;
@@ -45,23 +52,45 @@ namespace GP.Concealment {
         #endregion
         #region Fields
 
-        public uint ControlledMovingGraceTimeSeconds = 
-            DefaultControlledMovingGraceTimeSeconds;
-        public uint ControlledMovementGraceDistanceMeters = 
-            DefaultControlledMovementGraceDistanceMeters;
-        public uint RevealVisibilityMeters = DefaultRevealVisibilityMeters;
-        //public uint RevealDetectabilityMeters = DefaultRevealDetectabilityMeters;
-        //public uint RevealCommunicationMeters = DefaultRevealCommunicationMeters;
-        //public uint RevealCollisionMeters = DefaultRevealCollisionMeters;
-        public bool ConcealNearAsteroids = DefaultConcealNearAsteroids;
-        public readonly byte Count = 4;
+        private Dictionary<Setting, ulong> CurrentSettings = 
+            new Dictionary<Setting, ulong>();
+
+        #endregion
+        #region Properties
+
+        public ulong ControlledMovingGraceTimeSeconds {
+            get { return CurrentSettings[Setting.ControlledMovingGraceTime]; }
+            set { CurrentSettings[Setting.ControlledMovingGraceTime] = value; }
+        }
+
+        public ulong ControlledMovementGraceDistanceMeters {
+            get { return CurrentSettings[Setting.ControlledMovementGraceDistance]; }
+            set { CurrentSettings[Setting.ControlledMovementGraceDistance] = value; }
+        }
+
+        public ulong RevealVisibilityMeters {
+            get { return CurrentSettings[Setting.RevealVisibility]; }
+            set { CurrentSettings[Setting.RevealVisibility] = value; }
+        }
+
+        public bool ConcealNearAsteroids {
+            get { return CurrentSettings[Setting.ConcealNearAsteroids] == 1; }
+            set { CurrentSettings[Setting.ConcealNearAsteroids] = (ulong)((value) ? 1 : 0); }
+        }
+
+        public byte Count {
+            get { return (byte)CurrentSettings.Keys.Count; }
+        }
 
         #endregion
         #region Constructors
 
         public Settings() {
             Log.ClassName = "GP.Concealment.World.Entities.RevealedEntity";
-            Log.Trace("Finished RevealedEntity deserialize constructor", "ctr");
+            ControlledMovingGraceTimeSeconds = DefaultControlledMovingGraceTimeSeconds;
+            ControlledMovementGraceDistanceMeters = DefaultControlledMovingGraceTimeSeconds;
+            RevealVisibilityMeters = DefaultRevealVisibilityMeters;
+            ConcealNearAsteroids = DefaultConcealNearAsteroids;
         }
 
         // Byte Deserialization
@@ -98,11 +127,18 @@ namespace GP.Concealment {
 
         #endregion
 
+        public void ChangeSetting(byte id, ulong value) {
+            id--; // we use 1-basis for user simplicity
+            CurrentSettings[(Setting)id] = value;
+        }
 
-
-        public string ToString() {
-            // TODO: implement
-            return "To implement - settings as text with indicies for changing";
+        public string Describe() {
+            string result = "Boolean settings (i.e. ConcealNearAsteroids) take a 1 or 0.\n";
+            foreach (var kvp in CurrentSettings) {
+                result += " " + ((byte)kvp.Key + 1) + " : " + kvp.Key + " - " + 
+                    kvp.Value + "\n";
+            }
+            return result;
         }
 
 

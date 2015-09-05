@@ -32,21 +32,19 @@ namespace GP.Concealment.World.Entities {
         //private BoundingSphere DetectingSphere;
         //private BoundingSphere CommunicatingSphere;
 
-        private bool PreviouslyObserving;
-        private bool RefreshObservingNextUpdate = true;
+        private bool UpdateObservingNextUpdate = true;
         private Vector3D LastObservingPosition;
         private DateTime LastObservingTime;
-
 
         #endregion
         #region Properties
 
-        protected double ViewDistance { get; private set; }
+        protected double ViewDistance {
+            get { return Settings.Instance.RevealVisibilityMeters; }
+        }
 
-        private BoundingSphereD ViewingSphere { get; set; }
-
+        //private BoundingSphereD viewingSphere { get; set; }
         //protected virtual double DetectDistance { get { return 0; } }
-
         //protected virtual double CommunicateDistance { get { return 0; } }
 
         private double DistanceSinceLastObservingCheck {
@@ -57,6 +55,11 @@ namespace GP.Concealment.World.Entities {
                     return (Position - LastObservingPosition).AbsMax();
             }
         }
+
+        private bool PreviouslyObserving { 
+            get { return LastObservingTime != DateTime.MinValue; } 
+        }
+
 
         /*
         private double GreatestObservingDistance {
@@ -81,15 +84,25 @@ namespace GP.Concealment.World.Entities {
 
             LastObservingTime = stream.getDateTime();
             LastObservingPosition = stream.getVector3D();
-            ViewDistance = stream.getDouble();
-            Log.Trace("Deserialized distance of " + ViewDistance, "stream ctr");
+            //Log.Trace("Deserialized LastObservingTime of " + LastObservingTime, "stream ctr");
+            //Log.Trace("Deserialized LastObservingPosition of " + LastObservingPosition, "stream ctr");
+            //Log.Trace("Deserialized ViewDistance of " + ViewDistance, "stream ctr");
         }
 
         // Creation from ingame entity
         public ObservingEntity(IMyEntity entity) : base(entity) {
-            ViewDistance = Settings.Instance.RevealVisibilityMeters;
-            UpdateSpheres();
             Log.Trace("Set view distance to " + ViewDistance, "ctr");
+        }
+
+        #endregion
+        #region Control Event Handlers
+
+        protected override void ControlAcquired() {
+            UpdateObservingNextUpdate = true;
+        }
+
+        protected override void ControlReleased() {
+            UpdateObservingNextUpdate = true;
         }
 
         #endregion
@@ -101,20 +114,10 @@ namespace GP.Concealment.World.Entities {
         }
         */
 
-        protected virtual void Update() {
-            base.Update();
-
-            if (IsMoving && IsControlled && 
-                DistanceSinceLastObservingCheck > 
-                Settings.Instance.ControlledMovementGraceDistanceMeters) 
-            {
-                RefreshObservingNextUpdate = true;
-            }
-
-            if (RefreshObservingNextUpdate) {
-                RefreshObserving();
-                RefreshObservingNextUpdate = false;
-            }
+        protected override void UpdateControl() {
+            base.UpdateControl();
+            CheckMovedFarEnoughToReobserve();
+            UpdateObservingIfNeeded();
         }
 
         public override void Terminate() {
@@ -129,18 +132,41 @@ namespace GP.Concealment.World.Entities {
         public override void AddToByteStream(VRage.ByteStream stream) {
             base.AddToByteStream(stream);
 
+            //Log.Trace("Adding observing entity to byte stream", "AddToByteStream");
+
             stream.addLongList(EntitiesViewing.Keys.ToList());
             stream.addDateTime(LastObservingTime);
             stream.addVector3D(LastObservingPosition);
-            stream.addDouble(ViewDistance);
 
-            Log.Trace("Serialized distance of " + ViewDistance, "stream ctr");
+            //Log.Trace("Serialized LastObservingTime of " + LastObservingTime, "AddToByteStream");
+            //Log.Trace("Serialized LastObservingPosition of " + LastObservingPosition, "AddToByteStream");
+            //Log.Trace("Serialized ViewDistance of " + ViewDistance, "AddToByteStream");
         }
 
         #endregion
-        #region Observing Marking High level
+        #region Update Observing
 
-        protected void RefreshObserving() {
+        private void UpdateObservingIfNeeded() {
+            if (UpdateObservingNextUpdate) {
+                UpdateObserving();
+                UpdateObservingNextUpdate = false;
+            }
+        }
+
+        private void CheckMovedFarEnoughToReobserve() {
+            if (IsMoving && IsControlled && DistanceSinceLastObservingCheck >
+                Settings.Instance.ControlledMovementGraceDistanceMeters) 
+            {
+                Log.Trace("Moved far enough: " + DistanceSinceLastObservingCheck + 
+                    " / " + Settings.Instance.ControlledMovementGraceDistanceMeters, 
+                    "CheckMovedFarEnoughToReobserve");
+
+                UpdateObservingNextUpdate = true;
+            }
+        }
+
+        protected void UpdateObserving() {
+            Log.Trace("Update Observing", "UpdateObserving");
             ClearObserving();
             Observe();
         }
@@ -151,19 +177,23 @@ namespace GP.Concealment.World.Entities {
             //UnmarkReceivingAll();
         }
 
-
+        #endregion
+        #region Observe
         protected void Observe() {
             if (!IsControlled) return;
 
-            Log.Trace("Marking observed", "MarkObserving");
-            Log.Trace("Viewing shpere Center: " + ViewingSphere.Center, "MarkObserving");
-            Log.Trace("Viewing shpere Radius: " + ViewingSphere.Radius, "MarkObserving");
+            //Log.Trace("Observing", "Observe");
 
-            List<ObservableEntity> viewableEntities = Sector.ObservableInSphere(ViewingSphere);
+            var viewingSphere = new BoundingSphereD(Position, ViewDistance);
 
-            Log.Trace("Viewable entity count: " + viewableEntities, "MarkObserving");
+            //Log.Trace("Viewing shpere Center: " + viewingSphere.Center, "Observe");
+            //Log.Trace("Viewing shpere Radius: " + viewingSphere.Radius, "Observe");
 
-            foreach (ObservableEntity e in Sector.ObservableInSphere(ViewingSphere)) {
+            List<ObservableEntity> viewableEntities = Sector.ObservableInSphere(viewingSphere);
+
+            //Log.Trace("Viewable entity count: " + viewableEntities.Count, "Observe");
+
+            foreach (ObservableEntity e in viewableEntities) {
                 MarkViewing(e);
             }
 
@@ -172,11 +202,7 @@ namespace GP.Concealment.World.Entities {
 
             LastObservingTime = DateTime.UtcNow;
             LastObservingPosition = Position;
-            PreviouslyObserving = true;
         }
-
-        #endregion
-        #region Observing Marking
 
         private void MarkViewing(ObservableEntity e) {
             long id = e.EntityId;
@@ -185,7 +211,7 @@ namespace GP.Concealment.World.Entities {
                 return;
             }
 
-            Log.Error("Marking " + id + " as viewed by me", "MarkViewing");
+            Log.Trace("Marking " + id + " as viewed by me", "MarkViewing");
             EntitiesViewing.Add(id, e);
             e.MarkViewedBy(this);
         }
@@ -197,13 +223,13 @@ namespace GP.Concealment.World.Entities {
                 return;
             }
 
-            Log.Error("Removing view mark on " + id + " from me", "UnmarkViewing");
+            Log.Trace("Removing view mark on " + id + " from me", "UnmarkViewing");
             EntitiesViewing.Remove(id);
             e.UnmarkViewedBy(this);
         }
 
         private void UnmarkViewingAll() {
-            Log.Trace("Unmarking all viewed entities", "UnmarkViewingAll");
+            //Log.Trace("Unmarking all viewed entities", "UnmarkViewingAll");
             foreach (ObservableEntity e in EntitiesViewing.Values) {
                 e.UnmarkViewedBy(this);
             }
@@ -277,24 +303,9 @@ namespace GP.Concealment.World.Entities {
         */
 
         #endregion
-        #region Control 
+        #region Describe
 
-        protected override void ControlAcquired() {
-            RefreshObservingNextUpdate = true;
-        }
-
-        protected override void ControlReleased() {
-            RefreshObservingNextUpdate = true;
-        }
-
-        #endregion
-
-        private void UpdateSpheres() {
-            ViewingSphere = new BoundingSphereD(Position, ViewDistance);
-        }
-
-
-        public String Details() {
+        public String ObservationDetails() {
             String result = "";
 
             // Ids
@@ -354,6 +365,8 @@ namespace GP.Concealment.World.Entities {
 
             return result;
         }
+
+        #endregion
 
     }
 

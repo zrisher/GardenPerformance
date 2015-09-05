@@ -45,6 +45,7 @@ namespace GP.Concealment.World.Entities {
             add { ControllableEntityRemoval += value; }
             remove { ControllableEntityRemoval -= value; }
         }
+
         /*
         private static Action<ControllableEntity> ControlAcquisition;
         public static event Action<ControllableEntity> ControlAcquired {
@@ -58,6 +59,34 @@ namespace GP.Concealment.World.Entities {
             remove { ControlRelease -= value; }
         }
         */
+
+        private static void NotifyAdded(ControllableEntity entity) {
+            Log.Trace("ControllableEntity " + entity.DisplayName + " added.", "NotifyAdded");
+            if (ControllableEntityAddition != null) ControllableEntityAddition(entity);
+        }
+
+        private static void NotifyMoved(ControllableEntity entity) {
+            //Log.Trace("ControllableEntity " + entity.DisplayName + " moved ", "NotifyMoved");
+            if (ControllableEntityMovement != null) ControllableEntityMovement(entity);
+        }
+
+        private static void NotifyRemoved(ControllableEntity entity) {
+            Log.Trace("ControllableEntity " + entity.DisplayName + " removed.", "NotifyRemoved");
+            if (ControllableEntityRemoval != null) ControllableEntityRemoval(entity);
+        }
+
+        /*
+        private void NotifyControlAcquired() {
+            Log.Trace("ControllableEntity " + DisplayName + " controlled.", "NotifyRemoved");
+            if (ControlAcquisition != null) ControlAcquisition(this);
+        }
+
+        private void NotifyControlControlReleased() {
+            Log.Trace("ControllableEntity " + DisplayName + " released.", "NotifyRemoved");
+            if (ControlRelease != null) ControlRelease(this);
+        }
+        */
+
         #endregion
         #region Fields
         #endregion
@@ -66,21 +95,26 @@ namespace GP.Concealment.World.Entities {
         public override Dictionary<uint, Action> UpdateActions {
             get {
                 Dictionary<uint, Action> actions = base.UpdateActions;
-                actions.Add(60, Update); // TODO: Move to 300 when done testing
+                actions.Add(60, UpdateControl); // TODO: tweak resolution
                 return actions;
             }
         }
 
-        public override bool IsConcealable {
-            get {
-                return base.IsConcealable && !IsControlled;
-            }
+        public override bool IsConcealableAuto {
+            get { return base.IsConcealableAuto && !IsControlled; }
         }
 
         public bool IsMoving { get; private set; }
         public bool RecentlyMoved { get; private set; }
         public DateTime RecentlyMovedEnds { get; private set; }
         public virtual bool IsControlled { get { return IsMoving || RecentlyMoved;  } }
+
+        #endregion
+        #region Internal Events
+
+        protected virtual void ControlAcquired() { }
+
+        protected virtual void ControlReleased() { }
 
         #endregion
         #region Constructors
@@ -119,54 +153,20 @@ namespace GP.Concealment.World.Entities {
 
         public override void Initialize() {
             base.Initialize();
-            NotifyAdded();
+            NotifyAdded(this);
         }
 
-        protected virtual void Update() {
-            //Log.Trace("ControllableEntity update " + DisplayName, "Update");
+        protected virtual void UpdateControl() {
             UpdateMoving();
-
-            if (IsMoving) {
-                NotifyMoved();
-            }
-
         }
 
         public override void Terminate() {
-            NotifyRemoved();
+            NotifyRemoved(this);
             base.Terminate();
         }
 
         #endregion
-        #region ControllableEntities Event Helpers
-
-        private void NotifyAdded() {
-            Log.Trace("ControllableEntity " + DisplayName + " added.", "NotifyAdded");
-            if (ControllableEntityAddition != null) ControllableEntityAddition(this);
-        }
-
-        private void NotifyMoved() {
-            //Log.Trace("ControllableEntity " + DisplayName + " moved ", "NotifyMoved");
-            if (ControllableEntityMovement != null) ControllableEntityMovement(this);
-        }
-
-        private void NotifyRemoved() {
-            Log.Trace("ControllableEntity " + DisplayName + " removed.", "NotifyRemoved");
-            if (ControllableEntityRemoval != null) ControllableEntityRemoval(this);
-        }
-        /*
-        private void NotifyControlAcquired() {
-            Log.Trace("ControllableEntity " + DisplayName + " controlled.", "NotifyRemoved");
-            if (ControlAcquisition != null) ControlAcquisition(this);
-        }
-
-        private void NotifyControlControlReleased() {
-            Log.Trace("ControllableEntity " + DisplayName + " released.", "NotifyRemoved");
-            if (ControlRelease != null) ControlRelease(this);
-        }
-        */
-        #endregion
-        #region Movement
+        #region Update Movement
 
         private void UpdateMoving() {
             //Log.Trace("Checking Physics of " + DisplayName, "CheckPhysics");
@@ -202,31 +202,14 @@ namespace GP.Concealment.World.Entities {
                         Settings.Instance.ControlledMovingGraceTimeSeconds);
                 }
             }
+
+            if (IsMoving) {
+                NotifyMoved(this);
+            }
         }
 
         #endregion
-        #region Control 
 
-        protected virtual void ControlAcquired() { }
-
-        protected virtual void ControlReleased() { }
-
-        /*
-        protected virtual void MarkControlled() {
-            IsControlled = true;
-            //NotifyControlAcquired();
-        }
-
-        protected virtual void MarkNotControlled() {
-            IsControlled = false;
-            //NotifyControlControlReleased();
-        }
-        */
-        #endregion
-
-        protected override void UpdateConcealability() {
-            base.UpdateConcealability();
-        }
     }
 
 }

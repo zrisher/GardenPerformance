@@ -54,6 +54,9 @@ namespace GP.Concealment.MessageHandlers {
                 case MessageType.LogoutRequest:
                     ReceiveLogoutRequest(body, senderSteamId);
                     break;
+                case MessageType.FactionChangeRequest:
+                    ReceiveFactionChangeRequest(body, senderSteamId);
+                    break;
                 case MessageType.RevealedGridsRequest:
                     ReceiveRevealedGridsRequest(body, senderSteamId);
                     break;
@@ -122,14 +125,22 @@ namespace GP.Concealment.MessageHandlers {
             Log.Trace("Receiving Login Request", "ReceiveLoginRequest");
 
             LoginRequest request = new LoginRequest(body);
-            Session.Manager.Revealed.PlayerLoggedIn(request.PlayerId);
+            Session.Manager.Revealed.PlayerLoggedIn(request.PlayerId, request.FactionId);
         }
 
         private void ReceiveLogoutRequest(byte[] body, ulong senderId) {
             Log.Trace("Receiving Logout Request", "ReceiveLogoutRequest");
             LogoutRequest request = new LogoutRequest(body);
-            Session.Manager.Revealed.PlayerLoggedOut(request.PlayerId);
+            Session.Manager.Revealed.PlayerLoggedOut(request.PlayerId, request.FactionId);
         }
+
+        private void ReceiveFactionChangeRequest(byte[] body, ulong senderId) {
+            Log.Trace("Receiving Faction Change Request", "ReceiveFactionChangeRequest");
+            FactionChangeRequest request = new FactionChangeRequest(body);
+            Session.Manager.Revealed.PlayerChangedFactions(
+                request.PlayerId, request.OldFactionId, request.NewFactionId);
+        }
+
 
         private void ReceiveRevealRequest(byte[] body, ulong senderId) {
             Log.Trace("Receiving Reveal Request", "ReceiveRevealRequest");
@@ -156,12 +167,13 @@ namespace GP.Concealment.MessageHandlers {
         }
 
         private void ReceiveObservingEntitiesRequest(byte[] body, ulong senderId) {
-            Log.Trace("Receiving Revealed Grids Request",
-                "ReceiveRevealedGridsRequest");
+            Log.Trace("Receiving Observing Entities Request",
+                "ReceiveObservingEntitiesRequest");
 
             // nothing to read, but doing this anyway to test
             ObservingEntitiesRequest request = ObservingEntitiesRequest.FromBytes(body);
 
+            // Convert them to just observing form 
             ObservingEntitiesResponse response = new ObservingEntitiesResponse() {
                 ObservingEntities = Session.Manager.Revealed.ObservingEntitiesList()
             };
@@ -174,10 +186,17 @@ namespace GP.Concealment.MessageHandlers {
 
             ChangeSettingRequest request = ChangeSettingRequest.FromBytes(body);
 
-            // TODO - implement
+            Settings.Instance.ChangeSetting(request.Index, request.Value);
 
+            /*
+             * We actually resend settings, incase player is relying on them for data
             ChangeSettingResponse response = new ChangeSettingResponse() {
-                Success = false
+                Success = true
+            };
+            */
+
+            SettingsResponse response = new SettingsResponse() {
+                Settings = Settings.Instance
             };
 
             response.SendToPlayer(senderId);

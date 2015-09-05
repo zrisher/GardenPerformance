@@ -20,32 +20,24 @@ using GP.Concealment.Sessions;
 
 namespace GP.Concealment.World.Entities {
 
-    // Revealed entities cannot be concealed if they
-    // Are controlled
-    // Are "working" (refining, assembling, oxy creating, battery charging)
-    // Are moving, 
-    // Is near a controlled entity (taken care of by that controlled entity)
-    //
-    // TODO: beacons broadcast to both friends and enemies
-    // actually antennae do too, it's just laser that don't
-    // TODO: Power production and oxy production (need to check if these are actually making anything or else they'll just stay stuck revealed)
-    //
-    // Unfortunately ControllerInfo isn't whitelisted, so we just guess if 
-    // it's controlled by whether it's moving. Character entities report presence separately. 
-    //public bool Controlled { get { return ControlsInUse.Count > 0; } }
     public class RevealedGrid : ObservingEntity, ConcealableGrid {
-
-        /*
-        private static ServerConcealSession Session {
-            get { return ServerConcealSession.Instance; }
-        }
-        */
 
         #region Fields
 
         private Dictionary<long, Ingame.IMyProductionBlock> ProductionBlocks =
             new Dictionary<long, Ingame.IMyProductionBlock>();
+        /*
+        // Oxy production - oxy farms or generators might be generating oxy
+        // TODO Break these out from production blocks and only block conceal
+        // if they're both producing AND actually generating oxygen - could be leaks
+        private Dictionary<long, Ingame.IMyOxygenFarm> OxyFarms =
+            new Dictionary<long, Ingame.IMyOxygenFarm>();
 
+        private Dictionary<long, Ingame.IMyOxygenGenerator> OxyGenerators =
+            new Dictionary<long, Ingame.IMyOxygenGenerator>();
+        */
+
+        // Power production - solar panels might be charging batteries
         private Dictionary<long, Ingame.IMyBatteryBlock> BatteryBlocks =
             new Dictionary<long, Ingame.IMyBatteryBlock>();
 
@@ -54,22 +46,28 @@ namespace GP.Concealment.World.Entities {
         // But we already reveal near a character.
         // Plus we can't detect AI pilots at all.
         // So we just base control on moving or moved in past X minutes
+        // Unfortunately ControllerInfo isn't whitelisted, so we just guess if 
+        // it's controlled by whether it's moving. Character entities report presence separately. 
         /*
         private bool Piloted;
         private bool UpdatePilotedNextUpdate;
         private Dictionary<long, Ingame.IMyCockpit> Cockpits =
             new Dictionary<long, Ingame.IMyCockpit>();
+        public bool Controlled { get { return ControlsInUse.Count > 0; } }
         */
 
         // Spawn
+        private bool UpdateNeededForSpawnNextUpdate;
         private Dictionary<long, Ingame.IMyMedicalRoom> MedBays =
             new Dictionary<long, Ingame.IMyMedicalRoom>();
-        private Dictionary<long, Ingame.IMyCockpit> Cyrochambers =
-            new Dictionary<long, Ingame.IMyCockpit>();
+        private Dictionary<long, Sandbox.Game.Entities.Blocks.MyCryoChamber> Cryochambers =
+            new Dictionary<long, Sandbox.Game.Entities.Blocks.MyCryoChamber>();
 
         // Comms
         // These are all just to keep us from having to reveal at greater distances 
         /*
+        // TODO: beacons and antenna broadcast to both friends and enemies
+        // laser antennae just to friends
         private bool HasRadioAntennae;
         private bool HasLaserAntennae;
         private float BroadcastingFriendlyRange;
@@ -93,9 +91,12 @@ namespace GP.Concealment.World.Entities {
         }
 
         // ObservingEntity
+        /*
         public override Dictionary<uint, Action> UpdateActions {
             get { return base.UpdateActions; }
         }
+        */
+
         public override String ComponentName { get { return "RevealedGrid"; } }
 
         // ConcealableGrid
@@ -108,10 +109,13 @@ namespace GP.Concealment.World.Entities {
         public bool IsProducing { get; private set; }
         public bool IsChargingBatteries { get; private set; }
 
-        public override bool IsConcealable {
+        public override bool IsConcealableAuto {
+            get { return base.IsConcealableAuto && !NeededForSpawn; }
+        }
+
+        public override bool IsConcealableManual {
             get {
-                return base.IsConcealable && !IsProducing && !NeededForSpawn &&
-                    !IsProducing && !IsChargingBatteries;
+                return base.IsConcealableManual && !IsProducing && !IsChargingBatteries;
             }
         }
 
@@ -134,10 +138,6 @@ namespace GP.Concealment.World.Entities {
         }
         */
         #endregion
-        #region Instance Event Helpers
-
-
-        #endregion
         #region Constructors
 
         // Creation from ingame entity
@@ -154,9 +154,13 @@ namespace GP.Concealment.World.Entities {
             Log.ClassName = "GP.Concealment.World.Entities.CubeGrid";
 
             Log.Trace("Deserializing revealed grid", "stream ctr");
+            Log.Info("Pos " + stream.Position + " / " + stream.Length, "FromBytes");
             Grid = Entity as IMyCubeGrid;
+            Log.Info("Getting spawnowners ", "FromBytes");
             SpawnOwners = stream.getLongList();
+            Log.Info("Getting bigowners ", "FromBytes");
             BigOwners = stream.getLongList();
+            Log.Info("Finished, pos " + stream.Position + " / " + stream.Length, "FromBytes");
 
             if (SpawnOwners == null) {
                 Log.Error("Deserialized with null spawnowners", "stream ctr");
@@ -173,29 +177,32 @@ namespace GP.Concealment.World.Entities {
         }
 
         #endregion
-        #region Updates
+        #region Serialization
 
-        public override void Initialize() {
-            base.Initialize();
+        // Byte Serialization
+        public virtual void AddToByteStream(VRage.ByteStream stream) {
+            base.AddToByteStream(stream);
 
-            Grid.OnBlockAdded += BlockAdded;
-            Grid.OnBlockRemoved += BlockRemoved;
-        }
+            Log.Trace("Adding Revealed Grid to byte stream", "AddToByteStream");
 
-        protected override void Update() {
-            //Log.Trace("Revealed Grid update " + DisplayName, "Update");
-            base.Update();
-        }
+            if (SpawnOwners == null) {
+                Log.Error("Serializing with null spawnowners", "AddToByteStream");
+                SpawnOwners = new List<long>();
+            }
 
-        public override void Terminate() {
-            base.Terminate();
+            if (BigOwners == null) {
+                Log.Error("Serializing with null BigOwners", "AddToByteStream");
+                BigOwners = new List<long>();
+            }
 
-            Grid.OnBlockAdded -= BlockAdded;
-            Grid.OnBlockRemoved -= BlockRemoved;
+            Log.Info("Adding spawnowners ", "FromBytes");
+            stream.addLongList(SpawnOwners);
+            Log.Info("Adding BigOwners ", "FromBytes");
+            stream.addLongList(BigOwners);
         }
 
         #endregion
-        #region Block Events
+        #region Instance Event Helpers
 
         private void BlockAdded(IMySlimBlock block) {
             IMyCubeBlock fatblock = block.FatBlock;
@@ -210,6 +217,14 @@ namespace GP.Concealment.World.Entities {
             var medbay = fatblock as Ingame.IMyMedicalRoom;
             if (medbay != null) {
                 MedBays.Add(medbay.EntityId, medbay);
+                UpdateNeededForSpawnNextUpdate = true;
+                return;
+            }
+
+            var cryochamber = fatblock as Sandbox.Game.Entities.Blocks.MyCryoChamber;
+            if (cryochamber != null) {
+                Cryochambers.Add(cryochamber.EntityId, cryochamber);
+                UpdateNeededForSpawnNextUpdate = true;
                 return;
             }
 
@@ -219,6 +234,7 @@ namespace GP.Concealment.World.Entities {
                 return;
             }
 
+  
         
             /*
             var radioAntenna = fatblock as Ingame.IMyRadioAntenna;
@@ -261,6 +277,14 @@ namespace GP.Concealment.World.Entities {
             var medbay = fatblock as Ingame.IMyMedicalRoom;
             if (medbay != null) {
                 MedBays.Remove(medbay.EntityId);
+                UpdateNeededForSpawnNextUpdate = true;
+                return;
+            }
+
+            var cryochamber = fatblock as Sandbox.Game.Entities.Blocks.MyCryoChamber;
+            if (cryochamber != null) {
+                Cryochambers.Remove(cryochamber.EntityId);
+                UpdateNeededForSpawnNextUpdate = true;
                 return;
             }
 
@@ -299,56 +323,56 @@ namespace GP.Concealment.World.Entities {
         }
 
         #endregion
-        #region Serialization
+        #region Updates
 
-        // Byte Serialization
-        public virtual void AddToByteStream(VRage.ByteStream stream) {
-            base.AddToByteStream(stream);
+        public override void Initialize() {
+            base.Initialize();
 
-            Log.Trace("Serializing revealed grid", "AddToByteStream");
-            if (SpawnOwners == null) {
-                Log.Error("Serializing with null spawnowners", "AddToByteStream");
-                SpawnOwners = new List<long>();
-            }
-
-            if (BigOwners == null) {
-                Log.Error("Serializing with null BigOwners", "AddToByteStream");
-                BigOwners = new List<long>();
-            }
-
-            stream.addLongList(SpawnOwners);
-            stream.addLongList(BigOwners);
+            Grid.OnBlockAdded += BlockAdded;
+            Grid.OnBlockRemoved += BlockRemoved;
         }
 
-        #endregion
-        #region Update from Ingame state
+        protected override void UpdateConcealabilityAuto(){
+            base.UpdateConcealabilityAuto();
+            if (UpdateNeededForSpawnNextUpdate) {
+                UpdateNeededForSpawn();
+                UpdateNeededForSpawnNextUpdate = false;
+            }
+        }
 
-        protected override void UpdateConcealability() {
-            base.UpdateConcealability();
+        protected override void UpdateConcealabilityManual() {
+            base.UpdateConcealabilityManual();
             UpdateIsProducing();
             UpdateIsChargingBatteries();
         }
 
 
-        private void UpdateIsProducing() {
-            // TODO: implement this
-            IsProducing = false;
+        public override void Terminate() {
+            base.Terminate();
 
-
-            // loop through production blocks and return with true if producing one
+            Grid.OnBlockAdded -= BlockAdded;
+            Grid.OnBlockRemoved -= BlockRemoved;
         }
+
+        #endregion
+        #region Concealability Updates
 
         private void UpdateIsChargingBatteries() {
             // TODO: implement this
             IsChargingBatteries = false;
-
             // loop through battery blocks and return with true if charging one
+            // Cache what production was last time and only mark charging if 
+            // charge is going up
         }
 
-        #endregion
+        private void UpdateIsProducingOxygen() {
+            // TODO: implement this
+            // loop through oxy blocks and return with true if charging one
+            // Cache what production was last time and only mark charging if 
+            // charge is going up
+        }
 
-
-        private void RefreshProducing() {
+        private void UpdateIsProducing() {
             IsProducing = false;
             foreach (Ingame.IMyProductionBlock producer in ProductionBlocks.Values) {
                 if (producer.Enabled && producer.IsProducing) {
@@ -359,7 +383,7 @@ namespace GP.Concealment.World.Entities {
         }
 
         // TODO: beacons, other types of antennae
-        private void RefreshBroadcastRange() {
+        private void UpdateBroadcastRange() {
             /*
             RadioRange = 0;
 
@@ -369,6 +393,36 @@ namespace GP.Concealment.World.Entities {
             }
             */ 
         }
+
+        private void UpdateNeededForSpawn() {
+            NeededForSpawn = false;
+
+            // If we want to only use Working blocks, need hooks
+
+            foreach (var medbay in MedBays.Values) {
+                if (Sector.SpawnOwnerNeeded(medbay.OwnerId)) {
+                    NeededForSpawn = true;
+                    return;
+                }
+            }
+
+            foreach (var cryochamber in Cryochambers.Values) {
+                if (Sector.SpawnOwnerNeeded(cryochamber.OwnerId)) {
+                    NeededForSpawn = true;
+                    return;
+                }
+            }
+        }
+
+        #endregion
+        #region Public Marking
+
+        public void MarkSpawnUpdateNeeded() {
+            UpdateNeededForSpawnNextUpdate = true;
+        }
+
+        #endregion
+        #region Conceal
 
         protected override bool Conceal()  {
             Log.Trace("Concealing grid " + EntityId, "Conceal");
@@ -396,11 +450,20 @@ namespace GP.Concealment.World.Entities {
             return true;
         }
 
+        #endregion
+        #region Describe
+    
         public String ConcealDetails() {
+            // Revealed entities cannot be concealed if they
+            // Are controlled (i.e. moving)
+            // Are near a controlled entity
+            // Are "working" (refining, assembling, oxy creating, battery charging)
+            // Are needed as a spawn point for a logged-in player
+
             String result = "";
 
             // Ids
-            result += DisplayName + "\" - " + EntityId + "\n";
+            result += "\"" + DisplayName + "\" - " + EntityId + "\n";
 
             // Owners
             // TODO: show owner names instead of playerIds
@@ -419,101 +482,103 @@ namespace GP.Concealment.World.Entities {
 
             // Concealability
             if (IsConcealable) {
-                result += "  Concealable! Details:\n";
+                result += "  Concealable:\n";
                 //return result;
             }
             else {
                 result += "  Not concealable:\n";
             }
 
+            //result += "    Frequently Updated:\n";
+
             // Control
             if (IsControlled) {
-                result += "    Controlled:\n";
+                result += "      N Controlled:\n";
 
                 if (IsMoving) {
-                    result += "      Moving at " + 
+                    result += "        Moving at " + 
                         System.Math.Truncate(LinearVelocity.Length()) + " m/s";
                 }
                 else if (RecentlyMoved) {
-                    result += "      Recently moved until " + RecentlyMovedEnds;
+                    result += "        Recently moved until " + RecentlyMovedEnds;
                 }
 
                 result += "\n";
             }
             else {
-                result += "    Not Controlled. (OK to conceal.)\n";
+                result += "      Y Not Controlled.\n";
             }
 
             // Observed
             if (IsObserved) {
-                result += "    Observed by:\n";
+                result += "      N Observed by:\n";
                 foreach (long id in EntitiesViewedBy.Keys) {
-                    result += "      " + id;
+                    result += "        " + id + "\n";
                 }
             }
             else {
-                result += "    Not Observed. (OK to conceal.)\n";
+                result += "      Y Not Observed.\n";
             }
 
             // Spawn
             // TODO: show owner names instead of playerIds
             // TODO: actually implement updates to these details
-            result += "    TODO: Needed for spawn? \n";
-            /*
             if (NeededForSpawn) {
+                result += "      N Needed for spawn.\n";
+                /*
                 result += "    Needed as a spawn point by:\n";
                 foreach (long id in SpawnablePlayers) {
                     result += "      " + id;
                 }
+                */
             }
             else {
-                result += "    Not Needed as a spawn point. (OK to conceal.)\n";
+                result += "      Y Not Needed for spawn.\n";
             }
-            */
+
+            //result += "    Infrequently Updated:\n";
 
             // Working
             // TODO: send block entity ids
             // TODO: show block types instead of entity Ids
-            // TODO: actually implement updates to these details
-            result += "    TODO: Producing? \n";
-            result += "      TODO: Assembling? \n";
-            /*
             if (IsProducing) {
-                result += "    Some blocks are currently producing: by:\n";
+                result += "    N Producing:\n";
                 foreach (long id in ProductionBlocks.Keys) {
-                    result += "      " + id;
+                    result += "      " + id + "\n";
                 }
             }
             else {
-                result += "    No blocks producing. (OK to conceal.)\n";
+                result += "      Y Not Producing.\n";
             }
-            */
 
-            result += "      TODO: Refining? \n";
-            result += "      TODO: Charging? \n";
-
-            result += "      TODO: Producing Oxygen? \n";
-
-            // NearAsteroid
-            result += "    Inside asteroid? \n";
-            if (IsInsideAsteroid) {
-                result += "    Yes, might affect asteroid respawn.\n";
+            if (IsChargingBatteries) {
+                result += "      N Charging Batteries.\n";
             }
             else {
-                result += "    Not in Asteroid. (OK to conceal.)\n";
+                result += "      Y Not Charging Batteries.\n";
             }
 
+            // NearAsteroid
+            if (IsInsideAsteroid) {
+                result += "      N Inside Asteroid.\n";
+            }
+            else {
+                result += "      Y Not in Asteroid.\n";
+            }
 
             // Blocked
             if (IsRevealBlocked) {
-                result += "    Entities within bounding box, couldn't reveal.\n";
+                result += "      N Entities within bounding box.\n";
             }
             else {
-                result += "    Not Blocked. (OK to conceal.)\n";
+                result += "      Y No entities in bounding box.\n";
             }
 
             return result;
         }
+
+        #endregion
+
     }
 
 }

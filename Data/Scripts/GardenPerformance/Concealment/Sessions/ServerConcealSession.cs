@@ -49,7 +49,7 @@ namespace GP.Concealment.Sessions {
             get {
                 return new Dictionary<uint, Action> {
                     {60, Manager.ProcessRevealQueue},
-                    {120, Manager.ProcessConcealQueue}
+                    {360, Manager.ProcessConcealQueue}
                 };
             }
         }

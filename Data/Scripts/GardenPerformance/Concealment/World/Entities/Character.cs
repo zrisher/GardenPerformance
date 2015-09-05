@@ -19,12 +19,11 @@ namespace GP.Concealment.World.Entities {
 
         #region Fields
 
-        IMyCharacter CharacterEntity;
+        private bool Alive = true;
+        private IMyCharacter CharacterEntity;
 
         #endregion
         #region Properties
-
-        private bool Alive = true;
 
         public override String ComponentName { get { return "Character"; } }
 
@@ -47,7 +46,6 @@ namespace GP.Concealment.World.Entities {
             CharacterEntity = Entity as IMyCharacter;
         }
 
-
         #endregion
         #region Updates
 
@@ -55,12 +53,6 @@ namespace GP.Concealment.World.Entities {
             base.Initialize();
             if (CharacterEntity != null)
                 CharacterEntity.OnMovementStateChanged += MovementStateChanged;
-            Alive = true;
-        }
-
-        protected override void Update() {
-            //Log.Trace("Character update " + DisplayName, "Update");
-            base.Update();
         }
 
         public override void Terminate() {
@@ -75,9 +67,11 @@ namespace GP.Concealment.World.Entities {
         // Byte Serialization
         public override void AddToByteStream(VRage.ByteStream stream) {
             base.AddToByteStream(stream);
+            Log.Trace("Adding character to byte stream", "AddToByteStream");
         }
 
         #endregion
+        #region Character Entity Hooks
 
         void MovementStateChanged (MyCharacterMovementEnum oldState, 
             MyCharacterMovementEnum newState) 
@@ -87,15 +81,23 @@ namespace GP.Concealment.World.Entities {
             }
         }
 
+        #endregion
+        #region Conceal
+
         protected override bool Conceal() {
             Log.Error("Characters cannot be concealed!", "Conceal");
             return false;
         }
 
+        #endregion
+        #region Describe
+
         public String ToString() {
             // TODO: implement
             return "Character to String - to implement";
         }
+
+        #endregion
 
     }
 
