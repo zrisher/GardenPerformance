@@ -190,6 +190,7 @@ namespace GP.Concealment.World.Entities {
             //Log.Trace("Viewing shpere Radius: " + viewingSphere.Radius, "Observe");
 
             List<ObservableEntity> viewableEntities = Sector.ObservableInSphere(viewingSphere);
+            viewableEntities.Concat(Concealed.EntitiesInSphere(viewingSphere));
 
             //Log.Trace("Viewable entity count: " + viewableEntities.Count, "Observe");
 

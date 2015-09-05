@@ -340,7 +340,7 @@ namespace GP.Concealment.World.Entities {
             }
         }
 
-        protected override void UpdateConcealabilityManual() {
+        public override void UpdateConcealabilityManual() {
             base.UpdateConcealabilityManual();
             UpdateIsProducing();
             UpdateIsChargingBatteries();
@@ -490,6 +490,12 @@ namespace GP.Concealment.World.Entities {
             }
 
             //result += "    Frequently Updated:\n";
+            if (OldEnoughForConceal) {
+                result += "      Y Not recently revealed\n";
+            }
+            else {
+                result += "      N Too recently revealed\n";
+            }
 
             // Control
             if (IsControlled) {

@@ -203,6 +203,10 @@ namespace GP.Concealment.World.Sectors {
             return Grids.Values.ToList();
         }
 
+        public List<ConcealedGrid> ConcealedGridsNeedingReveal() {
+            return Grids.Values.Where((g) => g.NeedsReveal).ToList();
+        }
+
         private List<MyObjectBuilder_CubeGrid> ConcealedGridBuildersList() {
             return Grids.Values.Select((x) => x.Builder).ToList();
         }
@@ -243,6 +247,12 @@ namespace GP.Concealment.World.Sectors {
             Grids.Remove(concealed.EntityId);
             GridTree.Remove(concealed);
             NeedsSave = true;
+        }
+
+        public void UpdateSpawn() {
+            foreach (ConcealedGrid grid in Grids.Values) {
+                grid.MarkSpawnUpdateNeeded();
+            }
         }
 
         #endregion
@@ -292,16 +302,6 @@ namespace GP.Concealment.World.Sectors {
 
         #endregion
         #region Marking
-
-        public void MarkAllConcealable() {
-            foreach (var kvp in Grids) {
-                //kvp.Value.Concealability = EntityConcealability.Concealable;
-            }
-        }
-
-        public void MarkConcealabilityNear(Vector3D center, int meters, EntityConcealability flag) {
-            // TODO: Use AABB tree to mark all grids within meters of center for reason
-        }
 
         #endregion
 

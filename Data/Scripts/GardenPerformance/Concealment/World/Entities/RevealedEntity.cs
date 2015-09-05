@@ -25,6 +25,10 @@ namespace GP.Concealment.World.Entities {
             get { return ServerConcealSession.Instance.Manager.Revealed; }
         }
 
+        protected static ConcealedSector Concealed {
+            get { return ServerConcealSession.Instance.Manager.Concealed; }
+        }
+
         #endregion
         #region Fields
 
@@ -39,6 +43,8 @@ namespace GP.Concealment.World.Entities {
         private Dictionary<long, RevealedEntity> EntitiesBroadcastingTo =
             new Dictionary<long, RevealedEntity>();
         */
+
+        private DateTime RevealedAt = DateTime.Now;
 
         #endregion
         #region Properties
@@ -91,11 +97,18 @@ namespace GP.Concealment.World.Entities {
         }
 
         public virtual bool IsConcealableAuto {
-            get { return !IsObserved; }
+            get { return !IsObserved && OldEnoughForConceal; }
         }
 
         public virtual bool IsConcealableManual {
             get { return !IsRevealBlocked && !IsInsideAsteroid; }
+        }
+
+        protected bool OldEnoughForConceal {
+            get {
+                return DateTime.Now > RevealedAt.AddSeconds(Settings.Instance.
+                    RevealedMinAgeSeconds);
+            }
         }
 
         #endregion
@@ -111,6 +124,8 @@ namespace GP.Concealment.World.Entities {
             foreach (long id in entitiesViewedByList) {
                 EntitiesViewedBy.Add(id, null);
             }
+
+            RevealedAt = stream.getDateTime();
 
             Log.ClassName = "GP.Concealment.World.Entities.RevealedEntity";
             Log.Trace("Finished RevealedEntity deserialize constructor", "ctr");
@@ -132,6 +147,7 @@ namespace GP.Concealment.World.Entities {
             stream.addBoolean(IsObserved);
             stream.addBoolean(IsRevealBlocked);
             stream.addLongList(EntitiesViewedBy.Keys.ToList());
+            stream.addDateTime(RevealedAt);
         }
 
         #endregion
@@ -218,7 +234,7 @@ namespace GP.Concealment.World.Entities {
         /// Should be called before concealing and before sending to clients
         /// Call this to update things that aren't automatically kept up to date
         /// </summary>
-        protected virtual void UpdateConcealabilityManual() {
+        public virtual void UpdateConcealabilityManual() {
             UpdateRevealBlocked();
             UpdateInsideAsteroid();
         }
@@ -258,8 +274,7 @@ namespace GP.Concealment.World.Entities {
 
             //Log.Trace("All entities in bounds are children.", "UpdateRevealBlocked");
 
-            List<ConcealedEntity> concealedEntities = ServerConcealSession.Instance.
-                Manager.Concealed.EntitiesInBox(boxCopy);
+            List<ConcealedEntity> concealedEntities = Concealed.EntitiesInBox(boxCopy);
 
             //Log.Trace("concealed boundedEntities count " + concealedEntities.Count, "UpdateRevealBlocked");
 

@@ -55,6 +55,8 @@ namespace GP.Concealment {
         public ConcealedSector Concealed;
         public RevealedSector Revealed;
 
+        private Queue<ConcealedGrid> GridRevealCheckQueue = new Queue<ConcealedGrid>();
+        private Queue<RevealedGrid> GridConcealCheckQueue = new Queue<RevealedGrid>();
         private Queue<ConcealedGrid> GridRevealQueue = new Queue<ConcealedGrid>();
         private Queue<RevealedGrid> GridConcealQueue = new Queue<RevealedGrid>();
 
@@ -105,7 +107,6 @@ namespace GP.Concealment {
 
         #endregion
         #region Conceal/Reveal requests
-
 
         // can occur from messaging and entity hooks so safed
         // provide instruction queue for managed resource updates 
@@ -181,6 +182,39 @@ namespace GP.Concealment {
             }
         }
 
+        /// <summary>
+        /// Go through all currently revealed grids
+        /// If the automatic updates say it's conceable, try the manual
+        /// If it's concealable, queue it
+        /// </summary>
+        public void ProcessConcealCheckQueue() {
+
+            // fill queue if empty
+            if (GridConcealCheckQueue.Count == 0) {
+                foreach (RevealedGrid grid in Revealed.RevealedGridsList()) {
+                    GridConcealCheckQueue.Enqueue(grid);
+                }
+            }
+
+            // process queue
+            RevealedGrid gridToCheck;
+            for (ushort i = 0; i < GridConcealCheckQueue.Count; ++i) {
+                gridToCheck = GridConcealCheckQueue.Dequeue();
+
+                if (!gridToCheck.IsConcealableAuto) {
+                    continue;
+                }
+
+                gridToCheck.UpdateConcealabilityManual(); // expensive
+
+                if (gridToCheck.IsConcealable) {
+                    GridConcealQueue.Enqueue(gridToCheck);
+                }
+
+                return; // only of of these checks per update
+            }
+        }
+
         public void ProcessRevealQueue() {
             if (GridRevealQueue.Count == 0) return; 
 
@@ -198,6 +232,41 @@ namespace GP.Concealment {
                 }
             }
         }
+
+        /// <summary>
+        /// Go through all currently concealed grids that need reveal
+        /// If the automatic updates say it's conceable, try the manual
+        /// If it's concealable, queue it
+        /// </summary>
+        public void ProcessRevealCheckQueue() {
+
+            // fill queue if empty
+            if (GridRevealCheckQueue.Count == 0) {
+                foreach (ConcealedGrid grid in Concealed.ConcealedGridsNeedingReveal()) {
+                    GridRevealCheckQueue.Enqueue(grid);
+                }
+            }
+
+            // process queue
+            ConcealedGrid gridToCheck;
+            for (ushort i = 0; i < GridRevealCheckQueue.Count; ++i) {
+                gridToCheck = GridRevealCheckQueue.Dequeue();
+
+                if (!gridToCheck.IsRevealableAuto) {
+                    continue;
+                }
+
+                gridToCheck.UpdateRevealabilityManual(); // expensive
+
+                if (gridToCheck.IsRevealable) {
+                    GridRevealQueue.Enqueue(gridToCheck);
+                }
+
+                return; // only of of these checks per update
+            }
+        }
+
+
 
         #endregion
         #region Save

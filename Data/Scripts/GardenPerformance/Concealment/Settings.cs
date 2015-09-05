@@ -18,6 +18,7 @@ namespace GP.Concealment {
             ControlledMovementGraceDistance,
             RevealVisibility,
             ConcealNearAsteroids,
+            RevealedMinAge,
         }
 
         #region Static
@@ -29,6 +30,7 @@ namespace GP.Concealment {
         //private static readonly  uint DefaultRevealCommunicationMeters = 10; //50;
         //private static readonly  uint DefaultRevealCollisionMeters = 10; //10;
         private static readonly bool DefaultConcealNearAsteroids = false;
+        private static readonly uint DefaultRevealedMinAgeSeconds = 60;
         private static readonly Logger Log = new Logger("GP.Concealment.Settings");
         private static readonly string Filename = "concealment_settings.txt";
 
@@ -78,6 +80,11 @@ namespace GP.Concealment {
             set { CurrentSettings[Setting.ConcealNearAsteroids] = (ulong)((value) ? 1 : 0); }
         }
 
+        public ulong RevealedMinAgeSeconds {
+            get { return CurrentSettings[Setting.RevealedMinAge]; }
+            set { CurrentSettings[Setting.RevealedMinAge] = value; }
+        }
+
         public byte Count {
             get { return (byte)CurrentSettings.Keys.Count; }
         }
@@ -91,6 +98,7 @@ namespace GP.Concealment {
             ControlledMovementGraceDistanceMeters = DefaultControlledMovingGraceTimeSeconds;
             RevealVisibilityMeters = DefaultRevealVisibilityMeters;
             ConcealNearAsteroids = DefaultConcealNearAsteroids;
+            RevealedMinAgeSeconds = DefaultRevealedMinAgeSeconds;
         }
 
         // Byte Deserialization

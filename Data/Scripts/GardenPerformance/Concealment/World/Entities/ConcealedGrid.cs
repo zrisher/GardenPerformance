@@ -54,9 +54,11 @@ namespace GP.Concealment.World.Entities {
         public MyObjectBuilder_CubeGrid Builder { get; set;}
 
         [XmlIgnore]
-        public bool IsXMLSerializable {
-            get {return base.IsXMLSerializable && ConcealableGridXMLSerializable &&
-                Builder != null;}
+        public override bool IsXMLSerializable {
+            get {
+                return base.IsXMLSerializable && ConcealableGridXMLSerializable &&
+                Builder != null;
+            }
         }
 
         #endregion
@@ -91,7 +93,7 @@ namespace GP.Concealment.World.Entities {
         #region Serialization
 
         // Byte Serialization
-        public void AddToByteStream(VRage.ByteStream stream) {
+        public override void AddToByteStream(VRage.ByteStream stream) {
             base.AddToByteStream(stream);
             stream.addLongList(SpawnOwners);
             stream.addLongList(BigOwners);
@@ -100,28 +102,21 @@ namespace GP.Concealment.World.Entities {
         #endregion
         #region Update Attributes from Ingame data
 
-        /// <summary>
-        /// Should be called when the session player list changes and
-        /// every so often (because there are no hooks for faction changes)
-        /// </summary>
-        private void UpdateNeedsRevealForSpawn() {
-            // TODO - we need to find the right way to store all the player/faction
-            // info and update it occasionally for faction changes
-            // It might make the most sense to do the updates on ClientSession,
-            // since that's the singular point of origin for IMyPlayer
-            /*
-            List<long> toRevealFor = Sessions.ServerConcealSession.Instance.
-                Manager.Revealed.ActivePlayersAndAllies;
+        private void UpdateNeededForSpawn() {
+            NeedsRevealForSpawn = false;
 
+            // If we want to only use Working blocks, need hooks
             foreach (long owner in SpawnOwners) {
-                if (toRevealFor.Contains(owner)) {
+                if (Revealed.SpawnOwnerNeeded(owner)) {
                     NeedsRevealForSpawn = true;
                     return;
                 }
             }
-             * */
+        }
 
-            NeedsRevealForSpawn = false;
+
+        public void MarkSpawnUpdateNeeded() {
+            UpdateNeededForSpawn();
         }
 
         #endregion
@@ -179,8 +174,8 @@ namespace GP.Concealment.World.Entities {
             // Position
             result += "  Position: " + Position.ToRoundedString() + "\n";
 
-            result += "  Revealable? " + IsRevealable;
-            result += "  Reveal Blocked? " + IsRevealBlocked;
+            result += "  Revealable? " + IsRevealable + "\n";
+            result += "  Reveal Blocked? " + IsRevealBlocked + "\n";
             return result;
         }
 

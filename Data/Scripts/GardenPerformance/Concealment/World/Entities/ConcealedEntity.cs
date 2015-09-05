@@ -13,11 +13,18 @@ using SEGarden.Logging;
 using SEGarden.Logic;
 using SEGarden.Math;
 
+using GP.Concealment.Sessions;
+using GP.Concealment.World.Sectors;
+
 namespace GP.Concealment.World.Entities {
 
     public abstract class ConcealedEntity : ConcealableEntity, AABBEntity {
 
         #region Static
+
+        protected static RevealedSector Revealed {
+            get { return ServerConcealSession.Instance.Manager.Revealed; }
+        }
 
         #endregion
         #region Fields
@@ -76,12 +83,20 @@ namespace GP.Concealment.World.Entities {
 
         // ConcealedEntity
         [XmlIgnore]
-        public bool IsRevealable { get { return !IsRevealBlocked; } }
+        public bool IsRevealable { 
+            get { return IsRevealableAuto && IsRevealableManual; } 
+        }
+        [XmlIgnore]
+        public bool IsRevealableAuto { get { return true; } }
+        [XmlIgnore]
+        public bool IsRevealableManual { get { return !IsRevealBlocked; } }
+
+
         [XmlIgnore]
         public virtual bool NeedsReveal { get { return IsObserved; } }
 
         [XmlIgnore]
-        public bool IsXMLSerializable {
+        public virtual bool IsXMLSerializable {
             get {
                 return ObservableEntityXMLSerializable && AABBEntityyXMLSerializable;
             }
@@ -127,8 +142,8 @@ namespace GP.Concealment.World.Entities {
         #region Serialization
 
         // Byte Serialization
-        public void AddToByteStream(VRage.ByteStream stream) {
-            UpdateRevealability();
+        public virtual void AddToByteStream(VRage.ByteStream stream) {
+            UpdateRevealabilityManual();
             stream.addUShort((ushort)TypeOfEntity);
             stream.addLong(EntityId);
             stream.addVector3D(Position);
@@ -217,22 +232,20 @@ namespace GP.Concealment.World.Entities {
         #endregion
         #region Update Attributes from Ingame data
 
-
         /// <summary>
         /// Should be called before revealing and before sending to clients
         /// </summary>
-        private void UpdateRevealability(){
+        public void UpdateRevealabilityManual(){
             UpdateRevealBlocked();
         }
+
+        private void UpdateRevealabilityAuto() { }
 
         private void UpdateRevealBlocked() {
             BoundingBoxD boxCopy = BoundingBox;
             IsRevealBlocked = MyAPIGateway.Entities.
                 GetElementsInBox(ref boxCopy).Count > 0;
         }
-
-
-
 
         private void UpdateObserveability() {
             IsObserved = ( 
@@ -246,7 +259,7 @@ namespace GP.Concealment.World.Entities {
         #region Reveal
 
         public bool TryReveal() {
-            UpdateRevealability();
+            UpdateRevealabilityManual();
 
             if (!IsRevealable) {
                 Log.Trace("Grid is not revealable", "TryReveal");

@@ -106,7 +106,7 @@ namespace GP.Concealment.MessageHandlers {
             foreach (RevealedGrid grid in Session.RevealedGrids) {
 
                 // Ids
-                result += i + ": \"" + grid.DisplayName + " - ";
+                result += i + ": \"" + grid.DisplayName + "\" - ";
                 result += (grid.IsConcealable) ? "Concealable" : "Not concealable";
                 result += "\n";
 
@@ -128,7 +128,7 @@ namespace GP.Concealment.MessageHandlers {
             ConcealResponse response = ConcealResponse.FromBytes(body);
 
             String result = response.Success ? 
-                "Successfully concealed" :
+                "Successfully queued for conceal" :
                 "Failed to conceal";
 
             result += " grid " + response.EntityId;
@@ -147,7 +147,7 @@ namespace GP.Concealment.MessageHandlers {
             RevealResponse response = RevealResponse.FromBytes(body);
 
             String result = response.Success ?
-                "Successfully revealed" :
+                "Successfully queued for reveal" :
                 "Failed to reveal";
 
             result += " grid " + response.EntityId;

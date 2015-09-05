@@ -7,7 +7,7 @@ namespace GP {
 
     class ModInfo {
 
-        public const String Version = "0.5.3";
+        public const String Version = "0.6.5";
 
     }
 }

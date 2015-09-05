@@ -12,6 +12,7 @@ using VRageMath;
 using SEGarden.Logging;
 using SEGarden.Math;
 
+using GP.Concealment.Sessions;
 using GP.Concealment.World.Entities;
 
 namespace GP.Concealment.World.Sectors {
@@ -28,6 +29,9 @@ namespace GP.Concealment.World.Sectors {
     /// </remarks>
     public class RevealedSector {
 
+        protected static ConcealedSector Concealed {
+            get { return ServerConcealSession.Instance.Manager.Concealed; }
+        }
 
         private static Logger Log = 
             new Logger("GP.Concealment.World.Sectors.RevealedSector");
@@ -124,11 +128,9 @@ namespace GP.Concealment.World.Sectors {
 
         
         private void RememberCharacter(Character e) {
-            //TODO?
         }
 
         private void ForgetCharacter(Character e) {
-            //TODO?
         }
         
         private void RememberPlayerInFaction(long playerId, long factionId) {
@@ -353,10 +355,7 @@ namespace GP.Concealment.World.Sectors {
 
             SpawnOwnersNeeded = SpawnOwnersNeeded.Distinct().ToList();
 
-            // it would be nice to just mark grids for update that this might affect
-            foreach (RevealedGrid grid in Grids.Values) {
-                grid.MarkSpawnUpdateNeeded();
-            }
+            Concealed.UpdateSpawn();
         }
 
         #endregion
