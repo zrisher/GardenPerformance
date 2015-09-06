@@ -173,9 +173,23 @@ namespace GP.Concealment.World.Entities {
 
             // Position
             result += "  Position: " + Position.ToRoundedString() + "\n";
-            result += "  Reveal Needed? " + NeedsReveal + "\n";
-            result += "  Revealable? " + IsRevealable + "\n";
-            result += "    Reveal Blocked? " + IsRevealBlocked + "\n";
+
+            if (NeedsReveal) {
+                result += "  Reveal Needed: \n";
+                result += "     Observed? " + IsObserved + "\n";
+                result += "     NeededForSpawn? " + NeedsRevealForSpawn + "\n";
+            } else {
+                result += "  Reveal not Needed.\n";
+            }
+
+            if (!IsRevealable) {
+                result += "  Not Revealable:\n";
+                result += "    Reveal Blocked? " + IsRevealBlocked + "\n";
+            }
+            else {
+                result += "  Revealable.\n";
+            }
+
             return result;
         }
 

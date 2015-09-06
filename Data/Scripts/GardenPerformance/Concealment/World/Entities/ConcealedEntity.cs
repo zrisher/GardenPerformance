@@ -157,6 +157,12 @@ namespace GP.Concealment.World.Entities {
 
         public void MarkViewedBy(ObservingEntity e) {
             long id = e.EntityId;
+
+            if (id == EntityId) {
+                Log.Warning("Tried to view itself " + id, "MarkViewedBy");
+                return;
+            }
+
             if (EntitiesViewedBy.ContainsKey(id)) {
                 Log.Error("Already added " + id, "MarkViewedBy");
                 return;
@@ -169,6 +175,12 @@ namespace GP.Concealment.World.Entities {
 
         public void UnmarkViewedBy(ObservingEntity e) {
             long id = e.EntityId;
+
+            if (id == EntityId) {
+                Log.Warning("Tried to unview itself " + id, "UnmarkViewedBy");
+                return;
+            }
+
             if (!EntitiesViewedBy.ContainsKey(id)) {
                 Log.Error("Not stored " + id, "UnmarkViewedBy");
                 return;

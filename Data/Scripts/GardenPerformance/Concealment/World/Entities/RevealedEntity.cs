@@ -155,6 +155,12 @@ namespace GP.Concealment.World.Entities {
 
         public void MarkViewedBy(ObservingEntity e) {
             long id = e.EntityId;
+
+            if (id == EntityId) {
+                Log.Warning("Tried to view itself " + id, "MarkViewedBy");
+                return;
+            }
+
             if (EntitiesViewedBy.ContainsKey(id)) {
                 Log.Error("Already added " + id, "MarkViewedBy");
                 return;
@@ -167,6 +173,12 @@ namespace GP.Concealment.World.Entities {
 
         public void UnmarkViewedBy(ObservingEntity e) {
             long id = e.EntityId;
+
+            if (id == EntityId) {
+                Log.Warning("Tried to unview itself " + id, "UnmarkViewedBy");
+                return;
+            }
+
             if (!EntitiesViewedBy.ContainsKey(id)) {
                 Log.Error("Not stored " + id, "UnmarkViewedBy");
                 return;
@@ -303,18 +315,20 @@ namespace GP.Concealment.World.Entities {
 
             foreach (IMyVoxelMap roid in nearbyRoids) {
                 Log.Trace("Entity is near asteroid " + roid.EntityId, "UpdateInsideAsteroid");
-                BoundingSphere AsteroidHr = roid.WorldVolumeHr;
+
+                //BoundingSphere AsteroidHr = roid.WorldVolumeHr;
                 BoundingSphere Asteroid = roid.WorldVolume;
-                BoundingSphere AsteroidLocal = roid.LocalVolume;
+                //BoundingSphere AsteroidLocal = roid.LocalVolume;
+                /*
                 Log.Trace("Center of Asteroid using WorldVolHr BoundingSphere: " + AsteroidHr.Center, "UpdateInsideAsteroid");
                 Log.Trace("Radius of Asteroid using WorldVolHr BoundingSphere: " + AsteroidHr.Radius, "UpdateInsideAsteroid");
-
+                */
                 Log.Trace("Center of Asteroid using WorldVol BoundingSphere: " + Asteroid.Center, "UpdateInsideAsteroid");
                 Log.Trace("Radius of Asteroid using WorldVol BoundingSphere: " + Asteroid.Radius, "UpdateInsideAsteroid");
-
+                /*
                 Log.Trace("Center of Asteroid using Local BoundingSphere: " + AsteroidLocal.Center, "UpdateInsideAsteroid");
                 Log.Trace("Radius of Asteroid using Local BoundingSphere: " + AsteroidLocal.Radius, "UpdateInsideAsteroid");
-
+                */
                 Log.Trace("Center of Asteroid using IMyEntity: " + roid.GetPosition(), "UpdateInsideAsteroid");
 
                 bounds = new BoundingSphereD(Asteroid.Center, Asteroid.Radius);

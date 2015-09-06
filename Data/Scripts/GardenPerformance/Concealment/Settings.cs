@@ -24,13 +24,13 @@ namespace GP.Concealment {
         #region Static
 
         private static readonly uint DefaultControlledMovingGraceTimeSeconds = 30; //500
-        private static readonly uint DefaultControlledMovementGraceDistanceMeters = 50; //500
+        private static readonly uint DefaultControlledMovementGraceDistanceMeters = 5; //500
         private static readonly uint DefaultRevealVisibilityMeters = 100; //35
         //private static readonly  uint DefaultRevealDetectabilityMeters = 10; //50;
         //private static readonly  uint DefaultRevealCommunicationMeters = 10; //50;
         //private static readonly  uint DefaultRevealCollisionMeters = 10; //10;
         private static readonly bool DefaultConcealNearAsteroids = false;
-        private static readonly uint DefaultRevealedMinAgeSeconds = 60;
+        private static readonly uint DefaultRevealedMinAgeSeconds = 20;
         private static readonly Logger Log = new Logger("GP.Concealment.Settings");
         private static readonly string Filename = "concealment_settings.txt";
 

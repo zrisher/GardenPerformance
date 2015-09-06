@@ -137,8 +137,11 @@ namespace GP.Concealment {
 
                 ConcealedGrid grid = concealedGrids[n - 1];
 
+                String text = grid.ConcealmentDetails() + 
+                    "\nNote: Run \"/gp c concealed list\" to refresh this info.";
+
                 return new WindowNotification() {
-                    Text = grid.ConcealmentDetails(),
+                    Text = text,
                     BigLabel = "Garden Performance",
                     SmallLabel = "Revealed Grid Detail"
                 };
@@ -226,8 +229,11 @@ namespace GP.Concealment {
 
                 RevealedGrid grid = revealedGrids[n - 1];
 
+                String text = grid.ConcealDetails() +
+                    "\nNote: Run \"/gp c revealed list\" to refresh this info.";
+
                 return new WindowNotification() {
-                    Text = grid.ConcealDetails(),
+                    Text = text,
                     BigLabel = "Garden Performance",
                     SmallLabel = "Revealed Grid Detail"
                 };
@@ -299,7 +305,8 @@ namespace GP.Concealment {
         public static Tree FullTree = new Tree(
             "gp",
             "all GardenPerformance commands",
-            "GardenPerformance offers numerous commands to assist in use and " +
+            " --- GardenPerformance  - v " + ModInfo.Version + " --- \n" + 
+            "Offers numerous commands to assist in use and " +
             "configuration.",
             0,
             new List<Node> { ConcealmentTree }

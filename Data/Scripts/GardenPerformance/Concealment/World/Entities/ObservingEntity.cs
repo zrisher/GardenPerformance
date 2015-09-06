@@ -192,6 +192,9 @@ namespace GP.Concealment.World.Entities {
             List<ObservableEntity> viewableEntities = Sector.ObservableInSphere(viewingSphere);
             viewableEntities.AddRange(Concealed.EntitiesInSphere(viewingSphere));
 
+            // don't mark self
+            viewableEntities = viewableEntities.Where((e) => e.EntityId != EntityId).ToList();
+
             //Log.Trace("Viewable entity count: " + viewableEntities.Count, "Observe");
 
             Log.Trace("Entities observed by " + EntityId + ":", "observe");
@@ -210,6 +213,12 @@ namespace GP.Concealment.World.Entities {
 
         private void MarkViewing(ObservableEntity e) {
             long id = e.EntityId;
+
+            if (id == EntityId) {
+                Log.Warning("Tried to view itself " + id, "MarkViewing");
+                return;
+            }
+
             if (EntitiesViewing.ContainsKey(id)) {
                 Log.Error("Already added " + id, "MarkViewing");
                 return;
@@ -222,6 +231,12 @@ namespace GP.Concealment.World.Entities {
 
         private void UnmarkViewing(ObservableEntity e) {
             long id = e.EntityId;
+
+            if (id == EntityId) {
+                Log.Warning("Tried to unview itself " + id, "UnmarkViewing");
+                return;
+            }
+
             if (!EntitiesViewing.ContainsKey(id)) {
                 Log.Error("Not stored " + id, "UnmarkViewing");
                 return;

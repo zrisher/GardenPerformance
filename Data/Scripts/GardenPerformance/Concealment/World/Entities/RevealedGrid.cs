@@ -640,10 +640,10 @@ namespace GP.Concealment.World.Entities {
             // TODO: send block entity ids
             // TODO: show block types instead of entity Ids
             if (IsProducing) {
-                result += "    N Producing:\n";
-                foreach (long id in ProductionBlocks.Keys) {
-                    result += "      " + id + "\n";
-                }
+                result += "      N Producing:\n";
+                //foreach (long id in ProductionBlocks.Keys) {
+                //    result += "      " + id + "\n";
+                //}
             }
             else {
                 result += "      Y Not Producing.\n";
