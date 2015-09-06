@@ -162,7 +162,7 @@ namespace GP.Concealment.World.Entities {
                 return;
             }
 
-            Log.Error("Adding " + id, "MarkViewedBy");
+            Log.Error("Viewed by " + id, "MarkViewedBy");
             EntitiesViewedBy.Add(id, e);
             UpdateObserveability();
         }
@@ -174,7 +174,7 @@ namespace GP.Concealment.World.Entities {
                 return;
             }
 
-            Log.Error("Removing " + id, "UnmarkViewedBy");
+            Log.Error("No longer viewed by " + id, "UnmarkViewedBy");
             EntitiesViewedBy.Remove(id);
             UpdateObserveability();
         }

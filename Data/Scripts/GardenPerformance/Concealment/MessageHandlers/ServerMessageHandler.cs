@@ -182,7 +182,7 @@ namespace GP.Concealment.MessageHandlers {
         }
 
         private void ReceiveChangeSettingRequest(byte[] body, ulong senderId) {
-            Log.Trace("Receiving Conceal Request", "ReceiveConcealRequest");
+            Log.Trace("Receiving Change Settings Request", "ReceiveConcealRequest");
 
             ChangeSettingRequest request = ChangeSettingRequest.FromBytes(body);
 
@@ -203,7 +203,7 @@ namespace GP.Concealment.MessageHandlers {
         }
 
         private void ReceiveSettingsRequest(byte[] body, ulong senderId) {
-            Log.Trace("Receiving Conceal Request", "ReceiveConcealRequest");
+            Log.Trace("Receiving Settings Request", "ReceiveConcealRequest");
 
             SettingsRequest request = SettingsRequest.FromBytes(body);
 

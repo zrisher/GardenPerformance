@@ -43,18 +43,18 @@ namespace GP.Concealment.World.Entities {
 
         // Control
         // We can't get the pilots from the grid, we have to go from the character
-        // But we already reveal near a character.
         // Plus we can't detect AI pilots at all.
         // So we just base control on moving or moved in past X minutes
         // Unfortunately ControllerInfo isn't whitelisted, so we just guess if 
-        // it's controlled by whether it's moving. Character entities report presence separately. 
-        /*
-        private bool Piloted;
+        // it's controlled by whether it's moving. 
+        private bool IsPiloted;
         private bool UpdatePilotedNextUpdate;
         private Dictionary<long, Ingame.IMyCockpit> Cockpits =
             new Dictionary<long, Ingame.IMyCockpit>();
-        public bool Controlled { get { return ControlsInUse.Count > 0; } }
-        */
+        public override bool IsControlled {
+            get { return base.IsControlled || IsPiloted; }
+        }
+
 
         // Spawn
         private bool UpdateNeededForSpawnNextUpdate;
@@ -142,7 +142,7 @@ namespace GP.Concealment.World.Entities {
 
         // Creation from ingame entity
         public RevealedGrid(IMyEntity entity) : base(entity) {
-            Log.ClassName = "GP.Concealment.World.Entities.CubeGrid";
+            Log.ClassName = "GP.Concealment.World.Entities.RevealedGrid";
             Grid = Entity as IMyCubeGrid;
             SpawnOwners = new List<long>();
             BigOwners = new List<long>();
@@ -151,16 +151,16 @@ namespace GP.Concealment.World.Entities {
 
         // Byte Deserialization
         public RevealedGrid(ByteStream stream) : base(stream) {
-            Log.ClassName = "GP.Concealment.World.Entities.CubeGrid";
+            Log.ClassName = "GP.Concealment.World.Entities.RevealedGrid";
 
             Log.Trace("Deserializing revealed grid", "stream ctr");
-            Log.Info("Pos " + stream.Position + " / " + stream.Length, "FromBytes");
+            //Log.Info("Pos " + stream.Position + " / " + stream.Length, "FromBytes");
             Grid = Entity as IMyCubeGrid;
-            Log.Info("Getting spawnowners ", "FromBytes");
+            //Log.Info("Getting spawnowners ", "FromBytes");
             SpawnOwners = stream.getLongList();
-            Log.Info("Getting bigowners ", "FromBytes");
+            //Log.Info("Getting bigowners ", "FromBytes");
             BigOwners = stream.getLongList();
-            Log.Info("Finished, pos " + stream.Position + " / " + stream.Length, "FromBytes");
+            //Log.Info("Finished, pos " + stream.Position + " / " + stream.Length, "FromBytes");
 
             if (SpawnOwners == null) {
                 Log.Error("Deserialized with null spawnowners", "stream ctr");
@@ -171,6 +171,11 @@ namespace GP.Concealment.World.Entities {
                 Log.Error("Deserialized with null BigOwners", "stream ctr");
                 BigOwners = new List<long>();
             }
+
+            NeededForSpawn = stream.getBoolean();
+            IsProducing = stream.getBoolean();
+            IsChargingBatteries = stream.getBoolean();
+            IsPiloted = stream.getBoolean();
 
 
             Log.Trace("New CubeGrid " + Entity.EntityId + " " + DisplayName, "ctr");
@@ -199,6 +204,10 @@ namespace GP.Concealment.World.Entities {
             stream.addLongList(SpawnOwners);
             Log.Info("Adding BigOwners ", "FromBytes");
             stream.addLongList(BigOwners);
+            stream.addBoolean(NeededForSpawn);
+            stream.addBoolean(IsProducing);
+            stream.addBoolean(IsChargingBatteries);
+            stream.addBoolean(IsPiloted);
         }
 
         #endregion
@@ -216,6 +225,9 @@ namespace GP.Concealment.World.Entities {
 
             var medbay = fatblock as Ingame.IMyMedicalRoom;
             if (medbay != null) {
+                Log.Trace("Adding medbay owned by " + medbay.OwnerId, "BlockAdded");
+                //Log.Trace("Fatblock ownerId " + fatblock.OwnerId, "BlockAdded");
+                //Log.Trace("Fatblock cubeblock builder ownerId " + fatblock.GetObjectBuilderCubeBlock().Owner, "BlockAdded");
                 MedBays.Add(medbay.EntityId, medbay);
                 UpdateNeededForSpawnNextUpdate = true;
                 return;
@@ -223,18 +235,27 @@ namespace GP.Concealment.World.Entities {
 
             var cryochamber = fatblock as Sandbox.Game.Entities.Blocks.MyCryoChamber;
             if (cryochamber != null) {
+                Log.Trace("Adding cryochamber owned by " + cryochamber.OwnerId, "BlockAdded");
+
                 Cryochambers.Add(cryochamber.EntityId, cryochamber);
                 UpdateNeededForSpawnNextUpdate = true;
                 return;
             }
 
-            var battery = fatblock as Ingame.IMyBatteryBlock;
-            if (battery != null) {
-                BatteryBlocks.Add(battery.EntityId, battery);
+            // Must be after cryochamber - they are also cockpits
+            var cockpit = fatblock as Ingame.IMyCockpit;
+            if (cockpit != null) {
+                Log.Trace("Adding cockpit owned by " + cockpit.OwnerId, "BlockAdded");
+                Cockpits.Add(cockpit.EntityId, cockpit);
                 return;
             }
 
-  
+            var battery = fatblock as Ingame.IMyBatteryBlock;
+            if (battery != null) {
+                Log.Trace("Adding battery owned by " + battery.OwnerId, "BlockAdded");
+                BatteryBlocks.Add(battery.EntityId, battery);
+                return;
+            }
         
             /*
             var radioAntenna = fatblock as Ingame.IMyRadioAntenna;
@@ -268,6 +289,8 @@ namespace GP.Concealment.World.Entities {
             IMyCubeBlock fatblock = block.FatBlock;
             if (fatblock == null) return;
 
+            fatblock.IsWorkingChanged -= BlockWorkingChanged;
+
             var producer = fatblock as Ingame.IMyProductionBlock;
             if (producer != null) {
                 ProductionBlocks.Remove(producer.EntityId);
@@ -276,6 +299,7 @@ namespace GP.Concealment.World.Entities {
 
             var medbay = fatblock as Ingame.IMyMedicalRoom;
             if (medbay != null) {
+                Log.Trace("Removing medbay owned by " + medbay.OwnerId, "BlockRemoved");
                 MedBays.Remove(medbay.EntityId);
                 UpdateNeededForSpawnNextUpdate = true;
                 return;
@@ -283,13 +307,23 @@ namespace GP.Concealment.World.Entities {
 
             var cryochamber = fatblock as Sandbox.Game.Entities.Blocks.MyCryoChamber;
             if (cryochamber != null) {
+                Log.Trace("Removing cryochamber owned by " + cryochamber.OwnerId, "BlockRemoved");
                 Cryochambers.Remove(cryochamber.EntityId);
                 UpdateNeededForSpawnNextUpdate = true;
                 return;
             }
 
+            // Must be after cryochamber - they are also cockpits
+            var cockpit = fatblock as Ingame.IMyCockpit;
+            if (cockpit != null) {
+                Log.Trace("Removing cockpit owned by " + cockpit.OwnerId, "BlockRemoved");
+                Cockpits.Remove(cockpit.EntityId);
+                return;
+            }
+
             var battery = fatblock as Ingame.IMyBatteryBlock;
             if (battery != null) {
+                Log.Trace("Removing battery owned by " + battery.OwnerId, "BlockRemoved");
                 BatteryBlocks.Remove(battery.EntityId);
                 return;
             }
@@ -322,14 +356,32 @@ namespace GP.Concealment.World.Entities {
             */
         }
 
+        private void BlockOwnerChanged(IMyCubeGrid fatblock) {
+            Log.Trace("Owner changed for some block on this grid.", "BlockOwnerChanged");
+            UpdateNeededForSpawnNextUpdate = true;
+        }
+
+        private void BlockWorkingChanged(IMyCubeBlock fatblock) {
+            Log.Trace("IsWorking changed for block " + fatblock.BlockDefinition.TypeId + " " + fatblock.EntityId, "IsWorkingChanged");
+            // TODO use this to keep only updated lists of working medbays, production, etc
+            // Maybe this can let us know when producion stops?
+        }
+
         #endregion
         #region Updates
 
         public override void Initialize() {
             base.Initialize();
 
+            List<IMySlimBlock> allBlocks = new List<IMySlimBlock>();
+            Grid.GetBlocks(allBlocks);
+            foreach (var block in allBlocks) {
+                BlockAdded(block);
+            }
+
             Grid.OnBlockAdded += BlockAdded;
             Grid.OnBlockRemoved += BlockRemoved;
+            Grid.OnBlockOwnershipChanged += BlockOwnerChanged;
         }
 
         protected override void UpdateConcealabilityAuto(){
@@ -346,12 +398,18 @@ namespace GP.Concealment.World.Entities {
             UpdateIsChargingBatteries();
         }
 
+        protected override void UpdateControl() {
+            base.UpdateControl();
+            UpdateIsPiloted();
+        }
+
 
         public override void Terminate() {
             base.Terminate();
 
             Grid.OnBlockAdded -= BlockAdded;
             Grid.OnBlockRemoved -= BlockRemoved;
+            Grid.OnBlockOwnershipChanged -= BlockOwnerChanged;
         }
 
         #endregion
@@ -382,6 +440,30 @@ namespace GP.Concealment.World.Entities {
             }
         }
 
+        private void UpdateIsPiloted() {
+            //Log.Trace("Begin", "UpdateIsPiloted");
+            IsPiloted = false;
+
+            foreach (var cockpit in Cockpits.Values) {
+                //Log.Trace("Looping cockpit", "UpdateIsPiloted");
+                if (cockpit.IsUnderControl) {
+                    //Log.Trace("Is Piloted", "UpdateIsPiloted");
+                    IsPiloted = true;
+                    return;
+                }
+            }
+
+            foreach (var cryochamber in Cryochambers.Values) {
+                //Log.Trace("Looping cryochamber", "UpdateIsPiloted");
+                var asCockpit = cryochamber as Ingame.IMyCockpit;
+                if (asCockpit.IsUnderControl) {
+                    //Log.Trace("Is Piloted", "UpdateIsPiloted");
+                    IsPiloted = true;
+                    return;
+                }
+            }
+        }
+
         // TODO: beacons, other types of antennae
         private void UpdateBroadcastRange() {
             /*
@@ -395,12 +477,16 @@ namespace GP.Concealment.World.Entities {
         }
 
         private void UpdateNeededForSpawn() {
+            Log.Trace("Update needed for spawn, marking as unneeded to start", "UpdateNeededForSpawn");
+            Log.Trace("Medbay owners: " + String.Join(", ", MedBays.Values.Select((x) => x.OwnerId).ToList()), "UpdateNeededForSpawn");
+            Log.Trace("Cryo owners: " + String.Join(", ", Cryochambers.Values.Select((x) => x.OwnerId).ToList()), "UpdateNeededForSpawn");
             NeededForSpawn = false;
 
             // If we want to only use Working blocks, need hooks
 
             foreach (var medbay in MedBays.Values) {
                 if (Sector.SpawnOwnerNeeded(medbay.OwnerId)) {
+                    Log.Trace("Needed for spawn", "UpdateNeededForSpawn");
                     NeededForSpawn = true;
                     return;
                 }
@@ -408,6 +494,7 @@ namespace GP.Concealment.World.Entities {
 
             foreach (var cryochamber in Cryochambers.Values) {
                 if (Sector.SpawnOwnerNeeded(cryochamber.OwnerId)) {
+                    Log.Trace("Needed for spawn", "UpdateNeededForSpawn");
                     NeededForSpawn = true;
                     return;
                 }
@@ -418,6 +505,7 @@ namespace GP.Concealment.World.Entities {
         #region Public Marking
 
         public void MarkSpawnUpdateNeeded() {
+            Log.Trace("Marked for spawn update", "MarkSpawnUpdateNeeded");
             UpdateNeededForSpawnNextUpdate = true;
         }
 
@@ -500,6 +588,10 @@ namespace GP.Concealment.World.Entities {
             // Control
             if (IsControlled) {
                 result += "      N Controlled:\n";
+
+                if (IsPiloted) {
+                    result += "        Piloted";
+                }
 
                 if (IsMoving) {
                     result += "        Moving at " + 

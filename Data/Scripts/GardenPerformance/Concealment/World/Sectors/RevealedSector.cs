@@ -70,8 +70,8 @@ namespace GP.Concealment.World.Sectors {
         public List<RevealedGrid> RevealedGridsList() {
             List<RevealedGrid> revealedGridsList = Grids.Values.ToList();
 
-            Log.Trace("Returning concealed grids list of count " + 
-                revealedGridsList.Count, "RevealedGridsList");
+            //Log.Trace("Returning revealed grids list of count " + 
+            //    revealedGridsList.Count, "RevealedGridsList");
 
             return revealedGridsList;
         }
@@ -80,8 +80,8 @@ namespace GP.Concealment.World.Sectors {
             List<ObservingEntity> observingEntitiesList = 
                 ObservingEntities.Values.ToList();
 
-            Log.Trace("Returning Observing Entities list of count " +
-                observingEntitiesList.Count, "RevealedGridsList");
+            //Log.Trace("Returning Observing Entities list of count " +
+            //    observingEntitiesList.Count, "RevealedGridsList");
 
             return observingEntitiesList;
         }
@@ -97,6 +97,8 @@ namespace GP.Concealment.World.Sectors {
         /// active players or their factions
         /// </summary>
         public bool SpawnOwnerNeeded(long ownerId) {
+            //Log.Trace("Do we need spawn owner " + ownerId, "SpawnOwnerNeeded");
+            //Log.Trace("Current owners " + String.Join(", ", SpawnOwnersNeeded), "SpawnOwnerNeeded");
             return SpawnOwnersNeeded.Contains(ownerId);
         }
 
@@ -193,6 +195,7 @@ namespace GP.Concealment.World.Sectors {
             }
 
             ActivePlayers.Add(playerId);
+            Log.Trace("Added playerId " + playerId + ", count now " + ActivePlayers.Count, "RememberPlayer");
             UpdateSpawnOwnersNextUpdate = true;
         }
 
@@ -316,6 +319,7 @@ namespace GP.Concealment.World.Sectors {
         */
 
         public void PlayerLoggedIn(long playerId, long factionId) {
+            Log.Trace("Player " + playerId + " logged in.", "PlayerLoggedIn");
             RememberPlayer(playerId);
             UpdateSpawnOwnersNextUpdate = true;
         }
@@ -332,7 +336,7 @@ namespace GP.Concealment.World.Sectors {
         #endregion
         #region Updates
 
-        public void Update() {
+        public void UpdateSpawnOwnersIfNeeded() {
             if (UpdateSpawnOwnersNextUpdate) {
                 UpdateSpawnOwners();
                 UpdateSpawnOwnersNextUpdate = false;
@@ -340,9 +344,11 @@ namespace GP.Concealment.World.Sectors {
         }
 
         private void UpdateSpawnOwners() {
+            Log.Trace("Updating Spawn Owners", "UpdateSpawnOwners");
             SpawnOwnersNeeded.Clear();
 
             foreach (long playerId in ActivePlayers) {
+                //Log.Trace("Updating for Active player " + playerId, "UpdateSpawnOwners");
                 IMyFaction faction = MyAPIGateway.Session.Factions.
                     TryGetPlayerFaction(playerId);
 
@@ -351,9 +357,22 @@ namespace GP.Concealment.World.Sectors {
                         SpawnOwnersNeeded.Add(kvp.Key);
                     }
                 }
+                else {
+                    SpawnOwnersNeeded.Add(playerId);
+                }
             }
 
+            //Log.Trace("Before distinct select: " + 
+            //    String.Join(", ", SpawnOwnersNeeded), "UpdateSpawnOwners");
+
             SpawnOwnersNeeded = SpawnOwnersNeeded.Distinct().ToList();
+
+            Log.Trace("Finished Updating Spawn Owners, new list: " + 
+                String.Join(", ", SpawnOwnersNeeded), "UpdateSpawnOwners");
+
+            foreach (RevealedGrid grid in Grids.Values) {
+                grid.MarkSpawnUpdateNeeded();
+            }
 
             Concealed.UpdateSpawn();
         }
@@ -364,6 +383,8 @@ namespace GP.Concealment.World.Sectors {
         public List<ObservableEntity> ObservableInSphere(BoundingSphereD bounds) {
             var results = new List<ObservableEntity>();
             GridTree.GetAllEntitiesInSphere<ObservableEntity>(ref bounds, results);
+            Log.Trace("Returning " + results.Count + " revealed results:", "ObservableInSphere");
+            Log.Trace(String.Join(", ", results), "ObservableInSphere");
             return results;
         }
 

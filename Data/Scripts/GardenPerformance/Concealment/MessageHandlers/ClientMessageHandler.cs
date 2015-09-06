@@ -206,8 +206,8 @@ namespace GP.Concealment.MessageHandlers {
         }
 
         private void ReceiveSettingsResponse(byte[] body) {
-            Log.Trace("Receiving Observing Entities Response",
-                "ReceiveObservingEntitiesResponse");
+            Log.Trace("Receiving Settings Response",
+                "ReceiveSettingsResponse");
 
             SettingsResponse response = SettingsResponse.FromBytes(body);
             Session.Settings = response.Settings;

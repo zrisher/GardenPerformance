@@ -77,6 +77,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Concealment\MessageHandlers\ModMessageHandler.cs" />
+    <Compile Include="Concealment\Messages\Requests\PilotingStoppedRequest.cs" />
+    <Compile Include="Concealment\Messages\Requests\PilotingStartedRequest.cs" />
     <Compile Include="Concealment\Player.cs" />
     <Compile Include="Concealment\Messages\Requests\FactionChangeRequest.cs" />
     <Compile Include="SEGarden\Commons\Conceal\ConcealMessageHandler.cs" />

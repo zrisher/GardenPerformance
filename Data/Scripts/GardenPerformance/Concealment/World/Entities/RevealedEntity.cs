@@ -160,7 +160,7 @@ namespace GP.Concealment.World.Entities {
                 return;
             }
 
-            Log.Trace("Adding " + id, "MarkViewedBy");
+            Log.Trace("Viewed by " + id, "MarkViewedBy");
             EntitiesViewedBy.Add(id, e);
             UpdateIsObservedNextUpdate = true;
         }
@@ -172,7 +172,7 @@ namespace GP.Concealment.World.Entities {
                 return;
             }
 
-            Log.Trace("Removing " + id, "UnmarkViewedBy");
+            Log.Trace("No longer viewed by " + id, "UnmarkViewedBy");
             EntitiesViewedBy.Remove(id);
             UpdateIsObservedNextUpdate = true;
         }

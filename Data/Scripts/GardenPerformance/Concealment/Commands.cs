@@ -285,14 +285,7 @@ namespace GP.Concealment {
         static Tree ConcealmentTree = new Tree(
             "c",
             "manage entity concealment",
-            "Grids are automatically concealed if they are: \n" +
-            "  * Not controlled by a person or autopilot\n" +
-            "  * Not within 35km of a controlled grid\n" +
-            "  * Not moving\n" +
-            "  * Not in an asteroid\n" +
-            "  * Not refining or manufacturing\n" +
-            "  * Not providing spawn points for players\n" +
-            "TODO - update this list with settings, request settings on client load",
+            BuildConcealmentInfo(),
             0,
             new List<Node> {
                 ConcealedTree,
@@ -311,6 +304,27 @@ namespace GP.Concealment {
             0,
             new List<Node> { ConcealmentTree }
         );
+
+        private static String BuildConcealmentInfo() {
+            return
+                "All grids are automatically concealed unless they: \n" +
+                " * Are Controlled:\n" +
+                "    * Piloted by a player OR\n" +
+                "    * Moving or moved within the last " + 
+                Settings.Instance.ControlledMovingGraceTimeSeconds + " seconds.\n" +
+                " * Are within " + Settings.Instance.RevealVisibilityMeters + 
+                "m of a controlled grid or player.\n" +
+                " * Have medbays or cryochambers for a current player\n" +
+                " * Are Producing:\n" +
+                "    * refining\n"+
+                "    * assembling\n"+
+                "    * generating oxygen\n"+
+                "    * charging batteries\n"+
+                " * Were revealed within the past " + 
+                Settings.Instance.RevealedMinAgeSeconds + " seconds\n" +
+                ((Settings.Instance.ConcealNearAsteroids) ? "" : 
+                " * Are within the bounding box of an asteroid.");
+        }
 
     }
 

@@ -50,6 +50,7 @@ namespace GP.Concealment.Sessions {
                 return new Dictionary<uint, Action> {
                     {29, Manager.ProcessRevealCheckQueue},
                     {59, Manager.ProcessRevealQueue},
+                    {113, Manager.Revealed.UpdateSpawnOwnersIfNeeded },
                     {127, Manager.ProcessConcealCheckQueue},
                     {331, Manager.ProcessConcealQueue}
                 };

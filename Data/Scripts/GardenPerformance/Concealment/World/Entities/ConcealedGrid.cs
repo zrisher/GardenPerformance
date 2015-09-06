@@ -173,9 +173,9 @@ namespace GP.Concealment.World.Entities {
 
             // Position
             result += "  Position: " + Position.ToRoundedString() + "\n";
-
+            result += "  Reveal Needed? " + NeedsReveal + "\n";
             result += "  Revealable? " + IsRevealable + "\n";
-            result += "  Reveal Blocked? " + IsRevealBlocked + "\n";
+            result += "    Reveal Blocked? " + IsRevealBlocked + "\n";
             return result;
         }
 

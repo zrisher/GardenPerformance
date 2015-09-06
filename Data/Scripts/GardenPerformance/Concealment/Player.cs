@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 
 using Sandbox.ModAPI;
+using InGame = Sandbox.ModAPI.Ingame;
 
 using SEGarden.Extensions;
 
@@ -20,6 +21,7 @@ namespace GP.Concealment {
     class Player {
 
         private IMyPlayer IngamePlayer;
+        private IMyCubeGrid PilotedGrid;
 
         public long Id { get; private set; }
         public long FactionId { get; private set; }
@@ -37,6 +39,7 @@ namespace GP.Concealment {
 
         public void Update(){ 
             UpdateFaction();
+            UpdatePiloting();
         }
 
         public void Terminate(){
@@ -58,6 +61,34 @@ namespace GP.Concealment {
         private long GetFactionId(){
             IMyFaction faction = IngamePlayer.GetFaction();
             return (faction != null) ? faction.FactionId : 0;
+        }
+
+        private void UpdatePiloting() {
+            IMyCubeGrid newPilotedGrid = null;
+
+            //var controlled = IngamePlayer.Controller.ControlledEntity;
+            //var shipController = controlled as InGame.IMyShipController;
+            //var fatblock = controlled as IMyCubeBlock;
+            var pilotedBlock = IngamePlayer.Controller.ControlledEntity as IMyCubeBlock;
+            if (pilotedBlock != null) {
+                newPilotedGrid = pilotedBlock.CubeGrid;
+            }
+
+            if (PilotedGrid == null && newPilotedGrid != null) {
+
+            }
+            else if (PilotedGrid != null && newPilotedGrid == null) {
+
+            }
+    
+        }
+
+        private void StartedPiloting(long gridId) {
+
+        }
+
+        private void FinishedPiloting(long gridId) {
+
         }
 
     }

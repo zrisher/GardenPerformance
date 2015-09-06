@@ -190,11 +190,14 @@ namespace GP.Concealment.World.Entities {
             //Log.Trace("Viewing shpere Radius: " + viewingSphere.Radius, "Observe");
 
             List<ObservableEntity> viewableEntities = Sector.ObservableInSphere(viewingSphere);
-            viewableEntities.Concat(Concealed.EntitiesInSphere(viewingSphere));
+            viewableEntities.AddRange(Concealed.EntitiesInSphere(viewingSphere));
 
             //Log.Trace("Viewable entity count: " + viewableEntities.Count, "Observe");
 
+            Log.Trace("Entities observed by " + EntityId + ":", "observe");
+
             foreach (ObservableEntity e in viewableEntities) {
+                Log.Trace(e.EntityId.ToString(), "observe");
                 MarkViewing(e);
             }
 
@@ -212,7 +215,7 @@ namespace GP.Concealment.World.Entities {
                 return;
             }
 
-            Log.Trace("Marking " + id + " as viewed by me", "MarkViewing");
+            Log.Trace("Marking " + id + " as viewed by this entity", "MarkViewing");
             EntitiesViewing.Add(id, e);
             e.MarkViewedBy(this);
         }

@@ -308,12 +308,16 @@ namespace GP.Concealment.World.Sectors {
         public List<ConcealedEntity> EntitiesInBox(BoundingBoxD bounds) {
             var results = new List<ConcealedEntity>();
             GridTree.GetAllEntitiesInBox<ConcealedEntity>(ref bounds, results);
+            Log.Trace("Returning " + results.Count + " concealed results.", "EntitiesInBox");
+            Log.Trace(String.Join(", ", results), "EntitiesInBox");
             return results;
         }
 
         public List<ConcealedEntity> EntitiesInSphere(BoundingSphereD bounds) {
             var results = new List<ConcealedEntity>();
             GridTree.GetAllEntitiesInSphere<ConcealedEntity>(ref bounds, results);
+            Log.Trace("Returning " + results.Count + " concealed results.", "EntitiesInSphere");
+            Log.Trace(String.Join(", ", results), "EntitiesInSphere");
             return results;
         }
 
