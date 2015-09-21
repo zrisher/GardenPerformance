@@ -31,9 +31,9 @@ namespace GP.Concealment.MessageHandlers {
         public override void HandleMessage(ushort messageTypeId, byte[] body,
             ulong senderSteamId, RunLocation sourceType) {
 
-            Log.Trace("Received message typeId " + messageTypeId, "HandleMessage");
+            //Log.Trace("Received message typeId " + messageTypeId, "HandleMessage");
             MessageType messageType = (MessageType)messageTypeId;
-            Log.Trace("Received message type " + messageType, "HandleMessage");
+            Log.Trace("Received " + messageType + " message", "HandleMessage");
 
 
             if (Disabled) {

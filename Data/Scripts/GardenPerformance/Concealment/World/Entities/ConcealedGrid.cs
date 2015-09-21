@@ -122,7 +122,7 @@ namespace GP.Concealment.World.Entities {
         #endregion
 
         protected override bool Reveal() {
-            Log.Trace("Revealing grid " + EntityId, "Reveal");
+            Log.Trace("Revealing.", "Reveal");
 
             if (Builder == null) {
                 Log.Error("No stored builder, aborting.", "Reveal");
@@ -144,12 +144,12 @@ namespace GP.Concealment.World.Entities {
 
             // === Add it back to game world
             MyAPIGateway.Entities.CreateFromObjectBuilderAndAdd(Builder);
-            Log.Trace("Added entity into game from builder. " + EntityId, "Reveal");
+            Log.Trace("Added entity into game from builder.", "Reveal");
 
             // === Update lists
             ServerConcealSession.Instance.Manager.Concealed.RemoveGrid(this);
 
-            Log.Trace("End reveal " + EntityId, "revealEntity");
+            Log.Trace("End reveal.", "revealEntity");
             return true;
         }
 

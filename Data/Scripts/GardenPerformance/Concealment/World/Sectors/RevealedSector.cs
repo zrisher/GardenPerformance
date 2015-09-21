@@ -62,6 +62,7 @@ namespace GP.Concealment.World.Sectors {
         private Dictionary<long, RevealedGrid> Grids =
             new Dictionary<long, RevealedGrid>();
 
+        private AABBTree ObservingTree = new AABBTree();
         private AABBTree GridTree = new AABBTree();
 
         #endregion
@@ -175,7 +176,7 @@ namespace GP.Concealment.World.Sectors {
         */
 
         private void RememberPlayer(long playerId) {
-            Log.Trace("Adding playerId " + playerId, "RememberPlayer");
+            //Log.Trace("Adding playerId " + playerId, "RememberPlayer");
 
             /*
             IMyFaction faction = MyAPIGateway.Session.Factions.
@@ -190,7 +191,7 @@ namespace GP.Concealment.World.Sectors {
              * */
 
             if (ActivePlayers.Contains(playerId)) {
-                Log.Error("Adding already tracked player", "RememberPlayer");
+                Log.Error("Adding already tracked player " + playerId, "RememberPlayer");
                 return;
             }
 
@@ -214,11 +215,12 @@ namespace GP.Concealment.World.Sectors {
 
 
             if (!ActivePlayers.Contains(playerId)) {
-                Log.Error("Player not tracked", "ForgetPlayer");
+                Log.Error("Player not tracked " + playerId, "ForgetPlayer");
                 return;
             }
 
             ActivePlayers.Remove(playerId);
+            Log.Trace("Forgetting playerId " + playerId + ", count now " + ActivePlayers.Count, "RememberPlayer");
             UpdateSpawnOwnersNextUpdate = true;
         }
 
@@ -231,6 +233,11 @@ namespace GP.Concealment.World.Sectors {
 
             Log.Trace("Adding " + id, "RememberObservingEntity");
             ObservingEntities.Add(id, e);
+            ObservingTree.Add(e);
+        }
+
+        private void UpdateObservingGridPosition(ObservingEntity e) {
+            ObservingTree.Move(e);
         }
 
         private void ForgetObservingEntity(ObservingEntity e) {
@@ -242,6 +249,7 @@ namespace GP.Concealment.World.Sectors {
 
             Log.Trace("Removing " + id, "ForgetObservingEntity");
             ObservingEntities.Remove(id);
+            ObservingTree.Remove(e);
         }
 
         private void RememberGrid(RevealedGrid e) {
@@ -254,6 +262,10 @@ namespace GP.Concealment.World.Sectors {
             Log.Trace("Adding " + id, "RememberGrid");
             Grids.Add(id, e);
             GridTree.Add(e);
+        }
+
+        private void UpdateRememberedGridPosition(RevealedGrid e) {
+            GridTree.Move(e);
         }
 
         private void ForgetGrid(RevealedGrid e) {
@@ -289,10 +301,16 @@ namespace GP.Concealment.World.Sectors {
 
         public void ControllableEntityMoved(ControllableEntity e) {
             //Log.Trace("Controllable Entity Moved", "ControllableEntityAdded");
+
+            ObservingEntity observer = e as ObservingEntity;
+            if (observer != null) UpdateObservingGridPosition(observer);
+
+            RevealedGrid grid = e as RevealedGrid;
+            if (grid != null) UpdateRememberedGridPosition(grid);
         }
 
         public void ControllableEntityRemoved(ControllableEntity e) {
-            Log.Trace("Controllable Entity Added", "ControllableEntityAdded");
+            Log.Trace("Controllable Entity Removed", "ControllableEntityRemoved");
 
             //if (e.IsControlled) ForgetControlledEntity(e);
 
@@ -382,9 +400,24 @@ namespace GP.Concealment.World.Sectors {
 
         public List<ObservableEntity> ObservableInSphere(BoundingSphereD bounds) {
             var results = new List<ObservableEntity>();
+            
             GridTree.GetAllEntitiesInSphere<ObservableEntity>(ref bounds, results);
-            Log.Trace("Returning " + results.Count + " revealed results:", "ObservableInSphere");
-            Log.Trace(String.Join(", ", results), "ObservableInSphere");
+            /*
+            if (results.Count > 0) {
+                Log.Trace(results.Count + " observable entities found in sphere " + bounds +
+                    " : " + String.Join(", ", results.Select((e) => e.EntityId).ToList()), "ObservableInSphere");
+            }
+            */
+            return results;
+        }
+
+        public List<ObservingEntity> ObservingInSphere(BoundingSphereD bounds) {
+            var results = new List<ObservingEntity>();
+            ObservingTree.GetAllEntitiesInSphere<ObservingEntity>(ref bounds, results);
+            if (results.Count > 0) {
+                Log.Trace(results.Count + " observing entities found in sphere " + bounds +
+                    " : " + String.Join(", ", results.Select((e) => e.EntityId).ToList()), "ObservingInSphere");
+            }
             return results;
         }
 

@@ -61,7 +61,7 @@ namespace GP.Concealment.World.Entities {
         */
 
         private static void NotifyAdded(ControllableEntity entity) {
-            Log.Trace("ControllableEntity " + entity.DisplayName + " added.", "NotifyAdded");
+            //Log.Trace("ControllableEntity " + entity.DisplayName + " added.", "NotifyAdded");
             if (ControllableEntityAddition != null) ControllableEntityAddition(entity);
         }
 
@@ -71,7 +71,7 @@ namespace GP.Concealment.World.Entities {
         }
 
         private static void NotifyRemoved(ControllableEntity entity) {
-            Log.Trace("ControllableEntity " + entity.DisplayName + " removed.", "NotifyRemoved");
+            //Log.Trace("ControllableEntity " + entity.DisplayName + " removed.", "NotifyRemoved");
             if (ControllableEntityRemoval != null) ControllableEntityRemoval(entity);
         }
 
@@ -124,7 +124,7 @@ namespace GP.Concealment.World.Entities {
         {
             //Log.Trace("Running ControllableEntity ctr", "ctr");
             Log.ClassName = "GP.Concealment.World.Entities.ControllableEntity";
-            Log.Trace("New Controllable Entity " + EntityId + " " + DisplayName, "ctr");
+            Log.Trace("New Controllable Entity " + DisplayName, "ctr");
             //Log.Trace("Finished ControllableEntity ctr", "ctr");
         }
 
@@ -134,7 +134,7 @@ namespace GP.Concealment.World.Entities {
             IsMoving = stream.getBoolean();
             RecentlyMoved = stream.getBoolean();
             RecentlyMovedEnds = stream.getDateTime();
-            Log.Trace("New Controllable Entity " + EntityId + " " + DisplayName, "ctr");
+            Log.Trace("New Controllable Entity " + DisplayName, "ctr");
         }
 
         #endregion
@@ -174,6 +174,7 @@ namespace GP.Concealment.World.Entities {
 
             if (Entity.IsMoving()) {
                 // Moving
+                MovedSinceIsInAsteroidCheck = true;
 
                 // Mark moving if not marked
                 if (!IsMoving) {

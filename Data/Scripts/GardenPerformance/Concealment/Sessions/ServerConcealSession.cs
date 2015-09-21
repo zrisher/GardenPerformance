@@ -48,10 +48,10 @@ namespace GP.Concealment.Sessions {
         public override Dictionary<uint, Action> UpdateActions {
             get {
                 return new Dictionary<uint, Action> {
-                    {29, Manager.ProcessRevealCheckQueue},
+                    {290, Manager.ProcessRevealCheckQueue},
                     {59, Manager.ProcessRevealQueue},
                     {113, Manager.Revealed.UpdateSpawnOwnersIfNeeded },
-                    {127, Manager.ProcessConcealCheckQueue},
+                    {1270, Manager.ProcessConcealCheckQueue},
                     {331, Manager.ProcessConcealQueue}
                 };
             }

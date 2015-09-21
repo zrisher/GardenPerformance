@@ -108,8 +108,8 @@ namespace GP.Concealment.World.Entities {
         // XML Deserialization
         public ConcealedEntity() {
             // EntityId is populated after instantiated from XML, so use an action
-            Log = new Logger("GP.Concealment.World.Entities.ConcealedEntity", 
-                (() => { return EntityId.ToString(); }));
+            Log = new Logger("GP.Concealment.World.Entities.ConcealedEntity",
+                EntityId.ToString());
         }
 
         // Byte Deserialization

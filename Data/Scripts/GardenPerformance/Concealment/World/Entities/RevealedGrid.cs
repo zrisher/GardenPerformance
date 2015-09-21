@@ -146,7 +146,7 @@ namespace GP.Concealment.World.Entities {
             Grid = Entity as IMyCubeGrid;
             SpawnOwners = new List<long>();
             BigOwners = new List<long>();
-            Log.Trace("New CubeGrid " + Entity.EntityId + " " + DisplayName, "ctr");
+            Log.Trace("New CubeGrid " + DisplayName, "ctr");
         }
 
         // Byte Deserialization
@@ -477,16 +477,16 @@ namespace GP.Concealment.World.Entities {
         }
 
         private void UpdateNeededForSpawn() {
-            Log.Trace("Update needed for spawn, marking as unneeded to start", "UpdateNeededForSpawn");
-            Log.Trace("Medbay owners: " + String.Join(", ", MedBays.Values.Select((x) => x.OwnerId).ToList()), "UpdateNeededForSpawn");
-            Log.Trace("Cryo owners: " + String.Join(", ", Cryochambers.Values.Select((x) => x.OwnerId).ToList()), "UpdateNeededForSpawn");
+            //Log.Trace("Update needed for spawn, marking as unneeded to start", "UpdateNeededForSpawn");
+            //Log.Trace("Medbay owners: " + String.Join(", ", MedBays.Values.Select((x) => x.OwnerId).ToList()), "UpdateNeededForSpawn");
+            //Log.Trace("Cryo owners: " + String.Join(", ", Cryochambers.Values.Select((x) => x.OwnerId).ToList()), "UpdateNeededForSpawn");
             NeededForSpawn = false;
 
             // If we want to only use Working blocks, need hooks
 
             foreach (var medbay in MedBays.Values) {
                 if (Sector.SpawnOwnerNeeded(medbay.OwnerId)) {
-                    Log.Trace("Needed for spawn", "UpdateNeededForSpawn");
+                    Log.Trace("Medbay needed for spawn", "UpdateNeededForSpawn");
                     NeededForSpawn = true;
                     return;
                 }
@@ -494,11 +494,13 @@ namespace GP.Concealment.World.Entities {
 
             foreach (var cryochamber in Cryochambers.Values) {
                 if (Sector.SpawnOwnerNeeded(cryochamber.OwnerId)) {
-                    Log.Trace("Needed for spawn", "UpdateNeededForSpawn");
+                    Log.Trace("Cryochamber needed for spawn", "UpdateNeededForSpawn");
                     NeededForSpawn = true;
                     return;
                 }
             }
+
+            Log.Trace("Not needed for spawn", "UpdateNeededForSpawn");
         }
 
         #endregion
@@ -513,7 +515,7 @@ namespace GP.Concealment.World.Entities {
         #region Conceal
 
         protected override bool Conceal()  {
-            Log.Trace("Concealing grid " + EntityId, "Conceal");
+            Log.Trace("Concealing.", "Conceal");
 
             if (Grid.SyncObject == null) {
                 Log.Error("SyncObject missing, aborting", "Conceal");
@@ -611,7 +613,7 @@ namespace GP.Concealment.World.Entities {
             if (IsObserved) {
                 result += "      N Observed by:\n";
                 foreach (long id in EntitiesViewedBy.Keys) {
-                    result += "        " + id + "\n";
+                    result += "            " + id + "\n";
                 }
             }
             else {
@@ -657,7 +659,7 @@ namespace GP.Concealment.World.Entities {
             }
 
             // NearAsteroid
-            if (IsInsideAsteroid) {
+            if (IsInAsteroid) {
                 result += "      N Inside Asteroid.\n";
             }
             else {

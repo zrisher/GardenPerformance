@@ -91,7 +91,7 @@ namespace GP.Concealment.World.Entities {
 
         // Creation from ingame entity
         public ObservingEntity(IMyEntity entity) : base(entity) {
-            Log.Trace("Set view distance to " + ViewDistance, "ctr");
+            //Log.Trace("Set view distance to " + ViewDistance, "ctr");
         }
 
         #endregion
@@ -144,6 +144,14 @@ namespace GP.Concealment.World.Entities {
         }
 
         #endregion
+        #region Public Marking
+
+        public void MarkForObservingUpdate() {
+            Log.Trace("Marked for Observing Update", "MarkForObservingUpdate");
+            UpdateObservingNextUpdate = true;
+        }
+
+        #endregion
         #region Update Observing
 
         private void UpdateObservingIfNeeded() {
@@ -166,7 +174,7 @@ namespace GP.Concealment.World.Entities {
         }
 
         protected void UpdateObserving() {
-            Log.Trace("Update Observing", "UpdateObserving");
+            //Log.Trace("Update Observing", "UpdateObserving");
             ClearObserving();
             Observe();
         }
@@ -197,10 +205,16 @@ namespace GP.Concealment.World.Entities {
 
             //Log.Trace("Viewable entity count: " + viewableEntities.Count, "Observe");
 
-            Log.Trace("Entities observed by " + EntityId + ":", "observe");
+            if (viewableEntities.Count > 0) {
+                Log.Trace("Entities observed: " +
+                    String.Join(", ", viewableEntities.Select((e) => e.EntityId).ToList()), "observe");
+            }
+            else {
+                Log.Trace(EntityId + " is not viewing any entities", "observe");
+            }
+
 
             foreach (ObservableEntity e in viewableEntities) {
-                Log.Trace(e.EntityId.ToString(), "observe");
                 MarkViewing(e);
             }
 
