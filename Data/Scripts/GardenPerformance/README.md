@@ -6,7 +6,9 @@ This mod is currently in alpha. We have a number of breaking bugs to fix before 
 # Running Locally
 
 * `git clone https://github.com/zrisher/gardenperformance`
-* `git submodule update --recursive`
+* Remove Data\Scripts\GardenPerformance\SEGarden - need to untrack this from git
+* `git submodule update init`
+* `git submodule update update`
 
 # Contributing
 
