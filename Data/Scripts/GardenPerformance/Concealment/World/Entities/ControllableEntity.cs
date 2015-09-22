@@ -46,19 +46,17 @@ namespace GP.Concealment.World.Entities {
             remove { ControllableEntityRemoval -= value; }
         }
 
-        /*
-        private static Action<ControllableEntity> ControlAcquisition;
-        public static event Action<ControllableEntity> ControlAcquired {
-            add { ControlAcquisition += value; }
-            remove { ControlAcquisition -= value; }
+        private static Action<ControllableEntity> ControllableEntityControlAcquisition;
+        public static event Action<ControllableEntity> ControllableEntityControlled {
+            add { ControllableEntityControlAcquisition += value; }
+            remove { ControllableEntityControlAcquisition -= value; }
         }
 
-        private static Action<ControllableEntity> ControlRelease;
-        public static event Action<ControllableEntity> ControlReleased {
-            add { ControlRelease += value; }
-            remove { ControlRelease -= value; }
+        private static Action<ControllableEntity> ControllableEntityControlRelease;
+        public static event Action<ControllableEntity> ControllableEntityReleased {
+            add { ControllableEntityControlRelease += value; }
+            remove { ControllableEntityControlRelease -= value; }
         }
-        */
 
         private static void NotifyAdded(ControllableEntity entity) {
             //Log.Trace("ControllableEntity " + entity.DisplayName + " added.", "NotifyAdded");
@@ -75,17 +73,15 @@ namespace GP.Concealment.World.Entities {
             if (ControllableEntityRemoval != null) ControllableEntityRemoval(entity);
         }
 
-        /*
         private void NotifyControlAcquired() {
             Log.Trace("ControllableEntity " + DisplayName + " controlled.", "NotifyRemoved");
-            if (ControlAcquisition != null) ControlAcquisition(this);
+            if (ControllableEntityControlAcquisition != null) ControllableEntityControlAcquisition(this);
         }
 
-        private void NotifyControlControlReleased() {
+        private void NotifyControlReleased() {
             Log.Trace("ControllableEntity " + DisplayName + " released.", "NotifyRemoved");
-            if (ControlRelease != null) ControlRelease(this);
+            if (ControllableEntityControlRelease != null) ControllableEntityControlRelease(this);
         }
-        */
 
         #endregion
         #region Fields
@@ -112,9 +108,13 @@ namespace GP.Concealment.World.Entities {
         #endregion
         #region Internal Events
 
-        protected virtual void ControlAcquired() { }
+        protected virtual void ControlAcquired() {
+            NotifyControlAcquired();
+        }
 
-        protected virtual void ControlReleased() { }
+        protected virtual void ControlReleased() {
+            NotifyControlReleased();
+        }
 
         #endregion
         #region Constructors
@@ -171,43 +171,40 @@ namespace GP.Concealment.World.Entities {
         private void UpdateMoving() {
             //Log.Trace("Checking Physics of " + DisplayName, "CheckPhysics");
 
+            bool wasMoving = IsMoving;
+            bool wasControlled = IsControlled;
 
-            if (Entity.IsMoving()) {
-                // Moving
+            IsMoving = Entity.IsMoving();
+
+            if (IsMoving) {
+                // mark for update asteroid proximity
                 MovedSinceIsInAsteroidCheck = true;
-
-                // Mark moving if not marked
-                if (!IsMoving) {
-                    IsMoving = true;
-                    ControlAcquired();
-                }
-
-
             }
             else {
-                //Not moving
 
                 // Update recently moved
-                if (RecentlyMoved) {
-                    if (DateTime.UtcNow > RecentlyMovedEnds) {
-                        RecentlyMoved = false;
-                        ControlReleased();
-                    }
-                }
-
-                // Mark stopped if not marked
-                if (IsMoving) {
-                    IsMoving = false;
+                if (wasMoving) {
                     RecentlyMoved = true;
                     RecentlyMovedEnds = DateTime.UtcNow.AddSeconds(
                         Settings.Instance.ControlledMovingGraceTimeSeconds);
                 }
+                else if (RecentlyMoved && DateTime.UtcNow > RecentlyMovedEnds) {
+                    RecentlyMoved = false;
+                }
             }
 
+            // Do events after above updates have finished
             if (IsMoving) {
                 NotifyMoved(this);
             }
+            if (IsControlled && !wasControlled) {
+                ControlAcquired();
+            }
+            else if (!IsControlled && wasControlled) {
+                ControlReleased();
+            }
         }
+
 
         #endregion
 

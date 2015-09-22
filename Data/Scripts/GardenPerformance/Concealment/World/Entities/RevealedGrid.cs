@@ -51,6 +51,9 @@ namespace GP.Concealment.World.Entities {
         private bool UpdatePilotedNextUpdate;
         private Dictionary<long, Ingame.IMyCockpit> Cockpits =
             new Dictionary<long, Ingame.IMyCockpit>();
+        private Dictionary<long, Ingame.IMyRemoteControl> RemoteControls =
+            new Dictionary<long, Ingame.IMyRemoteControl>();
+
         public override bool IsControlled {
             get { return base.IsControlled || IsPiloted; }
         }
@@ -256,6 +259,13 @@ namespace GP.Concealment.World.Entities {
                 BatteryBlocks.Add(battery.EntityId, battery);
                 return;
             }
+
+            var remoteControl = fatblock as Ingame.IMyRemoteControl;
+            if (remoteControl != null) {
+                Log.Trace("Adding remote control owned by " + remoteControl.OwnerId, "BlockAdded");
+                RemoteControls.Add(remoteControl.EntityId, remoteControl);
+                return;
+            }
         
             /*
             var radioAntenna = fatblock as Ingame.IMyRadioAntenna;
@@ -325,6 +335,13 @@ namespace GP.Concealment.World.Entities {
             if (battery != null) {
                 Log.Trace("Removing battery owned by " + battery.OwnerId, "BlockRemoved");
                 BatteryBlocks.Remove(battery.EntityId);
+                return;
+            }
+
+            var remoteControl = fatblock as Ingame.IMyRemoteControl;
+            if (remoteControl != null) {
+                Log.Trace("Removing remote control owned by " + remoteControl.OwnerId, "BlockRemoved");
+                RemoteControls.Remove(remoteControl.EntityId);
                 return;
             }
 
@@ -441,27 +458,45 @@ namespace GP.Concealment.World.Entities {
         }
 
         private void UpdateIsPiloted() {
-            //Log.Trace("Begin", "UpdateIsPiloted");
-            IsPiloted = false;
+            bool wasControlled = IsControlled;
+            IsPiloted = CheckIsPiloted();
+
+            if (IsControlled && !wasControlled) {
+                ControlAcquired();
+            }
+            else if (!IsControlled && wasControlled) {
+                ControlReleased();
+            }
+        }
+
+        private bool CheckIsPiloted() {
 
             foreach (var cockpit in Cockpits.Values) {
                 //Log.Trace("Looping cockpit", "UpdateIsPiloted");
-                if (cockpit.IsUnderControl) {
-                    //Log.Trace("Is Piloted", "UpdateIsPiloted");
-                    IsPiloted = true;
-                    return;
+                if (cockpit.IsUnderControl || cockpit.GetPilot() != null) {
+                    Log.Trace("Is Piloted via cockpit", "UpdateIsPiloted");
+                    return true;
                 }
             }
 
             foreach (var cryochamber in Cryochambers.Values) {
                 //Log.Trace("Looping cryochamber", "UpdateIsPiloted");
                 var asCockpit = cryochamber as Ingame.IMyCockpit;
-                if (asCockpit.IsUnderControl) {
-                    //Log.Trace("Is Piloted", "UpdateIsPiloted");
-                    IsPiloted = true;
-                    return;
+                if (asCockpit.IsUnderControl || asCockpit.GetPilot() != null) {
+                    Log.Trace("Is Piloted via cryochamber", "UpdateIsPiloted");
+                    return true;
                 }
             }
+
+            foreach (var remoteControl in RemoteControls.Values) {
+                if (remoteControl.IsUnderControl) {
+                    Log.Trace("Is Piloted via remote control", "UpdateIsPiloted");
+                    return true;
+                }
+            }
+
+            Log.Trace("Not piloted", "UpdateIsPiloted");
+            return false;
         }
 
         // TODO: beacons, other types of antennae
@@ -594,8 +629,7 @@ namespace GP.Concealment.World.Entities {
                 if (IsPiloted) {
                     result += "        Piloted";
                 }
-
-                if (IsMoving) {
+                else if (IsMoving) {
                     result += "        Moving at " + 
                         System.Math.Truncate(LinearVelocity.Length()) + " m/s";
                 }

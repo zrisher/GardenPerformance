@@ -19,7 +19,7 @@ namespace GP.Concealment.World.Entities {
 
     public abstract class RevealedEntity : EntityComponent, ObservableEntity, AABBEntity {
 
-        #region Static
+        #region Static Access Helpers
 
         protected static RevealedSector Sector {
             get { return ServerConcealSession.Instance.Manager.Revealed; }
@@ -27,6 +27,31 @@ namespace GP.Concealment.World.Entities {
 
         protected static ConcealedSector Concealed {
             get { return ServerConcealSession.Instance.Manager.Concealed; }
+        }
+
+        #endregion
+        #region Static Events
+
+        private static Action<RevealedEntity> RevealedEntityAddition;
+        public static event Action<RevealedEntity> RevealedEntityAdded {
+            add { RevealedEntityAddition += value; }
+            remove { RevealedEntityAddition -= value; }
+        }
+
+        private static Action<RevealedEntity> RevealedEntityRemoval;
+        public static event Action<RevealedEntity> RevealedEntityRemoved {
+            add { RevealedEntityRemoval += value; }
+            remove { RevealedEntityRemoval -= value; }
+        }
+  
+        private static void NotifyAdded(RevealedEntity entity) {
+            //Log.Trace("ControllableEntity " + entity.DisplayName + " added.", "NotifyAdded");
+            if (RevealedEntityAddition != null) RevealedEntityAddition(entity);
+        }
+
+        private static void NotifyRemoved(RevealedEntity entity) {
+            //Log.Trace("ControllableEntity " + entity.DisplayName + " removed.", "NotifyRemoved");
+            if (RevealedEntityRemoval != null) RevealedEntityRemoval(entity);
         }
 
         #endregion
@@ -136,8 +161,20 @@ namespace GP.Concealment.World.Entities {
             Log.Trace("Start RevealedEntity constructor", "ctr");
             MovedSinceIsInAsteroidCheck = true;
             Log.ClassName = "GP.Concealment.World.Entities.RevealedEntity";
-            MarkNearbyObservingEntitiesForUpdate();
             Log.Trace("Finished RevealedEntity constructor", "ctr");
+        }
+
+        #endregion
+        #region Init/Terminate
+
+        public override void Initialize() {
+            base.Initialize();
+            NotifyAdded(this);
+        }
+
+        public override void Terminate() {
+            base.Terminate();
+            NotifyRemoved(this);
         }
 
         #endregion
@@ -151,29 +188,6 @@ namespace GP.Concealment.World.Entities {
             stream.addBoolean(IsRevealBlocked);
             stream.addLongList(EntitiesViewedBy.Keys.ToList());
             stream.addDateTime(RevealedAt);
-        }
-
-        #endregion
-        #region Marking external world
-
-        private void MarkNearbyObservingEntitiesForUpdate() {
-            Log.Trace("begin", "MarkNearbyObservingEntitiesForUpdate");
-            // Observing entities need to know there's a new entity to observe.
-            // If they're not moving, they won't realize this has been added.
-            var viewingSphere = new BoundingSphereD(Position, Settings.Instance.RevealVisibilityMeters);
-            List<ObservingEntity> nearbyObserving = Sector.ObservingInSphere(viewingSphere);
-
-            if (nearbyObserving.Count == 0) {
-                Log.Trace("No nearby observing entities", "MarkNearbyObservingEntitiesForUpdate");
-                //Log.Trace("viewingSphere has center " + Position + " and radius " + RevealVisibilityMeters, "MarkNearbyObservingEntitiesForUpdate");
-                return;
-            }
-
-            Log.Trace("Marking " + nearbyObserving.Count + " nearby observing entities for observe update", "MarkNearbyObservingEntitiesForUpdate");
-            foreach (ObservingEntity observing in nearbyObserving) {
-                observing.MarkForObservingUpdate();
-            }
-
         }
 
         #endregion

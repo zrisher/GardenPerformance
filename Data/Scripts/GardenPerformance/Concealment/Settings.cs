@@ -24,7 +24,7 @@ namespace GP.Concealment {
         #region Static
 
         private static readonly uint DefaultControlledMovingGraceTimeSeconds = 30; //500
-        private static readonly uint DefaultControlledMovementGraceDistanceMeters = 5; //500
+        private static readonly uint DefaultControlledMovementGraceDistanceMeters = 20; //500
         private static readonly uint DefaultRevealVisibilityMeters = 100; //35
         //private static readonly  uint DefaultRevealDetectabilityMeters = 10; //50;
         //private static readonly  uint DefaultRevealCommunicationMeters = 10; //50;

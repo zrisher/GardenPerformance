@@ -107,6 +107,7 @@
     <Compile Include="Concealment\World\Sectors\ConcealedSector.cs" />
     <Compile Include="SEGarden\Commons\MessageDomain.cs" />
     <Compile Include="SEGarden\Commons\Conceal\MessageType.cs" />
+    <Compile Include="SEGarden\Extensions\Cockpit.cs" />
     <Compile Include="SEGarden\Math\AABBEntity.cs" />
     <Compile Include="SEGarden\Math\AABBTree.cs" />
     <Compile Include="Concealment\Messages\Responses\StatusResponse.cs" />

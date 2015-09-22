@@ -98,10 +98,12 @@ namespace GP.Concealment.World.Entities {
         #region Control Event Handlers
 
         protected override void ControlAcquired() {
+            base.ControlAcquired();
             UpdateObservingNextUpdate = true;
         }
 
         protected override void ControlReleased() {
+            base.ControlReleased();
             UpdateObservingNextUpdate = true;
         }
 

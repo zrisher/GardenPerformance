@@ -85,8 +85,10 @@ namespace GP.Concealment {
             ControllableEntity.ControllableEntityAdded += Revealed.ControllableEntityAdded;
             ControllableEntity.ControllableEntityMoved += Revealed.ControllableEntityMoved;
             ControllableEntity.ControllableEntityRemoved += Revealed.ControllableEntityRemoved;
-            //ControllableEntity.ControlAcquired += Revealed.ControllableEntityControlled;
-            //ControllableEntity.ControlReleased += Revealed.ControllableEntityReleased;
+            ControllableEntity.ControllableEntityControlled += Revealed.ControllableEntityControlled;
+            ControllableEntity.ControllableEntityReleased += Revealed.ControllableEntityReleased;
+            RevealedEntity.RevealedEntityAdded += Revealed.RevealedEntityAdded;
+            RevealedEntity.RevealedEntityRemoved += Revealed.RevealedEntityRemoved;
 
             if (Concealed != null) Loaded = true;
             Log.Trace("Done Initializing ConcealmentManager", "Initialize");
@@ -99,8 +101,10 @@ namespace GP.Concealment {
             ControllableEntity.ControllableEntityAdded -= Revealed.ControllableEntityAdded;
             ControllableEntity.ControllableEntityMoved -= Revealed.ControllableEntityMoved;
             ControllableEntity.ControllableEntityRemoved -= Revealed.ControllableEntityRemoved;
-            //ControllableEntity.ControlAcquired -= Revealed.ControllableEntityControlled;
-            //ControllableEntity.ControlReleased -= Revealed.ControllableEntityReleased;
+            ControllableEntity.ControllableEntityControlled -= Revealed.ControllableEntityControlled;
+            ControllableEntity.ControllableEntityReleased -= Revealed.ControllableEntityReleased;
+            RevealedEntity.RevealedEntityAdded -= Revealed.RevealedEntityAdded;
+            RevealedEntity.RevealedEntityRemoved -= Revealed.RevealedEntityRemoved;
 
             Log.Trace("Done Terminating ConcealmentManager", "Terminate");
         }

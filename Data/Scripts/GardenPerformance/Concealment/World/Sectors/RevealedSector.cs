@@ -301,7 +301,14 @@ namespace GP.Concealment.World.Sectors {
         }
 
         public void ControllableEntityMoved(ControllableEntity e) {
+            /*
             //Log.Trace("Controllable Entity Moved", "ControllableEntityAdded");
+            var notice = new SEGarden.Notifications.AlertNotification() {
+                Text = "Controllable Entity " + e.EntityId + " Moved",
+                DisplaySeconds = 5
+            };
+            notice.Raise();
+            */
 
             ObservingEntity observer = e as ObservingEntity;
             if (observer != null) UpdateObservingGridPosition(observer);
@@ -323,6 +330,67 @@ namespace GP.Concealment.World.Sectors {
 
             //Character character = e as Character;
             //if (character != null) ForgetCharacter(character);
+        }
+
+        public void ControllableEntityControlled(ControllableEntity e) {
+            var notice = new SEGarden.Notifications.AlertNotification() {
+                Text = "Controllable Entity " + e.EntityId + " Controlled",
+                DisplaySeconds = 5
+            };
+
+            notice.Raise();
+        }
+
+        public void ControllableEntityReleased(ControllableEntity e) {
+            var notice = new SEGarden.Notifications.AlertNotification() {
+                Text = "Controllable Entity " + e.EntityId + " Released",
+                DisplaySeconds = 5
+            };
+
+            notice.Raise();
+        }
+
+        public void RevealedEntityAdded(RevealedEntity e) {
+            var notice = new SEGarden.Notifications.AlertNotification() {
+                Text = "Revealed Entity " + e.EntityId + " Added",
+                DisplaySeconds = 5
+            };
+
+            notice.Raise();
+
+            MarkNearbyObserversToObserve(e);
+        }
+
+        public void RevealedEntityRemoved(RevealedEntity e) {
+            var notice = new SEGarden.Notifications.AlertNotification() {
+                Text = "Revealed Entity " + e.EntityId + " Removed",
+                DisplaySeconds = 5
+            };
+
+            notice.Raise();
+
+            MarkNearbyObserversToObserve(e);
+        }
+
+        // Observing entities only pick up entity changes when they move.
+        // They need to know about add/remove too
+        private void MarkNearbyObserversToObserve(ObservableEntity observable) {
+            Log.Trace("begin", "MarkNearbyObservingEntitiesForUpdate");
+
+            var viewingSphere = new BoundingSphereD(observable.Position, Settings.Instance.RevealVisibilityMeters);
+            List<ObservingEntity> nearbyObserving = ObservingInSphere(viewingSphere);
+
+            if (nearbyObserving.Count == 0) {
+                Log.Trace("No nearby observing entities", "MarkNearbyObservingEntitiesForUpdate");
+                //Log.Trace("viewingSphere has center " + Position + " and radius " + RevealVisibilityMeters, "MarkNearbyObservingEntitiesForUpdate");
+                return;
+            }
+
+            Log.Trace("Marking " + nearbyObserving.Count + " nearby observing entities for observe update", "MarkNearbyObservingEntitiesForUpdate");
+            foreach (ObservingEntity observing in nearbyObserving) {
+                observing.MarkForObservingUpdate();
+            }
+
         }
 
         /*
