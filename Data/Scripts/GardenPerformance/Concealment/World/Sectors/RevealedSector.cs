@@ -234,6 +234,7 @@ namespace GP.Concealment.World.Sectors {
             Log.Trace("Adding " + id, "RememberObservingEntity");
             ObservingEntities.Add(id, e);
             ObservingTree.Add(e);
+            Log.Trace("Finished Adding " + id, "RememberObservingEntity");
         }
 
         private void UpdateObservingGridPosition(ObservingEntity e) {

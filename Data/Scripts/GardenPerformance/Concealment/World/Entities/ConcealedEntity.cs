@@ -65,13 +65,14 @@ namespace GP.Concealment.World.Entities {
 
         // AABBEntity
         public BoundingBoxD BoundingBox { get; set; }
-        public int TreeProxyID { get; set; }
+        [XmlIgnore]
+        public Dictionary<long, int> ProxyIdsByTree { get; set; }
         public Vector3D WorldTranslation { get; set; }
         public Vector3D LinearVelocity { get; set; }
 
         private bool AABBEntityyXMLSerializable {
             get {
-                return BoundingBox != null && TreeProxyID != null &&
+                return BoundingBox != null &&
                 WorldTranslation != null && LinearVelocity != null;
             }
         }

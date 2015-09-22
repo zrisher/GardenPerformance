@@ -67,7 +67,7 @@ namespace GP.Concealment.World.Entities {
         public BoundingBoxD BoundingBox {
             get { return Entity.PositionComp.WorldAABB; } 
         }
-        public int TreeProxyID { 
+        public Dictionary<long, int> ProxyIdsByTree { 
             get; set; 
         }
         public Vector3D WorldTranslation {
@@ -133,6 +133,7 @@ namespace GP.Concealment.World.Entities {
 
         // Creation from ingame entity
         public RevealedEntity(IMyEntity entity) : base(entity) {
+            Log.Trace("Start RevealedEntity constructor", "ctr");
             MovedSinceIsInAsteroidCheck = true;
             Log.ClassName = "GP.Concealment.World.Entities.RevealedEntity";
             MarkNearbyObservingEntitiesForUpdate();
